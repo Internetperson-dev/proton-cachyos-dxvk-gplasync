@@ -14,6 +14,9 @@ user_settings = {
     #Use gl-based wined3d for d3d11 and d3d10 instead of vulkan-based dxvk
 #    "PROTON_USE_WINED3D": "1",
 
+    #Use Vulkan-based D9VK instead of OpenGL-based wined3d for d3d9.
+#    "PROTON_USE_D9VK": "1",
+
     #Disable d3d11 entirely
 #    "PROTON_NO_D3D11": "1",
 
