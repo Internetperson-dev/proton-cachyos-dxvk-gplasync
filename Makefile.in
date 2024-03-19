@@ -53,8 +53,9 @@ endif
 
 OBJCOPY_FLAGS  := -p
 
-i386_CFLAGS    := -mstackrealign -march=nocona -mtune=core-avx2 -mfpmath=sse
-x86_64_CFLAGS  := -mcmodel=small -march=nocona -mtune=core-avx2 -mfpmath=sse
+HOST_CFLAGS    ?= -O2 -march=nocona -mtune=core-avx2
+i386_CFLAGS    := -mstackrealign $(HOST_CFLAGS) -mfpmath=sse
+x86_64_CFLAGS  := -mcmodel=small $(HOST_CFLAGS) -mfpmath=sse
 
 CFLAGS  = -O2 -fwrapv -fno-strict-aliasing
 CFLAGS += -ggdb -ffunction-sections -fdata-sections -fno-omit-frame-pointer
@@ -68,6 +69,14 @@ ifeq ($(ENABLE_BEAR),1)
 	BEAR := bear --append --
 else
 	BEAR :=
+endif
+
+ifneq ($(USE_LTO), 1)
+	GST_LTO :=
+	FFMPEG_LTO :=
+else
+	GST_LTO := -Db_lto=true
+	FFMPEG_LTO := --enable-lto
 endif
 
 $(DST_DIR):
@@ -123,6 +132,7 @@ $(eval $(call rules-meson,dav1d,x86_64,unix))
 ##
 
 GST_ORC_MESON_ARGS := \
+	$(GST_LTO) \
 	-Dexamples=disabled \
 	-Dtests=disabled \
 	-Dbenchmarks=disabled \
@@ -138,7 +148,10 @@ $(eval $(call rules-meson,gst_orc,x86_64,unix))
 ##
 
 GSTREAMER_MESON_ARGS := \
+	$(GST_LTO) \
 	-Dgst_parse=false \
+	-Dptp-helper-permissions=capabilities \
+	-Ddbghelp=disabled \
 	-Dintrospection=disabled \
 	-Dgobject-cast-checks=disabled \
 	-Dglib-asserts=disabled \
@@ -162,6 +175,11 @@ $(eval $(call rules-meson,gstreamer,x86_64,unix))
 ## graphene
 ##
 
+GRAPHENE_MESON_ARGS := \
+	-Dtests=false \
+	-Dintrospection=disabled \
+	-Dinstalled_tests=false
+
 $(eval $(call rules-source,graphene,$(SRCDIR)/graphene))
 $(eval $(call rules-meson,graphene,i386,unix))
 $(eval $(call rules-meson,graphene,x86_64,unix))
@@ -172,6 +190,7 @@ $(eval $(call rules-meson,graphene,x86_64,unix))
 ##
 
 GST_BASE_MESON_ARGS := \
+	$(GST_LTO) \
 	-Dauto_features=disabled \
 	-Dintrospection=disabled \
 	-Dgobject-cast-checks=disabled \
@@ -181,6 +200,7 @@ GST_BASE_MESON_ARGS := \
 	-Dexamples=disabled \
 	-Dtests=disabled \
 	-Ddoc=disabled \
+	-Dtools=disabled \
 	-Dadder=enabled \
 	-Dapp=enabled \
 	-Daudioconvert=enabled \
@@ -214,6 +234,7 @@ $(eval $(call rules-meson,gst_base,x86_64,unix))
 ##
 
 GST_GOOD_MESON_ARGS := \
+	$(GST_LTO) \
 	-Dapetag=enabled \
 	-Dauto_features=disabled \
 	-Dgobject-cast-checks=disabled \
@@ -261,6 +282,7 @@ $(eval $(call rules-meson,gst_good,x86_64,unix))
 ##
 
 GST_BAD_MESON_ARGS := \
+	$(GST_LTO) \
 	-Dauto_features=disabled \
 	-Dintrospection=disabled \
 	-Dgobject-cast-checks=disabled \
@@ -374,6 +396,7 @@ $(eval $(call rules-meson,gst_bad,x86_64,unix))
 ##
 
 GST_UGLY_MESON_ARGS := \
+	$(GST_LTO) \
 	-Dauto_features=disabled \
 	-Dgobject-cast-checks=disabled \
 	-Dglib-asserts=disabled \
@@ -400,6 +423,7 @@ $(eval $(call rules-meson,gst_ugly,x86_64,unix))
 
 FFMPEG_CONFIGURE_ARGS := \
 	--enable-shared \
+	$(FFMPEG_LTO) \
 	--disable-static \
 	--disable-everything \
 	--disable-programs \
@@ -436,10 +460,16 @@ FFMPEG_i386-unix_CONFIGURE_ARGS := \
 	--arch=x86 \
 	--target-os=linux
 
+FFMPEG_i386-unix_CONFIGURE_ARGS += \
+	--optflags="$(CFLAGS) $(i386_CFLAGS)"
+
 FFMPEG_x86_64-unix_CONFIGURE_ARGS := \
 	--cross-prefix=x86_64-linux-gnu- \
 	--arch=x86_64 \
 	--target-os=linux
+
+FFMPEG_x86_64-unix_CONFIGURE_ARGS += \
+	--optflags="$(CFLAGS) $(x86_64_CFLAGS)"
 
 $(eval $(call rules-source,ffmpeg,$(SRCDIR)/ffmpeg))
 $(eval $(call rules-configure,ffmpeg,i386,unix))
@@ -537,7 +567,7 @@ $(eval $(call rules-cmake,openxr,x86_64,unix))
 ## Note 32-bit is not supported by SteamVR, so we don't build it.
 ##
 
-WINEOPENXR_LDFLAGS = -lopenxr_loader
+WINEOPENXR_LDFLAGS = -lopenxr_loader -lvulkan
 WINEOPENXR_DEPENDS = wine openxr
 
 $(eval $(call rules-source,wineopenxr,$(SRCDIR)/wineopenxr))
@@ -613,6 +643,9 @@ OPENFST_CONFIGURE_ARGS = \
   --with-pic \
   --disable-bin \
 
+OPENFST_CFLAGS = -mno-bmi2
+OPENFST_CXXFLAGS = -mno-bmi2
+
 $(eval $(call rules-source,openfst,$(SRCDIR)/openfst))
 $(eval $(call rules-configure,openfst,i386,unix))
 $(eval $(call rules-configure,openfst,x86_64,unix))
@@ -679,6 +712,9 @@ WINE_SOURCE_ARGS = \
   --exclude server/request_trace.h \
 
 WINE_AUTOCONF_ARGS = \
+  --with-x \
+  --with-gstreamer \
+  --without-oss \
   --with-mingw \
   --disable-tests
 
@@ -772,9 +808,13 @@ DXVK_x86_64_SOURCE_DATE_EPOCH := $(shell expr $(x86_64_SOURCE_DATE_EPOCH) - 1)
 DXVK_SOURCE_ARGS = \
   --exclude version.h.in \
 
+DXVK_MESON_ARGS = --force-fallback-for=libdisplay-info
 DXVK_i386_MESON_ARGS = --bindir=$(DXVK_i386_DST)/lib/wine/dxvk/i386-windows
 DXVK_x86_64_MESON_ARGS = --bindir=$(DXVK_x86_64_DST)/lib/wine/dxvk/x86_64-windows
 DXVK_HOST_DEPENDS = glslang
+
+DXVK_CPPFLAGS = -msse -msse2
+DXVK_LDFLAGS = -static -static-libgcc -static-libstdc++
 
 $(eval $(call rules-source,dxvk,$(SRCDIR)/dxvk))
 $(eval $(call rules-meson,dxvk,i386,windows))
@@ -795,6 +835,9 @@ $(OBJ)/.dxvk-post-source:
 
 DXVK_NVAPI_i386_MESON_ARGS = --bindir=$(DXVK_NVAPI_i386_DST)/lib/wine/nvapi/i386-windows
 DXVK_NVAPI_x86_64_MESON_ARGS = --bindir=$(DXVK_NVAPI_x86_64_DST)/lib/wine/nvapi/x86_64-windows
+
+DXVK_NVAPI_CPPFLAGS = -msse -msse2
+DXVK_NVAPI_LDFLAGS = -static -static-libgcc -static-libstdc++
 
 $(eval $(call rules-source,dxvk-nvapi,$(SRCDIR)/dxvk-nvapi))
 $(eval $(call rules-meson,dxvk-nvapi,i386,windows))
@@ -886,6 +929,9 @@ VKD3D_PROTON_HOST_DEPENDS = glslang
 ifneq ($(UNSTRIPPED_BUILD),)
 	VKD3D_PROTON_MESON_ARGS = -Denable_trace=true
 endif
+
+VKD3D_PROTON_CPPFLAGS = -msse -msse2
+VKD3D_PROTON_LDFLAGS = -static -static-libgcc -static-libstdc++
 
 $(eval $(call rules-source,vkd3d-proton,$(SRCDIR)/vkd3d-proton))
 $(eval $(call rules-meson,vkd3d-proton,i386,windows))
