@@ -739,6 +739,7 @@ WINE_SOURCE_ARGS = \
 
 WINE_AUTOCONF_ARGS = \
   --with-mingw \
+  --with-wayland \
   --disable-tests
 
 WINE_AUTOCONF_ARGS += \
