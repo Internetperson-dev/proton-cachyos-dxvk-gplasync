@@ -504,6 +504,7 @@ WINE_SOURCE_ARGS = \
 WINE_AUTOCONF_ARGS = \
   --enable-werror \
   --with-mingw \
+  --with-wayland \
   --disable-tests
 
 WINE_x86_64_AUTOCONF_ARGS = \
