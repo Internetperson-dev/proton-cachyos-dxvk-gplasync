@@ -119,7 +119,11 @@ $(2)_$(3)-unix_LIBFLAGS = $$(foreach d,$$($(2)_$(3)_DEPS),-Wl,-rpath-link=$$($$(
 # unix version doesn't exist.
 
 $(2)_$(3)_ENV = \
+    WINEDEBUG="-all" \
+    WINEPREFIX="$$(OBJ)/pfx-wine-$(3)" WINEESYNC="0" WINEFSYNC="0" \
+    WINEDLLOVERRIDES="winex11.drv,winewayland.drv=d;winemenubuilder=d;" \
     CARGO_TARGET_$$(call toupper,$$($(3)-$(4)_CARGO_TARGET))_LINKER="$$($(3)-$(4)_TARGET)-gcc" \
+    CARGO_TARGET_$$(call toupper,$$($(3)-$(4)_CARGO_TARGET))_RUSTFLAGS="$$(HOST_RUSTFLAGS)" \
     CCACHE_BASEDIR="$$(CCACHE_BASEDIR)" \
     STRIP="$$(STRIP)" \
     AR="$$($(3)-$(4)_TARGET)-ar" \
