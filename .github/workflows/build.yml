@@ -43,11 +43,11 @@ jobs:
       working-directory: ./build
       run: make -j3 redist
 
-    - name: Upload artifact ${{ inputs.name }}.tar.gz
+    - name: Upload artifact ${{ inputs.name }}.tar.xz
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ inputs.name }}.tar.gz
-        path: ./build/${{ inputs.name }}.tar.gz
+        name: ${{ inputs.name }}.tar.xz
+        path: ./build/${{ inputs.name }}.tar.xz
 
     - name: Upload artifact ${{ inputs.name }}.sha512sum
       uses: actions/upload-artifact@v4
