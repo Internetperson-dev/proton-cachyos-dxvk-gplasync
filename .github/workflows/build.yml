@@ -16,7 +16,7 @@ jobs:
       run: sudo apt update && sudo apt-get install -y ccache fontforge-nox
 
     - name: Download cache
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.ccache
         key: ccache-proton-${{ github.run_id }}
@@ -42,14 +42,14 @@ jobs:
       working-directory: ./build
       run: make -j3 redist
 
-    - name: Upload artifact ${{ inputs.name }}.tar.gz
-      uses: actions/upload-artifact@v3
+    - name: Upload artifact ${{ inputs.name }}.tar.xz
+      uses: actions/upload-artifact@v4
       with:
-        name: ${{ inputs.name }}.tar.gz
-        path: ./build/${{ inputs.name }}.tar.gz
+        name: ${{ inputs.name }}.tar.xz
+        path: ./build/${{ inputs.name }}.tar.xz
 
     - name: Upload artifact ${{ inputs.name }}.sha512sum
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ inputs.name }}.sha512sum
         path: ./build/${{ inputs.name }}.sha512sum
