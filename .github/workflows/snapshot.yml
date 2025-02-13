@@ -1,4 +1,4 @@
-name: Development
+name: Snapshot
 
 on:
   workflow_dispatch:
@@ -32,10 +32,20 @@ jobs:
         echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
 
   build:
+    strategy:
+      matrix:
+        include:
+          - name: proton-${{ needs.version.outputs.full_desc }}-x86_64
+            cpu_arch: nocona
+            cpu_tune: core-avx2
+          - name: proton-${{ needs.version.outputs.full_desc }}-x86_64_v3
+            cpu_arch: core-avx2
+            cpu_tune: core-avx2
     needs: version
     name: Build
     uses: ./.github/workflows/build.yml
     with:
-      name: proton-${{ needs.version.outputs.full_desc }}-${{ needs.version.outputs.branch }}
-
+      name: ${{ matrix.name }}
+      cpu_arch: ${{ matrix.cpu_arch }}
+      cpu_tune: ${{ matrix.cpu_tune }}
 
