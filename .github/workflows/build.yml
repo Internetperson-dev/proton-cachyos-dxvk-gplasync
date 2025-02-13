@@ -6,10 +6,16 @@ on:
       name:
         required: true
         type: string
+      cpu_arch:
+        required: true
+        type: string
+      cpu_tune:
+        required: true
+        type: string
 
 jobs:
   proton:
-    name: ${{ inputs.name }}
+    name: Build ${{ inputs.name }}
     runs-on: ubuntu-latest
     steps:
     - name: Prepare host
@@ -19,9 +25,9 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ~/.ccache
-        key: ccache-proton-${{ github.run_id }}
+        key: ccache-proton-${{ inputs.cpu_arch }}-${{ inputs.cpu_tune }}-${{ github.run_id }}
         restore-keys: |
-          ccache-proton
+          ccache-proton-${{ inputs.cpu_arch }}-${{ inputs.cpu_tune }}
 
     - name: Checkout
       uses: actions/checkout@v4
@@ -32,15 +38,19 @@ jobs:
 
     - name: Patch
       run: |
+        sed 's/-march=nocona/-march=${{ inputs.cpu_arch }}/g' -i Makefile.in
+        sed 's/-mtune=core-avx2/-mtune=${{ inputs.cpu_tune }}/g' -i Makefile.in
         mkdir ./build
 
     - name: Configure
       working-directory: ./build
-      run: ../configure.sh --build-name=${{ inputs.name }} --enable-ccache --container-engine=docker
+      run: |
+        ../configure.sh --build-name=${{ inputs.name }} --enable-ccache --container-engine=docker
 
     - name: Make ${{ inputs.name }}
       working-directory: ./build
-      run: make -j3 redist
+      run: |
+        make -j$(nproc) redist
 
     - name: Upload artifact ${{ inputs.name }}.tar.xz
       uses: actions/upload-artifact@v4
@@ -53,3 +63,4 @@ jobs:
       with:
         name: ${{ inputs.name }}.sha512sum
         path: ./build/${{ inputs.name }}.sha512sum
+
