@@ -1,0 +1,530 @@
+From 1da84ae3c953d9bd36c6ef22b77acb194338653b Mon Sep 17 00:00:00 2001
+From: Krzysztof Bogacki <krzysztof.bogacki@leancode.pl>
+Date: Mon, 10 Feb 2025 00:44:38 +0100
+Subject: [PATCH 1/4] nvapi-drs: Recognize some named NGX settings
+
+---
+ src/meson.build       |   1 +
+ src/nvapi_drs.cpp     |   3 +-
+ src/util/util_drs.cpp |  48 ++++++++++++
+ src/util/util_drs.h   | 167 ++++++++++++++++++++++++++++++++++++++++++
+ tests/meson.build     |   1 +
+ tests/nvapi_drs.cpp   |   5 +-
+ 6 files changed, 222 insertions(+), 3 deletions(-)
+ create mode 100644 src/util/util_drs.cpp
+ create mode 100644 src/util/util_drs.h
+
+diff --git a/src/meson.build b/src/meson.build
+index 0336b6b0..1cbfb48e 100644
+--- a/src/meson.build
++++ b/src/meson.build
+@@ -2,6 +2,7 @@ nvapi_src = files([
+   'util/util_string.cpp',
+   'util/util_env.cpp',
+   'util/util_log.cpp',
++  'util/util_drs.cpp',
+   'shared/vk.cpp',
+   'shared/resource_factory.cpp',
+   'nvapi/lfx.cpp',
+diff --git a/src/nvapi_drs.cpp b/src/nvapi_drs.cpp
+index 2ba97a8a..820f8150 100644
+--- a/src/nvapi_drs.cpp
++++ b/src/nvapi_drs.cpp
+@@ -1,5 +1,6 @@
+ #include "nvapi_private.h"
+ #include "NvApiDriverSettings.c"
++#include "util/util_drs.h"
+ #include "util/util_env.h"
+ #include "util/util_statuscode.h"
+ #include "util/util_string.h"
+@@ -150,7 +151,7 @@ extern "C" {
+         constexpr auto n = __func__;
+         static const auto nvapiDrsSettingsEnvName = "DXVK_NVAPI_DRS_SETTINGS";
+         static const auto nvapiDrsSettingsString = dxvk::env::getEnvVariable(nvapiDrsSettingsEnvName);
+-        static const auto nvapiDrsDwords = dxvk::str::parsedwords(nvapiDrsSettingsString);
++        static const auto nvapiDrsDwords = dxvk::drs::parsedrsdwordsettings(nvapiDrsSettingsString);
+ 
+         if (log::tracing())
+             log::trace(n, log::fmt::hnd(hSession), log::fmt::hnd(hProfile), settingId, log::fmt::ptr(pSetting));
+diff --git a/src/util/util_drs.cpp b/src/util/util_drs.cpp
+new file mode 100644
+index 00000000..783b8b01
+--- /dev/null
++++ b/src/util/util_drs.cpp
+@@ -0,0 +1,48 @@
++#include "util_drs.h"
++#include "util_env.h"
++
++namespace dxvk::drs {
++    bool parsedrssetting(const std::string_view& str, NvU32& setting) {
++        if (auto it = settings.find(str); it != settings.end()) {
++            setting = it->second;
++            return true;
++        } else {
++            return str::parsedword(str, setting);
++        }
++    }
++
++    bool parsedrsdwordvalue(NvU32 key, const std::string_view& str, NvU32& value) {
++        if (auto it = values.find(key); it != values.end()) {
++            auto& values = it->second;
++            if (auto it = values.find(str); it != values.end()) {
++                value = it->second;
++                return true;
++            }
++        }
++
++        return str::parsedword(str, value);
++    }
++
++    std::unordered_map<NvU32, NvU32> parsedrsdwordsettings(const std::string& str) {
++        std::unordered_map<NvU32, NvU32> result;
++
++        if (str.empty())
++            return result;
++
++        auto entries = str::split<std::vector<std::string_view>>(str, std::regex(","));
++
++        for (auto entry : entries) {
++            auto eq = entry.find('=');
++
++            if (eq == entry.npos || eq == 0 || eq == entry.size() - 1)
++                continue;
++
++            NvU32 key, value;
++
++            if (parsedrssetting(entry.substr(0, eq), key) && parsedrsdwordvalue(key, entry.substr(eq + 1), value))
++                result[key] = value;
++        }
++
++        return result;
++    }
++}
+diff --git a/src/util/util_drs.h b/src/util/util_drs.h
+new file mode 100644
+index 00000000..2b018a42
+--- /dev/null
++++ b/src/util/util_drs.h
+@@ -0,0 +1,167 @@
++#pragma once
++
++#include "../nvapi_private.h"
++#include "./util_string.h"
++#include "NvApiDriverSettings.h"
++
++namespace dxvk::drs {
++    static const std::map<std::string_view, NvU32, str::CaseInsensitiveCompare<std::string_view>> settings = {
++#define SETTING_ID(x) x##_ID
++#define ENTRY(x) {#x, SETTING_ID(x)}
++        ENTRY(NGX_DLAA_OVERRIDE),
++        ENTRY(NGX_DLSSG_MULTI_FRAME_COUNT),
++        ENTRY(NGX_DLSS_FG_OVERRIDE),
++        ENTRY(NGX_DLSS_RR_MODE),
++        ENTRY(NGX_DLSS_OVERRIDE_OPTIMAL_SETTINGS),
++        ENTRY(NGX_DLSS_RR_OVERRIDE),
++        ENTRY(NGX_DLSS_RR_OVERRIDE_RENDER_PRESET_SELECTION),
++        ENTRY(NGX_DLSS_SR_MODE),
++        ENTRY(NGX_DLSS_SR_OVERRIDE),
++        ENTRY(NGX_DLSS_SR_OVERRIDE_RENDER_PRESET_SELECTION),
++#undef ENTRY
++#undef SETTING_ID
++    };
++
++#define CAT2_(a, b) a##b
++#define CAT2(a, b) CAT2_(a, b)
++#define CAT3_(a, b, c) a##b##c
++#define CAT3(a, b, c) CAT3_(a, b, c)
++#define CAT5_(a, b, c, d, e) a##b##c##d##e
++#define CAT5(a, b, c, d, e) CAT5_(a, b, c, d, e)
++#define ENTRY1_(x, prefix) {#x, CAT3(prefix, _, x)}
++#define ENTRY1(x) ENTRY1_(x, SETTING)
++#define ENTRY2_(x, prefix) {#x, CAT5(prefix, _, prefix, _, x)}
++#define ENTRY2(x) ENTRY2_(x, SETTING)
++#define ID() CAT2(SETTING, _ID)
++
++    static const std::unordered_map<NvU32, std::map<std::string_view, NvU32, str::CaseInsensitiveCompare<std::string_view>>> values = {
++#define SETTING NGX_DLAA_OVERRIDE
++        {ID(), {
++                   ENTRY1(DLAA_DEFAULT),
++                   ENTRY1(DLAA_ON),
++                   ENTRY1(DEFAULT),
++               }},
++#undef SETTING
++#define SETTING NGX_DLSSG_MULTI_FRAME_COUNT
++        {ID(), {
++                   ENTRY1(MIN),
++                   ENTRY1(MAX),
++                   ENTRY1(DEFAULT),
++               }},
++#undef SETTING
++#define SETTING NGX_DLSS_FG_OVERRIDE
++        {ID(), {
++                   ENTRY1(OFF),
++                   ENTRY1(ON),
++                   ENTRY1(DEFAULT),
++               }},
++#undef SETTING
++#define SETTING NGX_DLSS_OVERRIDE_OPTIMAL_SETTINGS
++        {ID(), {
++                   ENTRY2(NONE),
++                   ENTRY2(PERF_TO_9X),
++                   ENTRY1(DEFAULT),
++               }},
++#undef SETTING
++#define SETTING NGX_DLSS_RR_MODE
++        {ID(), {
++                   ENTRY2(PERFORMANCE),
++                   ENTRY2(BALANCED),
++                   ENTRY2(QUALITY),
++                   ENTRY2(SNIPPET_CONTROLLED),
++                   ENTRY2(DLAA),
++                   ENTRY2(ULTRA_PERFORMANCE),
++                   ENTRY2(CUSTOM),
++                   ENTRY1(DEFAULT),
++               }},
++#undef SETTING
++#define SETTING NGX_DLSS_RR_OVERRIDE
++        {ID(), {
++                   ENTRY1(OFF),
++                   ENTRY1(ON),
++                   ENTRY1(DEFAULT),
++               }},
++#undef SETTING
++#define SETTING NGX_DLSS_RR_OVERRIDE_RENDER_PRESET_SELECTION
++        {ID(), {
++                   ENTRY1(OFF),
++                   ENTRY1(RENDER_PRESET_A),
++                   ENTRY1(RENDER_PRESET_B),
++                   ENTRY1(RENDER_PRESET_C),
++                   ENTRY1(RENDER_PRESET_D),
++                   ENTRY1(RENDER_PRESET_E),
++                   ENTRY1(RENDER_PRESET_F),
++                   ENTRY1(RENDER_PRESET_G),
++                   ENTRY1(RENDER_PRESET_H),
++                   ENTRY1(RENDER_PRESET_I),
++                   ENTRY1(RENDER_PRESET_J),
++                   ENTRY1(RENDER_PRESET_K),
++                   ENTRY1(RENDER_PRESET_L),
++                   ENTRY1(RENDER_PRESET_M),
++                   ENTRY1(RENDER_PRESET_N),
++                   ENTRY1(RENDER_PRESET_O),
++                   ENTRY1(RENDER_PRESET_Latest),
++                   ENTRY1(DEFAULT),
++               }},
++#undef SETTING
++#define SETTING NGX_DLSS_SR_MODE
++        {ID(), {
++                   ENTRY2(PERFORMANCE),
++                   ENTRY2(BALANCED),
++                   ENTRY2(QUALITY),
++                   ENTRY2(SNIPPET_CONTROLLED),
++                   ENTRY2(DLAA),
++                   ENTRY2(ULTRA_PERFORMANCE),
++                   ENTRY2(CUSTOM),
++                   ENTRY1(DEFAULT),
++               }},
++#undef SETTING
++#define SETTING NGX_DLSS_SR_OVERRIDE
++        {ID(), {
++                   ENTRY1(OFF),
++                   ENTRY1(ON),
++                   ENTRY1(DEFAULT),
++               }},
++#undef SETTING
++#define SETTING NGX_DLSS_SR_OVERRIDE_RENDER_PRESET_SELECTION
++        {ID(), {
++                   ENTRY1(OFF),
++                   ENTRY1(RENDER_PRESET_A),
++                   ENTRY1(RENDER_PRESET_B),
++                   ENTRY1(RENDER_PRESET_C),
++                   ENTRY1(RENDER_PRESET_D),
++                   ENTRY1(RENDER_PRESET_E),
++                   ENTRY1(RENDER_PRESET_F),
++                   ENTRY1(RENDER_PRESET_G),
++                   ENTRY1(RENDER_PRESET_H),
++                   ENTRY1(RENDER_PRESET_I),
++                   ENTRY1(RENDER_PRESET_J),
++                   ENTRY1(RENDER_PRESET_K),
++                   ENTRY1(RENDER_PRESET_L),
++                   ENTRY1(RENDER_PRESET_M),
++                   ENTRY1(RENDER_PRESET_N),
++                   ENTRY1(RENDER_PRESET_O),
++                   ENTRY1(RENDER_PRESET_Latest),
++                   ENTRY1(DEFAULT),
++               }},
++#undef SETTING
++    };
++
++#undef CAT2_
++#undef CAT2
++#undef CAT3_
++#undef CAT3
++#undef CAT5_
++#undef CAT5
++#undef ENTRY1_
++#undef ENTRY1
++#undef ENTRY2_
++#undef ENTRY2
++#undef ID
++
++    bool parsedrssetting(const std::string_view& str, NvU32& setting);
++
++    bool parsedrsdwordvalue(NvU32 key, const std::string_view& str, NvU32& value);
++
++    std::unordered_map<NvU32, NvU32> parsedrsdwordsettings(const std::string& str);
++}
+diff --git a/tests/meson.build b/tests/meson.build
+index 59dfb895..985d4c50 100644
+--- a/tests/meson.build
++++ b/tests/meson.build
+@@ -4,6 +4,7 @@ nvapi_src = files([
+   '../src/util/util_string.cpp',
+   '../src/util/util_env.cpp',
+   '../src/util/util_log.cpp',
++  '../src/util/util_drs.cpp',
+   '../src/shared/vk.cpp',
+   '../src/shared/resource_factory.cpp',
+   '../src/nvapi/lfx.cpp',
+diff --git a/tests/nvapi_drs.cpp b/tests/nvapi_drs.cpp
+index 744ea966..22d44a1b 100644
+--- a/tests/nvapi_drs.cpp
++++ b/tests/nvapi_drs.cpp
+@@ -108,7 +108,7 @@ TEST_CASE("DRS methods succeed", "[.drs]") {
+ 
+     SECTION("GetSetting") {
+         // this variable is read and cached the first time NvAPI_DRS_GetSetting is called
+-        ::SetEnvironmentVariableA("DXVK_NVAPI_DRS_SETTINGS", "0x10E41E01=1,0x10E41DF3=0xffffff");
++        ::SetEnvironmentVariableA("DXVK_NVAPI_DRS_SETTINGS", "0x10E41E01=1,0x10E41DF3=0xffffff,NGX_DLAA_OVERRIDE=DLAA_ON");
+ 
+         SECTION("GetSetting with unknown struct version returns incompatible-struct-version") {
+             NvDRSSessionHandle handle{};
+@@ -142,7 +142,8 @@ TEST_CASE("DRS methods succeed", "[.drs]") {
+         SECTION("GetSetting for DWORD settings found in environment returns OK") {
+             auto [settingId, value] = GENERATE(
+                 std::make_pair(0x10E41E01u, 1u),
+-                std::make_pair(0x10E41DF3u, 0xffffffu));
++                std::make_pair(0x10E41DF3u, 0xffffffu),
++                std::make_pair(NGX_DLAA_OVERRIDE_ID, NGX_DLAA_OVERRIDE_DLAA_ON));
+ 
+             NvDRSSessionHandle handle{};
+             NvDRSProfileHandle profile{};
+
+From b42a66e366b0323deed7a38d0811e5e4776d93a2 Mon Sep 17 00:00:00 2001
+From: Krzysztof Bogacki <krzysztof.bogacki@leancode.pl>
+Date: Mon, 10 Feb 2025 00:55:06 +0100
+Subject: [PATCH 2/4] nvapi-drs: Expose dedicated environment variables for DRS
+ NGX settings
+
+---
+ src/nvapi_drs.cpp     |  7 ++++---
+ src/util/util_drs.cpp | 16 ++++++++++++++++
+ src/util/util_drs.h   |  2 ++
+ tests/nvapi_drs.cpp   |  9 ++++++---
+ 4 files changed, 28 insertions(+), 6 deletions(-)
+
+diff --git a/src/nvapi_drs.cpp b/src/nvapi_drs.cpp
+index 820f8150..e64f0540 100644
+--- a/src/nvapi_drs.cpp
++++ b/src/nvapi_drs.cpp
+@@ -150,18 +150,19 @@ extern "C" {
+     NvAPI_Status __cdecl NvAPI_DRS_GetSetting(NvDRSSessionHandle hSession, NvDRSProfileHandle hProfile, NvU32 settingId, NVDRS_SETTING* pSetting) {
+         constexpr auto n = __func__;
+         static const auto nvapiDrsSettingsEnvName = "DXVK_NVAPI_DRS_SETTINGS";
++        static const auto nvapiDrsSettingsEnvPrefix = "DXVK_NVAPI_DRS_";
+         static const auto nvapiDrsSettingsString = dxvk::env::getEnvVariable(nvapiDrsSettingsEnvName);
+-        static const auto nvapiDrsDwords = dxvk::drs::parsedrsdwordsettings(nvapiDrsSettingsString);
++        static const auto nvapiDrsDwords = dxvk::drs::enrichwithenv(dxvk::drs::parsedrsdwordsettings(nvapiDrsSettingsString), nvapiDrsSettingsEnvPrefix);
+ 
+         if (log::tracing())
+             log::trace(n, log::fmt::hnd(hSession), log::fmt::hnd(hProfile), settingId, log::fmt::ptr(pSetting));
+ 
+         static std::once_flag once;
+         std::call_once(once, []() {
+-            if (nvapiDrsSettingsString.empty())
++            if (nvapiDrsDwords.empty())
+                 return;
+ 
+-            log::info(str::format(nvapiDrsSettingsEnvName, " is set, applying the following DRS settings when requested by the application (", nvapiDrsDwords.size(), " total):"));
++            log::info(str::format("Applying the following DRS settings when requested by the application (", nvapiDrsDwords.size(), " total):"));
+             for (auto& [key, value] : nvapiDrsDwords)
+                 log::info(str::format("    0x", std::hex, key, "/", GetSettingName(key), " = 0x", std::hex, value));
+         });
+diff --git a/src/util/util_drs.cpp b/src/util/util_drs.cpp
+index 783b8b01..c5c9d357 100644
+--- a/src/util/util_drs.cpp
++++ b/src/util/util_drs.cpp
+@@ -45,4 +45,20 @@ namespace dxvk::drs {
+ 
+         return result;
+     }
++
++    std::unordered_map<NvU32, NvU32> enrichwithenv(std::unordered_map<NvU32, NvU32> map, const char* prefix) {
++        for (auto& [name, key] : settings) {
++            auto envname = std::string(prefix).append(name);
++            auto envvalue = env::getEnvVariable(envname);
++
++            if (envvalue.empty())
++                continue;
++
++            NvU32 value;
++            if (parsedrsdwordvalue(key, envvalue, value))
++                map[key] = value;
++        }
++
++        return map;
++    }
+ }
+diff --git a/src/util/util_drs.h b/src/util/util_drs.h
+index 2b018a42..395c8cc9 100644
+--- a/src/util/util_drs.h
++++ b/src/util/util_drs.h
+@@ -164,4 +164,6 @@ namespace dxvk::drs {
+     bool parsedrsdwordvalue(NvU32 key, const std::string_view& str, NvU32& value);
+ 
+     std::unordered_map<NvU32, NvU32> parsedrsdwordsettings(const std::string& str);
++
++    std::unordered_map<NvU32, NvU32> enrichwithenv(std::unordered_map<NvU32, NvU32> map, const char* prefix);
+ }
+diff --git a/tests/nvapi_drs.cpp b/tests/nvapi_drs.cpp
+index 22d44a1b..1e0bc18e 100644
+--- a/tests/nvapi_drs.cpp
++++ b/tests/nvapi_drs.cpp
+@@ -107,8 +107,10 @@ TEST_CASE("DRS methods succeed", "[.drs]") {
+     }
+ 
+     SECTION("GetSetting") {
+-        // this variable is read and cached the first time NvAPI_DRS_GetSetting is called
++        // these variables are read and cached the first time NvAPI_DRS_GetSetting is called
+         ::SetEnvironmentVariableA("DXVK_NVAPI_DRS_SETTINGS", "0x10E41E01=1,0x10E41DF3=0xffffff,NGX_DLAA_OVERRIDE=DLAA_ON");
++        ::SetEnvironmentVariableA("DXVK_NVAPI_DRS_NGX_DLSS_SR_OVERRIDE_RENDER_PRESET_SELECTION", "render_preset_a");
++        ::SetEnvironmentVariableA("DXVK_NVAPI_DRS_NGX_DLSS_SR_MODE", "performance");
+ 
+         SECTION("GetSetting with unknown struct version returns incompatible-struct-version") {
+             NvDRSSessionHandle handle{};
+@@ -142,8 +144,9 @@ TEST_CASE("DRS methods succeed", "[.drs]") {
+         SECTION("GetSetting for DWORD settings found in environment returns OK") {
+             auto [settingId, value] = GENERATE(
+                 std::make_pair(0x10E41E01u, 1u),
+-                std::make_pair(0x10E41DF3u, 0xffffffu),
+-                std::make_pair(NGX_DLAA_OVERRIDE_ID, NGX_DLAA_OVERRIDE_DLAA_ON));
++                std::make_pair(NGX_DLSS_SR_OVERRIDE_RENDER_PRESET_SELECTION_ID, NGX_DLSS_SR_OVERRIDE_RENDER_PRESET_SELECTION_RENDER_PRESET_A),
++                std::make_pair(NGX_DLAA_OVERRIDE_ID, NGX_DLAA_OVERRIDE_DLAA_ON),
++                std::make_pair(NGX_DLSS_SR_MODE_ID, NGX_DLSS_SR_MODE_NGX_DLSS_SR_MODE_PERFORMANCE));
+ 
+             NvDRSSessionHandle handle{};
+             NvDRSProfileHandle profile{};
+
+From 2fd2a3ddff476e931c70d02a5fe3428415f45691 Mon Sep 17 00:00:00 2001
+From: Krzysztof Bogacki <krzysztof.bogacki@leancode.pl>
+Date: Tue, 11 Feb 2025 22:04:23 +0100
+Subject: [PATCH 3/4] tests: Add tests for new DRS utils
+
+---
+ tests/util.cpp | 53 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 53 insertions(+)
+
+diff --git a/tests/util.cpp b/tests/util.cpp
+index a80615f8..448bad12 100644
+--- a/tests/util.cpp
++++ b/tests/util.cpp
+@@ -1,10 +1,63 @@
+ #include "nvapi_tests_private.h"
++#include "../src/util/util_drs.h"
+ #include "../src/util/util_log.h"
+ #include "../src/util/util_string.h"
+ #include "../src/util/util_version.h"
+ 
+ using namespace Catch::Matchers;
+ 
++TEST_CASE("DRS", "[.util]") {
++    SECTION("parsedrssetting") {
++        auto [str, setting] = GENERATE(
++            std::make_pair<std::string_view, NvU32>("NGX_DLAA_OVERRIDE", NGX_DLAA_OVERRIDE_ID),
++            std::make_pair<std::string_view, NvU32>("ngx_dlssg_multi_frame_count", NGX_DLSSG_MULTI_FRAME_COUNT_ID),
++            std::make_pair<std::string_view, NvU32>("283385347", NGX_DLSS_FG_OVERRIDE_ID),
++            std::make_pair<std::string_view, NvU32>("0x10BD9423", NGX_DLSS_RR_MODE_ID));
++
++        NvU32 result;
++        REQUIRE(dxvk::drs::parsedrssetting(str, result));
++        REQUIRE(result == setting);
++    }
++
++    SECTION("parsedrsdwordvalue") {
++        auto [setting, str, value] = GENERATE(
++            std::make_tuple<NvU32, std::string_view, NvU32>(NGX_DLAA_OVERRIDE_ID, "DLAA_ON", NGX_DLAA_OVERRIDE_DLAA_ON),
++            std::make_tuple<NvU32, std::string_view, NvU32>(NGX_DLSSG_MULTI_FRAME_COUNT_ID, "max", NGX_DLSSG_MULTI_FRAME_COUNT_MAX),
++            std::make_tuple<NvU32, std::string_view, NvU32>(NGX_DLSS_FG_OVERRIDE_ID, "1", NGX_DLSS_FG_OVERRIDE_ON),
++            std::make_tuple<NvU32, std::string_view, NvU32>(NGX_DLSS_RR_MODE_ID, "balanced", NGX_DLSS_RR_MODE_NGX_DLSS_RR_MODE_BALANCED),
++            std::make_tuple<NvU32, std::string_view, NvU32>(0, "1", 1),
++            std::make_tuple<NvU32, std::string_view, NvU32>(INVALID_SETTING_ID, "0x1", 1));
++
++        NvU32 result;
++        REQUIRE(dxvk::drs::parsedrsdwordvalue(setting, str, result));
++        REQUIRE(result == value);
++    }
++
++    SECTION("parsedrsdwordsettings") {
++        auto dwords = dxvk::drs::parsedrsdwordsettings("NGX_DLAA_OVERRIDE=DLAA_ON,ngx_dlssg_multi_frame_count=3,NGX_DLSS_FG_OVERRIDE=on,0x10E41E01=1,0x10E41DF3=render_preset_latest");
++
++        REQUIRE(dwords.size() == 5);
++        REQUIRE(dwords.at(NGX_DLAA_OVERRIDE_ID) == NGX_DLAA_OVERRIDE_DLAA_ON);
++        REQUIRE(dwords.at(NGX_DLSSG_MULTI_FRAME_COUNT_ID) == 3);
++        REQUIRE(dwords.at(NGX_DLSS_FG_OVERRIDE_ID) == NGX_DLSS_FG_OVERRIDE_ON);
++        REQUIRE(dwords.at(0x10E41E01) == 1);
++        REQUIRE(dwords.at(0x10E41DF3) == 0xffffff);
++    }
++
++    SECTION("enrichwithenv") {
++        ::SetEnvironmentVariableA("TEST_NGX_DLSS_SR_OVERRIDE", "1");
++        ::SetEnvironmentVariableA("TEST_NGX_DLSS_SR_OVERRIDE_RENDER_PRESET_SELECTION", "render_preset_latest");
++        ::SetEnvironmentVariableA("TEST_NGX_DLSS_SR_MODE", "PERFORMANCE");
++        auto dwords = dxvk::drs::enrichwithenv({{NGX_DLAA_OVERRIDE_ID, NGX_DLAA_OVERRIDE_DLAA_ON}, {NGX_DLSS_SR_OVERRIDE_ID, 0}}, "TEST_");
++
++        REQUIRE(dwords.size() == 4);
++        REQUIRE(dwords.at(NGX_DLAA_OVERRIDE_ID) == NGX_DLAA_OVERRIDE_DLAA_ON);
++        REQUIRE(dwords.at(NGX_DLSS_SR_OVERRIDE_ID) == 1);
++        REQUIRE(dwords.at(NGX_DLSS_SR_OVERRIDE_RENDER_PRESET_SELECTION_ID) == NGX_DLSS_SR_OVERRIDE_RENDER_PRESET_SELECTION_RENDER_PRESET_Latest);
++        REQUIRE(dwords.at(NGX_DLSS_SR_MODE_ID) == NGX_DLSS_SR_MODE_NGX_DLSS_SR_MODE_PERFORMANCE);
++    }
++}
++
+ TEST_CASE("Log", "[.util]") {
+     REQUIRE(dxvk::log::fmt::hnd(nullptr) == "hnd=0x0");
+     // Avoid different hex padding between MSVC and GCC
+
+From 38a4d3b6016a881713b674e039b7fd5cbe7b613a Mon Sep 17 00:00:00 2001
+From: Krzysztof Bogacki <krzysztof.bogacki@leancode.pl>
+Date: Tue, 11 Feb 2025 22:31:49 +0100
+Subject: [PATCH 4/4] meta: Document new flavor of DRS environment variables
+
+---
+ README.md | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/README.md b/README.md
+index 85c4da47..df779cb8 100644
+--- a/README.md
++++ b/README.md
+@@ -109,6 +109,22 @@ The following environment variables tweak DXVK-NVAPI's runtime behavior:
+ - `DXVK_NVAPI_ALLOW_OTHER_DRIVERS`, when set to `1`, allows DXVK-NVAPI to initialize for a non-NVIDIA GPU.
+ - `DXVK_NVAPI_DISABLE_ENTRYPOINTS`, when set to a comma-separated list of NVAPI entrypoint names, will hide their implementation from the application. For example, `DXVK_NVAPI_DISABLE_ENTRYPOINTS=NvAPI_D3D11_BeginUAVOverlap,NvAPI_D3D11_EndUAVOverlap` will report D3D11 barrier control extensions as not available.
+ - `DXVK_NVAPI_DRS_SETTINGS` allows providing custom values for arbitrary driver settings. Currently, only values of DWORD (u32) type are supported. Format is `setting1=value1,setting2=value2,…` where both `settingN` and `valueN` are unsigned 32-bit integers and can be prefixed with `0x` or `0X` to parse them as hexadecimal numbers. For example, `DXVK_NVAPI_DRS_SETTINGS=0x10E41DF3=0xffffff,0x10E41DF7=0xffffff` overrides presets for both DLSS Super Resolution and DLSS Ray Reconstruction to latest.
++  - Additionally, _some_ well-known settings are supported in their named/text form. For each setting supported this way, `settingN` can be provided as case-insensitive name of [`ESetting`](https://github.com/NVIDIA/nvapi/blob/d08488fcc82eef313b0464db37d2955709691e94/NvApiDriverSettings.h#L148) enum member with the `_ID` suffix omitted, and `valueN` can be provided as case-insensitive name of corresponding `EValues_${settingN}` enum member with the longest repetition of setting type prefix omitted, for example `NGX_DLSS_FG_OVERRIDE=on`. Settings currently supported this way are:
++    - `NGX_DLAA_OVERRIDE`
++    - `NGX_DLSSG_MULTI_FRAME_COUNT`
++    - `NGX_DLSS_FG_OVERRIDE`
++    - `NGX_DLSS_RR_MODE`
++    - `NGX_DLSS_OVERRIDE_OPTIMAL_SETTINGS`
++    - `NGX_DLSS_RR_OVERRIDE`
++    - `NGX_DLSS_RR_OVERRIDE_RENDER_PRESET_SELECTION`
++    - `NGX_DLSS_SR_MODE`
++    - `NGX_DLSS_SR_OVERRIDE`
++    - `NGX_DLSS_SR_OVERRIDE_RENDER_PRESET_SELECTION`
++  - Additionally, for each supported named setting, it can also be configured with a dedicated environment variable, the name of which is constructed by prefixing setting name with `DXVK_NVAPI_DRS_` and is case-sensitive. If a setting is set via both `DXVK_NVAPI_DRS_SETTINGS` and its own dedicated environment variable, the latter takes precedence. For example, all following sets of environment variables result in equivalent configuration:
++    - `DXVK_NVAPI_DRS_SETTINGS=0x10E41DF3=0xffffff,0x10E41DF7=0xffffff`
++    - `DXVK_NVAPI_DRS_SETTINGS=NGX_DLSS_SR_OVERRIDE_RENDER_PRESET_SELECTION=0xffffff,NGX_DLSS_RR_OVERRIDE_RENDER_PRESET_SELECTION=0xffffff`
++    - `DXVK_NVAPI_DRS_SETTINGS=ngx_dlss_sr_override_render_preset_selection=render_preset_latest,ngx_dlss_rr_override_render_preset_selection=render_preset_latest`
++    - `DXVK_NVAPI_DRS_NGX_DLSS_SR_OVERRIDE_RENDER_PRESET_SELECTION=0xffffff` plus `DXVK_NVAPI_DRS_NGX_DLSS_RR_OVERRIDE_RENDER_PRESET_SELECTION=render_preset_latest`
+ - `DXVK_NVAPI_GPU_ARCH`, when set to one of supported NVIDIA GPU architecture IDs will override reported GPU architecture. Currently supported values are:
+   - `GK100` (Kepler)
+   - `GM000` (Maxwell Gen1)
