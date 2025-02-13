@@ -16,3 +16,7 @@ popd || exit 1
 pushd "$here"/../openfst || exit 1
     patch_cmd "$here"/openfst/openfst-879f09d2ac799cca99b78de3442194ebbe29d24a.patch
 popd || exit 1
+
+pushd "$here"/../dxvk-nvapi || exit 1
+    patch_cmd "$here"/dxvk-nvapi/dxvk-nvapi-pr269.patch
+popd || exit 1
