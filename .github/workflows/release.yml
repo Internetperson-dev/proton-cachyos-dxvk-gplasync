@@ -6,38 +6,30 @@ on:
 
 jobs:
   build:
+    strategy:
+      matrix:
+        include:
+          - name: proton-${{ github.ref_name }}-x86_64
+            cpu_arch: nocona
+            cpu_tune: core-avx2
+          - name: proton-${{ github.ref_name }}-x86_64_v3
+            cpu_arch: core-avx2
+            cpu_tune: core-avx2
     name: Build
     uses: ./.github/workflows/build.yml
     with:
-      name: proton-${{ github.ref_name }}
+      name: ${{ matrix.name }}
+      cpu_arch: ${{ matrix.cpu_arch }}
+      cpu_tune: ${{ matrix.cpu_tune }}
 
-  release:
-    name: Release ${{ github.ref_name }}
+  upload:
+    strategy:
+      matrix:
+        include:
+          - name: proton-${{ github.ref_name }}-x86_64
+          - name: proton-${{ github.ref_name }}-x86_64_v3
+    name: Upload
     needs: build
-    runs-on: ubuntu-latest
-    steps:
-    - name: Download ${{ github.ref_name }}.tar.xz artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: proton-${{ github.ref_name }}.tar.xz
-
-    - name: Download ${{ github.ref_name }}.sha512sum artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: proton-${{ github.ref_name }}.sha512sum
-
-    - name: Upload ${{ github.ref_name }}.tar.xz to release
-      uses: svenstaro/upload-release-action@v2
-      with:
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
-        tag: ${{ github.ref_name }}
-        file: proton-${{ github.ref_name }}.tar.xz
-        overwrite: false
-
-    - name: Upload ${{ github.ref_name }}.sha512sum to release
-      uses: svenstaro/upload-release-action@v2
-      with:
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
-        tag: ${{ github.ref_name }}
-        file: proton-${{ github.ref_name }}.sha512sum
-        overwrite: false
+    uses: ./.github/workflows/upload.yml
+    with:
+      name: ${{ matrix.name }}
