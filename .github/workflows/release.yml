@@ -3,9 +3,13 @@ name: Release
 on:
   release:
     types: [ published ]
+  push:
+    tags:
+      - 'cachyos-*-*-slr'
 
 jobs:
   build:
+    name: Build
     strategy:
       matrix:
         include:
@@ -15,21 +19,49 @@ jobs:
           - name: proton-${{ github.ref_name }}-x86_64_v3
             cpu_arch: core-avx2
             cpu_tune: core-avx2
-    name: Build
-    uses: ./.github/workflows/build.yml
+    uses: ./.github/workflows/_job_build.yml
     with:
       name: ${{ matrix.name }}
       cpu_arch: ${{ matrix.cpu_arch }}
       cpu_tune: ${{ matrix.cpu_tune }}
 
+  release:
+    name: Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Title
+      id: title
+      shell: bash
+      run: |
+        python -c "_,mj,mn,_='${{ github.ref_name }}'.split('-');print('title='+'-'.join([mj,mn]))" >> "$GITHUB_OUTPUT"
+    - name: Create
+      id: create
+      shell: bash
+      run: >-
+        gh
+        --repo "${{ github.server_url }}/${{ github.repository }}"
+        release create
+        ${{ github.ref_name }}
+        --latest
+        --title "Version ${{ steps.title.outputs.title }}"
+        --notes-from-tag
+        --verify-tag
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   upload:
+    name: Upload
+    needs: release
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         include:
           - name: proton-${{ github.ref_name }}-x86_64
           - name: proton-${{ github.ref_name }}-x86_64_v3
-    name: Upload
-    needs: build
-    uses: ./.github/workflows/upload.yml
-    with:
-      name: ${{ matrix.name }}
+    steps:
+    - name: Upload
+      uses: ./.github/workflows/_job_upload.yml
+      with:
+        version: ${{ github.ref_name }}
+        name: ${{ matrix.name }}

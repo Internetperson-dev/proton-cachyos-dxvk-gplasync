@@ -1,8 +1,11 @@
-name: Upload
+name: _job_upload
 
 on:
   workflow_call:
     inputs:
+      version:
+        required: true
+        type: string
       name:
         required: true
         type: string
@@ -23,9 +26,13 @@ jobs:
           name: ${{ matrix.file }}
 
       - name: Upload ${{ matrix.file }} to release
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ github.ref_name }}
-          file: ${{ matrix.file }}
-          overwrite: false
+        shell: bash
+        run: >-
+          gh
+          --repo "${{ github.server_url }}/${{ github.repository }}"
+          release upload
+          ${{ inputs.version }}
+          ${{ matrix.file }}
+          --clobber
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
