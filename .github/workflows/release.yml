@@ -30,17 +30,21 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        fetch-tags: true
     - name: Title
       id: title
       shell: bash
       run: |
+        git fetch origin +refs/tags/*:refs/tags/*
         python -c "_,mj,mn,_='${{ github.ref_name }}'.split('-');print('title='+'-'.join([mj,mn]))" >> "$GITHUB_OUTPUT"
     - name: Create
       id: create
       shell: bash
       run: >-
         gh
-        --repo "${{ github.server_url }}/${{ github.repository }}"
         release create
         ${{ github.ref_name }}
         --latest
