@@ -57,15 +57,12 @@ jobs:
   upload:
     name: Upload
     needs: release
-    runs-on: ubuntu-latest
     strategy:
       matrix:
         include:
           - name: proton-${{ github.ref_name }}-x86_64
           - name: proton-${{ github.ref_name }}-x86_64_v3
-    steps:
-    - name: Upload
-      uses: ./.github/workflows/_job_upload.yml
-      with:
-        version: ${{ github.ref_name }}
-        name: ${{ matrix.name }}
+    uses: ./.github/workflows/_job_upload.yml
+    with:
+      version: ${{ github.ref_name }}
+      name: ${{ matrix.name }}
