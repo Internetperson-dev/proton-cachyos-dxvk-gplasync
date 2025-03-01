@@ -1579,6 +1579,7 @@ class Session:
 
         if "noesync" in self.compat_config:
             self.env.pop("WINEESYNC", "")
+            self.env["WINEESYNC"] = "0"
         else:
             self.env["WINEESYNC"] = "1"
 
@@ -1587,6 +1588,7 @@ class Session:
 
         if "nofsync" in self.compat_config:
             self.env.pop("WINEFSYNC", "")
+            self.env["WINEFSYNC"] = "0"
         else:
             self.env["WINEFSYNC"] = "1"
 
