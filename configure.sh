@@ -183,6 +183,10 @@ function configure() {
       echo "ENABLE_BEAR := 1"
     fi
 
+    echo "CFLAGS := ${CFLAGS:--O2 -march=nocona -mtune=core-avx2}"
+    echo "RUSTFLAGS := ${RUSTFLAGS:--Copt-level=2 -Ctarget-cpu=nocona}"
+    echo "USE_LTO := ${USE_LTO:-0}"
+
     # Include base
     echo ""
     echo "include \$(SRCDIR)/Makefile.in"
