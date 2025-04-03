@@ -1099,9 +1099,6 @@ class CompatData:
             setup_game_dir_drive()
             setup_steam_dir_drive()
 
-            # add Steam ffmpeg libraries to path
-            prepend_to_env_str(g_session.env, ld_path_var, steamdir + "/ubuntu12_64/video/:" + steamdir + "/ubuntu12_32/video/", ":")
-
 def comma_escaped(s):
     escaped = False
     idx = -1
@@ -1420,6 +1417,7 @@ class Session:
 
         self.env["GST_PLUGIN_SYSTEM_PATH_1_0"] = g_proton.lib64_dir + "gstreamer-1.0" + ":" + g_proton.lib_dir + "gstreamer-1.0"
         self.env["WINE_GST_REGISTRY_DIR"] = g_compatdata.path("gstreamer-1.0/")
+        self.env["GST_GL_WINDOW"] = "surfaceless"
 
         if "STEAM_COMPAT_MEDIA_PATH" in os.environ:
             old_audiofoz_path = os.environ["STEAM_COMPAT_MEDIA_PATH"] + "/audio.foz"
@@ -1523,6 +1521,8 @@ class Session:
 
         if not self.check_environment("PROTON_USE_WINED3D", "wined3d"):
             self.check_environment("PROTON_USE_WINED3D11", "wined3d")
+        self.check_environment("PROTON_NO_WM_DECORATION", "nowmdecoration")
+        self.check_environment("PROTON_PREFER_SDL", "prefersdl")
         self.check_environment("PROTON_DXVK_D3D8", "dxvkd3d8")
         self.check_environment("PROTON_NO_D3D11", "nod3d11")
         self.check_environment("PROTON_NO_D3D10", "nod3d10")
@@ -1541,16 +1541,30 @@ class Session:
         self.check_environment("PROTON_FORCE_NVAPI", "forcenvapi")
         self.check_environment("PROTON_HIDE_APU", "hideapu")
 
+        #disable Proton Media Converter
+        self.env["PROTON_AUDIO_CONVERT"] = "0"
+        self.env["PROTON_AUDIO_CONVERT_BIN"] = "0"
+        self.env["PROTON_VIDEO_CONVERT"] = "0"
+        self.env["PROTON_DEMUX"] = "0"
+
         if "noesync" in self.compat_config:
             self.env.pop("WINEESYNC", "")
+            self.env["WINEESYNC"] = "0"
         else:
             self.env["WINEESYNC"] = "1"
+
+        if "nowmdecoration" in self.compat_config:
+            self.env["WINE_NO_WM_DECORATION"] = "1"
+
+        if "prefersdl" in self.compat_config:
+            self.env["WINE_PREFER_SDL"] = "1"
 
         if "noxim" not in self.compat_config:
             self.env.pop("WINE_ALLOW_XIM")
 
         if "nofsync" in self.compat_config:
             self.env.pop("WINEFSYNC", "")
+            self.env["WINEFSYNC"] = "0"
         else:
             self.env["WINEFSYNC"] = "1"
 

@@ -115,7 +115,11 @@ $(2)_LIBFLAGS$(3) = $$(foreach d,$$($(2)_DEPS$(3)),-L$$($$(d)_LIBDIR$(3))) \
 
 
 $(2)_ENV$(3) = \
+    WINEDEBUG="-all" \
+    WINEPREFIX="$$(OBJ)/pfx-wine$(3)" \
+    WINEDLLOVERRIDES="winex11.drv,winewayland.drv=d;winemenubuilder=d;" \
     CARGO_TARGET_$$(call toupper,$$(CARGO_TARGET_$(3)))_LINKER="$$(TARGET_$(4)$(3))-gcc" \
+    CARGO_TARGET_$$(call toupper,$$(CARGO_TARGET_$(3)))_RUSTFLAGS="$$(RUSTFLAGS)" \
     CCACHE_BASEDIR="$$(CCACHE_BASEDIR)" \
     STRIP="$$(STRIP)" \
     AR="$$(TARGET_$(4)$(3))-ar" \
