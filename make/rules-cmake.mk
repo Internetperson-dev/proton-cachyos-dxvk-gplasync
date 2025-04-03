@@ -14,6 +14,7 @@ $$(OBJ)/.$(1)-configure$(3): $$($(2)_SRC)/CMakeLists.txt
 
 	cd "$$($(2)_OBJ$(3))" && env $$($(2)_ENV$(3)) \
 	cmake "$$($(2)_SRC)" \
+	    -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
 	    -DCMAKE_INSTALL_PREFIX="$$($(2)_DST$(3))" \
 	    -DCMAKE_INSTALL_LIBDIR="lib$(subst 32,,$(3))" \
 	    -DCMAKE_BUILD_TYPE=plain \
