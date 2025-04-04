@@ -127,6 +127,9 @@ def make_default_pfx(default_pfx_dir, dist_dir):
     local_env["WINEPREFIX"] = default_pfx_dir
     local_env["WINEDEBUG"] = "-all"
     local_env["WINEDLLPATH"] = dll_path
+    local_env["WINEDLLOVERRIDES"] = "winex11.drv,winewayland.drv=d;winemenubuilder=d;"
+    local_env["WINEESYNC"] = "0"
+    local_env["WINEFSYNC"] = "0"
     runtime_args = []
 
     subprocess.run(runtime_args + ["/bin/bash", "-c",
