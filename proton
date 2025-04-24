@@ -490,7 +490,6 @@ class Proton:
         self.wine_bin = self.bin_dir + "wine"
         self.wine64_bin = self.bin_dir + "wine64"
         self.wineserver_bin = self.bin_dir + "wineserver"
-        self.dist_lock = FileLock(self.path("dist.lock"), timeout=-1)
 
     def path(self, d):
         return self.base_dir + d
@@ -865,6 +864,9 @@ class CompatData:
                     machine_guid = "\"" + str(uuid.uuid4()) + "\""
                 get_replace_reg_value(self.prefix_dir + "system.reg", "Software\\\\Microsoft\\\\Cryptography", "MachineGuid", machine_guid)
 
+            # Fix broken prefixes by replacing any faulty values in registry
+            get_replace_reg_value(self.prefix_dir + "user.reg", "Software\\\\Wine\\\\Drivers", "Graphics", "\"x11,wayland\"")
+
             self.migrate_user_paths()
 
             if not file_exists(self.prefix_dir + "/dosdevices/c:", follow_symlinks=False):
@@ -1008,6 +1010,15 @@ class CompatData:
                 try_copy(g_proton.lib64_dir + "vkd3d/libvkd3d-shader-1.dll", "drive_c/windows/system32",
                         prefix=self.prefix_dir, track_file=tracked_files, link_debug=True)
                 try_copy(g_proton.lib_dir + "vkd3d/libvkd3d-shader-1.dll", "drive_c/windows/syswow64",
+                        prefix=self.prefix_dir, track_file=tracked_files, link_debug=True)
+                #copy mingw DLL dependencies for libvkd3d
+                try_copy(g_proton.lib64_dir + "vkd3d/libgcc_s_seh-1.dll", "drive_c/windows/system32",
+                        prefix=self.prefix_dir, track_file=tracked_files, link_debug=True)
+                try_copy(g_proton.lib_dir + "vkd3d/libgcc_s_dw2-1.dll", "drive_c/windows/syswow64",
+                        prefix=self.prefix_dir, track_file=tracked_files, link_debug=True)
+                try_copy(g_proton.lib64_dir + "vkd3d/libwinpthread-1.dll", "drive_c/windows/system32",
+                        prefix=self.prefix_dir, track_file=tracked_files, link_debug=True)
+                try_copy(g_proton.lib_dir + "vkd3d/libwinpthread-1.dll", "drive_c/windows/syswow64",
                         prefix=self.prefix_dir, track_file=tracked_files, link_debug=True)
 
                 if use_wined3d:
@@ -1531,6 +1542,7 @@ class Session:
         self.check_environment("PROTON_NO_FSYNC", "nofsync")
         self.check_environment("PROTON_FORCE_LARGE_ADDRESS_AWARE", "forcelgadd")
         self.check_environment("PROTON_OLD_GL_STRING", "oldglstr")
+        self.check_environment("PROTON_ENABLE_WAYLAND", "enablewayland")
         self.check_environment("PROTON_HIDE_NVIDIA_GPU", "hidenvgpu")
         self.check_environment("PROTON_HIDE_VANGOGH_GPU", "hidevggpu")
         self.check_environment("PROTON_SET_GAME_DRIVE", "gamedrive")
@@ -1574,6 +1586,10 @@ class Session:
             self.env["MESA_EXTENSION_MAX_YEAR"] = "2003"
             #nvidia override
             self.env["__GL_ExtensionStringVersion"] = "17700"
+
+        if "enablewayland" in self.compat_config:
+            if self.env.get("WAYLAND_DISPLAY", False):
+                self.env.pop("DISPLAY", "")
 
         if os.environ.get("SteamGameId", 0) == "444930":
             self.env["MESA_EXTENSION_OVERRIDE"] = "-GL_ARB_bindless_texture"
@@ -1806,8 +1822,6 @@ if __name__ == "__main__":
 
     g_proton = Proton(os.path.dirname(sys.argv[0]))
 
-    g_proton.cleanup_legacy_dist()
-    g_proton.do_steampipe_fixups()
 
     g_compatdata = CompatData(os.environ["STEAM_COMPAT_DATA_PATH"])
 
@@ -1819,7 +1833,8 @@ if __name__ == "__main__":
     os.environ["PROTON_DLL_COPY"] = "*"
 
     if g_proton.missing_default_prefix():
-        g_proton.make_default_prefix()
+        log("Default prefix is missing, something is very wrong.")
+        sys.exit(1)
 
     g_session.init_session(sys.argv[1] != "runinprefix")
 
