@@ -57,8 +57,8 @@ CROSSLDFLAGS   += -Wl,--file-alignment,4096
 CFLAGS         ?= -O2 -march=nocona -mtune=core-avx2
 OPTIMIZE_FLAGS := $(CFLAGS) -mno-avx512f -mfpmath=sse
 SANITY_FLAGS   := -fwrapv -fno-strict-aliasing
-DEBUG_FLAGS    := -ggdb -ffunction-sections -fdata-sections -fno-omit-frame-pointer
-COMMON_FLAGS    = -s $(OPTIMIZE_FLAGS) $(SANITY_FLAGS) -ffile-prefix-map=$(CCACHE_BASEDIR)=.
+DEBUG_FLAGS    := -ffunction-sections -fdata-sections -fno-omit-frame-pointer
+COMMON_FLAGS    = $(DEBUG_FLAGS) -s $(OPTIMIZE_FLAGS) $(SANITY_FLAGS) -ffile-prefix-map=$(CCACHE_BASEDIR)=.
 COMMON_FLAGS32 := -mstackrealign
 COMMON_FLAGS64 := -mcmodel=small
 CARGO_BUILD_ARGS += --release
