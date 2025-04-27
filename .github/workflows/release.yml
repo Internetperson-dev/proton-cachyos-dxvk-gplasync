@@ -7,6 +7,10 @@ on:
     tags:
       - 'cachyos-*-*-slr'
 
+concurrency:
+  group: ${{ github.ref_name }}
+  cancel-in-progress: true
+
 jobs:
   build:
     name: Build
