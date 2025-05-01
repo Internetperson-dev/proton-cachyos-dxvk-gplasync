@@ -1277,9 +1277,9 @@ redist: all
 	rsync --delete -arx $(DST_BASE)/ $(REDIST_DIR)
 	cp $(PROTONFIXES_TARGET)/cabextract $(REDIST_DIR)/files/bin/
 	cp $(PROTONFIXES_TARGET)/unzip $(REDIST_DIR)/files/bin/
-	cp -a $(PROTONFIXES_TARGET)/libmspack.so $(REDIST_DIR)/files/lib64/
-	cp -a $(PROTONFIXES_TARGET)/libmspack.so.0 $(REDIST_DIR)/files/lib64/
-	cp $(PROTONFIXES_TARGET)/libmspack.so.0.1.0 $(REDIST_DIR)/files/lib64/
+	cp -a $(PROTONFIXES_TARGET)/libmspack.so $(REDIST_DIR)/files/lib/x86_64-linux-gnu/
+	cp -a $(PROTONFIXES_TARGET)/libmspack.so.0 $(REDIST_DIR)/files/lib/x86_64-linux-gnu/
+	cp $(PROTONFIXES_TARGET)/libmspack.so.0.1.0 $(REDIST_DIR)/files/lib/x86_64-linux-gnu/
 	mv $(REDIST_DIR) $(BUILD_NAME)
 	XZ_OPT="-9 -T$(J)" tar -cvJf $(BUILD_NAME).tar.xz $(BUILD_NAME)
 	sha512sum $(BUILD_NAME).tar.xz > $(BUILD_NAME).sha512sum
