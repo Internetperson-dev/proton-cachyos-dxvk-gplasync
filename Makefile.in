@@ -387,98 +387,6 @@ $(eval $(call rules-makedep,steamexe,x86_64))
 
 
 ##
-## piper
-##
-
-$(eval $(call rules-source,piper,$(SRCDIR)/piper))
-$(eval $(call rules-cmake,piper,x86_64,unix))
-
-$(OBJ)/.piper-x86_64-post-build:
-	mkdir -p $(PIPER_x86_64_DST)/lib/$(x86_64-unix_LIBDIR)
-	mv $(PIPER_x86_64_DST)/*.so* $(PIPER_x86_64_DST)/lib/$(x86_64-unix_LIBDIR)
-	mkdir -p $(DST_DIR)/share
-	cp -a $(PIPER_x86_64_DST)/{espeak-ng-data,libtashkeel_model.ort} $(DST_DIR)/share/
-	touch $@
-
-##
-## openfst
-##
-
-OPENFST_SOURCE_ARGS = \
-  --include src/include/fst/config.h.in \
-  --exclude aclocal.m4 \
-  --exclude ar-lib \
-  --exclude autom4te.cache \
-  --exclude compile \
-  --exclude config.guess \
-  --exclude config.h.in \
-  --exclude config.sub \
-  --exclude configure \
-  --exclude depcomp \
-  --exclude install-sh \
-  --exclude ltmain.sh \
-  --exclude m4/libtool.m4 \
-  --exclude m4/ltoptions.m4 \
-  --exclude m4/ltsugar.m4 \
-  --exclude m4/ltversion.m4 \
-  --exclude m4/lt~obsolete.m4 \
-  --exclude Makefile.in \
-  --exclude missing \
-  --exclude test-driver \
-
-OPENFST_CONFIGURE_ARGS = \
-  --enable-silent-rules \
-  --enable-static \
-  --disable-shared \
-  --enable-far \
-  --enable-ngram-fsts \
-  --enable-lookahead-fsts \
-  --with-pic \
-  --disable-bin \
-
-$(eval $(call rules-source,openfst,$(SRCDIR)/openfst))
-$(eval $(call rules-configure,openfst,i386,unix))
-$(eval $(call rules-configure,openfst,x86_64,unix))
-
-
-##
-## kaldi
-##
-
-KALDI_SOURCE_ARGS = \
-  --exclude src/**/CMakeLists.txt \
-
-KALDI_CMAKE_ARGS = \
-  -DKALDI_VERSION=5.5-proton \
-  -DBLAS_LIBRARIES=-lblas \
-  -DLAPACK_LIBRARIES=-llapack \
-  -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
-  -DBUILD_SHARED_LIBS=OFF \
-  -DKALDI_BUILD_TEST=OFF \
-  -DKALDI_BUILD_EXE=OFF \
-
-KALDI_DEPENDS = openfst
-
-$(eval $(call rules-source,kaldi,$(SRCDIR)/kaldi))
-$(eval $(call rules-cmake,kaldi,i386,unix))
-$(eval $(call rules-cmake,kaldi,x86_64,unix))
-
-
-##
-## vosk
-##
-
-VOSK_CMAKE_ARGS = \
-  -DBUILD_SHARED_LIBS=ON \
-
-VOSK_DEPENDS = openfst kaldi
-
-$(eval $(call rules-source,vosk,$(SRCDIR)/vosk-api))
-$(eval $(call rules-cmake,vosk,i386,unix))
-$(eval $(call rules-cmake,vosk,x86_64,unix))
-
-
-##
 ## wine
 ##
 
@@ -518,8 +426,7 @@ WINE_x86_64_AUTOCONF_ARGS += \
   VKD3D_PE_CFLAGS="-I$(VULKAN_HEADERS_x86_64_DST)/include -I$(VKD3D_x86_64_DST)/include/vkd3d" \
   VKD3D_PE_LIBS="-L$(VKD3D_x86_64_LIBDIR)/vkd3d/x86_64-windows -l:libvkd3d-1.dll -l:libvkd3d-shader-1.dll"
 
-WINE_DEPENDS = gst_orc gstreamer gst_base vkd3d ffmpeg openfst kaldi vosk
-WINE_x86_64_DEPENDS = piper
+WINE_DEPENDS = gst_orc gstreamer gst_base vkd3d ffmpeg
 
 WINE_i386_LIBDIR = $(WINE_i386_DST)/lib
 WINE_x86_64_LIBDIR = $(WINE_x86_64_DST)/lib
