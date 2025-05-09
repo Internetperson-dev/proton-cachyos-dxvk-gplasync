@@ -19,13 +19,13 @@ pushd "$here"/../openfst || exit 1
 popd || exit 1
 
 pushd "$here"/../protonfixes || exit 1
-    patch_cmd "$here"/protonfixes/0001-Makefile-fix-r1kab3rn-isms.patch
+    patch_cmd "$here"/protonfixes/protonfixes-0001-Makefile-fix-r1kab3rn-isms.patch
 popd || exit 1
 
 pushd "$here"/../glslang || exit 1
-    patch_cmd "$here"/glslang/renderdoc-1.36-gcc15-fix.patch
+    patch_cmd "$here"/glslang/glslang-renderdoc-1.36-gcc15-fix.patch
 popd || exit 1
 
 pushd "$here"/../vkd3d-proton || exit 1
-    patch_cmd "$here"/vkd3d-proton/0001-vkd3d-Load-amdxc64-when-using-AMD.patch
+    patch_cmd "$here"/vkd3d-proton/vkd3d-proton-0001-vkd3d-Load-amdxc64-when-using-AMD.patch
 popd || exit 1
