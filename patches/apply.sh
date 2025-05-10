@@ -20,6 +20,7 @@ popd || exit 1
 
 pushd "$here"/../protonfixes || exit 1
     patch_cmd "$here"/protonfixes/protonfixes-0001-Makefile-fix-r1kab3rn-isms.patch
+    patch_cmd "$here"/protonfixes/protonfixes-0001-Makefile-include-gettext-0.25-m4-directory-in-autore.patch
 popd || exit 1
 
 pushd "$here"/../glslang || exit 1
