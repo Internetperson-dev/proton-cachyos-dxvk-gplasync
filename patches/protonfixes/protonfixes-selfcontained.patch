@@ -1,0 +1,617 @@
+From 00276e08a2d004f29245d65b7ae69b8115b6d6f7 Mon Sep 17 00:00:00 2001
+From: Stelios Tsampas <loathingkernel@gmail.com>
+Date: Sun, 11 May 2025 13:07:04 +0300
+Subject: [PATCH 1/9] protonfixes: add setup function to add protonfixes binary
+ and library paths
+
+to the environment.
+---
+ __init__.py | 36 +++++++++++++++++++++++++-----------
+ 1 file changed, 25 insertions(+), 11 deletions(-)
+
+diff --git a/__init__.py b/__init__.py
+index edecf72..b1a230a 100644
+--- a/__init__.py
++++ b/__init__.py
+@@ -3,6 +3,7 @@
+ import os
+ import sys
+ import traceback
++from typing import Callable
+ 
+ from . import fix
+ from .logger import log
+@@ -12,6 +13,10 @@ sys.path.insert(
+     f'{os.path.dirname(os.path.realpath(__file__))}/_vendor',  # noqa: PTH120
+ )
+ 
++bin_dir: str = f'{os.path.dirname(os.path.realpath(__file__))}/files/bin'
++i386_lib_dir: str = f'{os.path.dirname(os.path.realpath(__file__))}/files/lib/i386-linux-gnu'
++x86_64_lib_dir: str = f'{os.path.dirname(os.path.realpath(__file__))}/files/lib/x86_64-linux-gnu'
++
+ 
+ def check_conditions() -> bool:
+     """Determine, if the actual game was executed and protonfixes isn't deactivated.
+@@ -38,15 +43,24 @@ def check_iscriptevaluator() -> bool:
+     return len(sys.argv) >= 3 and 'iscriptevaluator.exe' in sys.argv[2]
+ 
+ 
+-if check_iscriptevaluator():
+-    log.debug('Skipping fix execution. We are running "iscriptevaluator.exe".')
+-elif not check_conditions():
+-    log.warn('Skipping fix execution. We are probably running an unit test.')
+-else:
+-    try:
+-        fix.main()
++def setup(env: dict, bin_path_var: str, lib_path_var: str, func: Callable[[dict, str, str, str], None]) -> None:
++    func(env, bin_path_var, bin_dir, ':')
++    func(env, lib_path_var, f'{x86_64_lib_dir}:{i386_lib_dir}', ':')
++
++
++def execute() -> None:
++    if check_iscriptevaluator():
++        log.debug('Skipping fix execution. We are running "iscriptevaluator.exe".')
++    elif not check_conditions():
++        log.warn('Skipping fix execution. We are probably running an unit test.')
++    else:
++        try:
++            fix.main()
++
++        # Catch any exceptions and print a traceback
++        except Exception:
++            sys.stderr.write('ProtonFixes ' + traceback.format_exc())
++            sys.stderr.flush()
++
+ 
+-    # Catch any exceptions and print a traceback
+-    except Exception:
+-        sys.stderr.write('ProtonFixes ' + traceback.format_exc())
+-        sys.stderr.flush()
++__all__ = ["setup", "execute"]
+-- 
+2.49.0
+
+
+From 70331507d62af669db9ab8e31a4235fba515f441 Mon Sep 17 00:00:00 2001
+From: Stelios Tsampas <loathingkernel@gmail.com>
+Date: Sun, 11 May 2025 13:10:27 +0300
+Subject: [PATCH 2/9] Makefile: de-debian makefile
+
+---
+ Makefile | 11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index c94929e..7f2e17c 100644
+--- a/Makefile
++++ b/Makefile
+@@ -116,8 +116,7 @@ unzip-install: unzip-dist
+ $(OBJDIR)/.build-python-xlib-dist: | $(OBJDIR)
+ 	$(info :: Building python-xlib )
+ 	cd subprojects/python-xlib && \
+-	dpkg-source --before-build . && \
+-	dh_auto_build -O--buildsystem=pybuild
++	python setup.py build
+ 	touch $(@)
+ 
+ .PHONY: python-xlib-dist
+@@ -126,10 +125,10 @@ python-xlib-dist: $(OBJDIR)/.build-python-xlib-dist
+ 
+ python-xlib-install: python-xlib-dist
+ 	$(info :: Installing python-xlib )
+-	mkdir -p $(INSTALL_DIR)/_vendor && \
+-	cd subprojects/python-xlib && \
+-	dh_auto_install -O--buildsystem=pybuild && \
+-	find debian/tmp -type d -name Xlib | xargs -I {} mv {} $(INSTALL_DIR)/_vendor; \
++	mkdir $(INSTALL_DIR)/_vendor && \
++	cd subprojects/python-xlib && mkdir dist && \
++	python setup.py install --root=dist --optimize=1 --skip-build && \
++	find dist -type d -name Xlib | xargs -I {} mv {} $(INSTALL_DIR)/_vendor; \
+ 
+ $(OBJDIR):
+ 	@mkdir -p $(@)
+-- 
+2.49.0
+
+
+From 702deb935cb4e6afca0090feb63b33576363cba1 Mon Sep 17 00:00:00 2001
+From: Stelios Tsampas <loathingkernel@gmail.com>
+Date: Sun, 11 May 2025 14:15:49 +0300
+Subject: [PATCH 3/9] util: search for `winetricks` in PATH
+
+---
+ util.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/util.py b/util.py
+index b3417fd..6f0a0ac 100644
+--- a/util.py
++++ b/util.py
+@@ -321,7 +321,7 @@ def protontricks(verb: str) -> bool:
+         env['WINETRICKS_LATEST_VERSION_CHECK'] = 'disabled'
+         env['LD_PRELOAD'] = ''
+ 
+-        winetricks_bin = os.path.abspath(__file__).replace('util.py', 'winetricks')
++        winetricks_bin = 'winetricks'
+         winetricks_cmd = [winetricks_bin, '--unattended'] + verb.split(' ')
+         if verb == 'gui':
+             winetricks_cmd = [winetricks_bin, '--unattended']
+-- 
+2.49.0
+
+
+From d0bc3d3a5789daed93904e74f0e29ea79bfa739c Mon Sep 17 00:00:00 2001
+From: Stelios Tsampas <loathingkernel@gmail.com>
+Date: Sun, 11 May 2025 14:17:12 +0300
+Subject: [PATCH 4/9] Makefile: install binary dependencies under
+ `protonfixes/files`
+
+---
+ Makefile | 27 +++++++++++++--------------
+ 1 file changed, 13 insertions(+), 14 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 7f2e17c..7ce8864 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,6 +1,6 @@
+ OBJDIR  := builddir
+ 
+-PREFIX      ?= /usr
++PREFIX      ?= /files
+ DESTDIR     ?=
+ INSTALL_DIR ?= $(shell pwd)/dist/protonfixes
+ 
+@@ -25,7 +25,8 @@ protonfixes-install: protonfixes
+ 	cp      -r gamefixes-*  $(INSTALL_DIR)
+ 	cp      -r verbs        $(INSTALL_DIR)
+ 	cp         *.py         $(INSTALL_DIR)
+-	cp         winetricks   $(INSTALL_DIR)
++	mkdir   -p              $(INSTALL_DIR)/files/bin
++	cp         winetricks   $(INSTALL_DIR)/files/bin
+ 	cp         umu-database.csv   $(INSTALL_DIR)
+ 	rm $(INSTALL_DIR)/protonfixes_test.py
+ 
+@@ -36,8 +37,8 @@ protonfixes-install: protonfixes
+ $(OBJDIR)/.build-cabextract-dist: | $(OBJDIR)
+ 	$(info :: Building cabextract )
+ 	cd subprojects/libmspack/cabextract && \
+-	./autogen.sh && \
+-	./configure --prefix=/usr --sysconfdir=/etc --mandir=/usr/share/man && \
++	autoreconf -fiv -I /usr/share/gettext/m4/ && \
++	./configure --prefix=/files --libdir=/files/lib/x86_64-linux-gnu --sysconfdir=/etc --mandir=/files/share/man && \
+ 	make
+ 	touch $(@)
+ 
+@@ -49,8 +50,7 @@ cabextract-install: cabextract-dist
+ 	$(info :: Installing cabextract )
+ 	cd subprojects/libmspack/cabextract && \
+ 	make DESTDIR=$(INSTALL_DIR) install
+-	cp $(INSTALL_DIR)/usr/bin/cabextract $(INSTALL_DIR)
+-	rm -r $(INSTALL_DIR)/usr
++	rm -r $(INSTALL_DIR)/files/share
+ 
+ #
+ # libmspack
+@@ -60,7 +60,7 @@ $(OBJDIR)/.build-libmspack-dist: | $(OBJDIR)
+ 	$(info :: Building libmspack )
+ 	cd subprojects/libmspack/libmspack && \
+ 	autoreconf -vfi && \
+-	./configure --prefix=/usr --disable-static --sysconfdir=/etc --localstatedir=/var && \
++	./configure --prefix=/files --libdir=/files/lib/x86_64-linux-gnu --disable-static --sysconfdir=/etc --localstatedir=/var && \
+ 	sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool && \
+ 	make
+ 	touch $(@)
+@@ -73,9 +73,9 @@ libmspack-install: libmspack-dist
+ 	$(info :: Installing libmspack )
+ 	cd subprojects/libmspack/libmspack && \
+ 	make DESTDIR=$(INSTALL_DIR) install
+-	cp -d $(INSTALL_DIR)/usr/lib/libmspack* $(INSTALL_DIR)
+-	rm -r $(INSTALL_DIR)/usr
+-	rm    $(INSTALL_DIR)/libmspack.la
++	rm -r $(INSTALL_DIR)/files/include
++	rm -r $(INSTALL_DIR)/files/lib/x86_64-linux-gnu/pkgconfig
++	rm    $(INSTALL_DIR)/files/lib/x86_64-linux-gnu/libmspack.la
+ 
+ #
+ # unzip
+@@ -94,7 +94,7 @@ $(OBJDIR)/.build-unzip-dist: | $(OBJDIR)
+ 	$(info :: Building unzip )
+ 	cd subprojects/unzip && \
+ 	$(foreach pch, $(UNZIP_PATCHES),patch -Np1 -i debian/patches/$(pch) &&) \
+-	make -f unix/Makefile prefix=/usr D_USE_BZ2=-DUSE_BZIP2 L_BZ2=-lbz2 LF2="$(LDFLAGS)" CF="$(CFLAGS) -I. $(DEFINES)" unzips
++	make -f unix/Makefile D_USE_BZ2=-DUSE_BZIP2 L_BZ2=-lbz2 LF2="$(LDFLAGS)" CF="$(CFLAGS) -I. $(DEFINES)" unzips
+ 	touch $(@)
+ 
+ .PHONY: unzip-dist
+@@ -104,10 +104,9 @@ unzip-dist: $(OBJDIR)/.build-unzip-dist
+ unzip-install: unzip-dist
+ 	$(info :: Installing unzip )
+ 	cd subprojects/unzip && \
+-	make -f unix/Makefile prefix=$(INSTALL_DIR) install
++	make -f unix/Makefile prefix=$(INSTALL_DIR)/files install
+ 	# Post install
+-	cp -a $(INSTALL_DIR)/bin/unzip $(INSTALL_DIR)
+-	rm -r $(INSTALL_DIR)/bin $(INSTALL_DIR)/man
++	rm -r $(INSTALL_DIR)/files/man
+ 
+ #
+ # python-xlib
+-- 
+2.49.0
+
+
+From bc43c3506468b4853c1d063172daa1d108c90aab Mon Sep 17 00:00:00 2001
+From: Stelios Tsampas <loathingkernel@gmail.com>
+Date: Sun, 11 May 2025 14:46:32 +0300
+Subject: [PATCH 5/9] chore: add docstrings
+
+---
+ __init__.py | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/__init__.py b/__init__.py
+index b1a230a..0cd7918 100644
+--- a/__init__.py
++++ b/__init__.py
+@@ -44,11 +44,13 @@ def check_iscriptevaluator() -> bool:
+ 
+ 
+ def setup(env: dict, bin_path_var: str, lib_path_var: str, func: Callable[[dict, str, str, str], None]) -> None:
++    """Setup PATH and LD_LIBRARY_PATH to include protonfixes's binary and library paths"""
+     func(env, bin_path_var, bin_dir, ':')
+     func(env, lib_path_var, f'{x86_64_lib_dir}:{i386_lib_dir}', ':')
+ 
+ 
+ def execute() -> None:
++    """Execute protonfixes"""
+     if check_iscriptevaluator():
+         log.debug('Skipping fix execution. We are running "iscriptevaluator.exe".')
+     elif not check_conditions():
+-- 
+2.49.0
+
+
+From 1c264ccb060eb821626b917a6c296fc24bf06682 Mon Sep 17 00:00:00 2001
+From: Stelios Tsampas <loathingkernel@gmail.com>
+Date: Sun, 11 May 2025 16:47:25 +0300
+Subject: [PATCH 6/9] Makefile: copy subprojects to OBJDIR before building
+
+---
+ Makefile | 39 ++++++++++++++++++++++++---------------
+ 1 file changed, 24 insertions(+), 15 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 7ce8864..6416374 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,6 +1,6 @@
+-OBJDIR  := builddir
+-
++OBJDIR      := builddir
+ PREFIX      ?= /files
++LIBDIR       = $(PREFIX)/lib/x86_64-linux-gnu
+ DESTDIR     ?=
+ INSTALL_DIR ?= $(shell pwd)/dist/protonfixes
+ 
+@@ -30,15 +30,22 @@ protonfixes-install: protonfixes
+ 	cp         umu-database.csv   $(INSTALL_DIR)
+ 	rm $(INSTALL_DIR)/protonfixes_test.py
+ 
++#
++# libmspack and cabextract
++#
++
++$(OBJDIR)/libmspack: | $(OBJDIR)
++	rsync -arx --delete subprojects/libmspack $(OBJDIR)
++
+ #
+ # cabextract
+ #
+ 
+-$(OBJDIR)/.build-cabextract-dist: | $(OBJDIR)
++$(OBJDIR)/.build-cabextract-dist: | $(OBJDIR)/libmspack
+ 	$(info :: Building cabextract )
+-	cd subprojects/libmspack/cabextract && \
++	cd $(OBJDIR)/libmspack/cabextract && \
+ 	autoreconf -fiv -I /usr/share/gettext/m4/ && \
+-	./configure --prefix=/files --libdir=/files/lib/x86_64-linux-gnu --sysconfdir=/etc --mandir=/files/share/man && \
++	./configure --prefix=$(PREFIX) --libdir=$(LIBDIR) && \
+ 	make
+ 	touch $(@)
+ 
+@@ -48,7 +55,7 @@ cabextract-dist: $(OBJDIR)/.build-cabextract-dist
+ 
+ cabextract-install: cabextract-dist
+ 	$(info :: Installing cabextract )
+-	cd subprojects/libmspack/cabextract && \
++	cd $(OBJDIR)/libmspack/cabextract && \
+ 	make DESTDIR=$(INSTALL_DIR) install
+ 	rm -r $(INSTALL_DIR)/files/share
+ 
+@@ -56,11 +63,11 @@ cabextract-install: cabextract-dist
+ # libmspack
+ #
+ 
+-$(OBJDIR)/.build-libmspack-dist: | $(OBJDIR)
++$(OBJDIR)/.build-libmspack-dist: | $(OBJDIR)/libmspack
+ 	$(info :: Building libmspack )
+-	cd subprojects/libmspack/libmspack && \
++	cd $(OBJDIR)/libmspack/libmspack && \
+ 	autoreconf -vfi && \
+-	./configure --prefix=/files --libdir=/files/lib/x86_64-linux-gnu --disable-static --sysconfdir=/etc --localstatedir=/var && \
++	./configure --prefix=/files --libdir=/files/lib/x86_64-linux-gnu --disable-static && \
+ 	sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool && \
+ 	make
+ 	touch $(@)
+@@ -71,7 +78,7 @@ libmspack-dist: $(OBJDIR)/.build-libmspack-dist
+ 
+ libmspack-install: libmspack-dist
+ 	$(info :: Installing libmspack )
+-	cd subprojects/libmspack/libmspack && \
++	cd $(OBJDIR)/libmspack/libmspack && \
+ 	make DESTDIR=$(INSTALL_DIR) install
+ 	rm -r $(INSTALL_DIR)/files/include
+ 	rm -r $(INSTALL_DIR)/files/lib/x86_64-linux-gnu/pkgconfig
+@@ -92,7 +99,8 @@ UNZIP_PATCHES := $(shell cat subprojects/unzip/debian/patches/series)
+ 
+ $(OBJDIR)/.build-unzip-dist: | $(OBJDIR)
+ 	$(info :: Building unzip )
+-	cd subprojects/unzip && \
++	rsync -arx --delete subprojects/unzip $(OBJDIR)
++	cd $(OBJDIR)/unzip && \
+ 	$(foreach pch, $(UNZIP_PATCHES),patch -Np1 -i debian/patches/$(pch) &&) \
+ 	make -f unix/Makefile D_USE_BZ2=-DUSE_BZIP2 L_BZ2=-lbz2 LF2="$(LDFLAGS)" CF="$(CFLAGS) -I. $(DEFINES)" unzips
+ 	touch $(@)
+@@ -103,7 +111,7 @@ unzip-dist: $(OBJDIR)/.build-unzip-dist
+ 
+ unzip-install: unzip-dist
+ 	$(info :: Installing unzip )
+-	cd subprojects/unzip && \
++	cd $(OBJDIR)/unzip && \
+ 	make -f unix/Makefile prefix=$(INSTALL_DIR)/files install
+ 	# Post install
+ 	rm -r $(INSTALL_DIR)/files/man
+@@ -114,7 +122,8 @@ unzip-install: unzip-dist
+ 
+ $(OBJDIR)/.build-python-xlib-dist: | $(OBJDIR)
+ 	$(info :: Building python-xlib )
+-	cd subprojects/python-xlib && \
++	rsync -arx --delete subprojects/python-xlib $(OBJDIR)
++	cd $(OBJDIR)/python-xlib && \
+ 	python setup.py build
+ 	touch $(@)
+ 
+@@ -124,8 +133,8 @@ python-xlib-dist: $(OBJDIR)/.build-python-xlib-dist
+ 
+ python-xlib-install: python-xlib-dist
+ 	$(info :: Installing python-xlib )
+-	mkdir $(INSTALL_DIR)/_vendor && \
+-	cd subprojects/python-xlib && mkdir dist && \
++	mkdir $(INSTALL_DIR)/_vendor
++	cd $(OBJDIR)/python-xlib && mkdir dist && \
+ 	python setup.py install --root=dist --optimize=1 --skip-build && \
+ 	find dist -type d -name Xlib | xargs -I {} mv {} $(INSTALL_DIR)/_vendor; \
+ 
+-- 
+2.49.0
+
+
+From 08154937e4f1b000062c9c7f93719b4aefed267a Mon Sep 17 00:00:00 2001
+From: Stelios Tsampas <loathingkernel@gmail.com>
+Date: Sun, 11 May 2025 20:00:49 +0300
+Subject: [PATCH 7/9] Makefile: make out-of-source building possible.
+
+It is now possible to use the BUILD variable to point make in the location
+to use for building the binary dependencies. When installing the DIST env
+variable can point make where to install protonfixes
+
+Example usage in proton's makefile:
+
+```
+PROTONFIXES_OBJ = ./obj-protonfixes
+PROTONFIXES_TARGET := $(addprefix $(DST_BASE)/,protonfixes)
+$(PROTONFIXES_TARGET): $(addprefix $(SRCDIR)/,protonfixes)
+
+$(OBJ)/.build-protonfixes:
+	cd $(SRCDIR)/protonfixes && \
+	env BUILD=$(PROTONFIXES_OBJ) make
+	touch $(@)
+
+$(PROTONFIXES_TARGET): $(OBJ)/.build-protonfixes
+	cd $(SRCDIR)/protonfixes && \
+	env BUILD=$(PROTONFIXES_OBJ) DIST=$(PROTONFIXES_TARGET) make install
+```
+---
+ Makefile | 57 ++++++++++++++++++++++++++++++--------------------------
+ 1 file changed, 31 insertions(+), 26 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 6416374..9315c93 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,8 +1,13 @@
+-OBJDIR      := builddir
+-PREFIX      ?= /files
+-LIBDIR       = $(PREFIX)/lib/x86_64-linux-gnu
+-DESTDIR     ?=
+-INSTALL_DIR ?= $(shell pwd)/dist/protonfixes
++BUILD ?= build
++DIST  ?= dist
++
++OBJDIR := $(shell realpath $(BUILD))
++DSTDIR := $(shell realpath $(DIST))
++TARGET_DIR := $(DSTDIR)/protonfixes
++
++BASEDIR       := /files
++i386_LIBDIR    = $(BASEDIR)/lib/i386-linux-gnu
++x86_64_LIBDIR  = $(BASEDIR)/lib/x86_64-linux-gnu
+ 
+ .PHONY: all
+ 
+@@ -21,14 +26,14 @@ install: protonfixes-install cabextract-install libmspack-install unzip-install
+ 
+ protonfixes-install: protonfixes
+ 	$(info :: Installing protonfixes )
+-	install -d              $(INSTALL_DIR)
+-	cp      -r gamefixes-*  $(INSTALL_DIR)
+-	cp      -r verbs        $(INSTALL_DIR)
+-	cp         *.py         $(INSTALL_DIR)
+-	mkdir   -p              $(INSTALL_DIR)/files/bin
+-	cp         winetricks   $(INSTALL_DIR)/files/bin
+-	cp         umu-database.csv   $(INSTALL_DIR)
+-	rm $(INSTALL_DIR)/protonfixes_test.py
++	install -d              $(TARGET_DIR)
++	cp      -r gamefixes-*  $(TARGET_DIR)
++	cp      -r verbs        $(TARGET_DIR)
++	cp         *.py         $(TARGET_DIR)
++	mkdir   -p              $(TARGET_DIR)$(BASEDIR)/bin
++	cp         winetricks   $(TARGET_DIR)$(BASEDIR)/bin
++	cp         umu-database.csv   $(TARGET_DIR)
++	rm $(TARGET_DIR)/protonfixes_test.py
+ 
+ #
+ # libmspack and cabextract
+@@ -45,7 +50,7 @@ $(OBJDIR)/.build-cabextract-dist: | $(OBJDIR)/libmspack
+ 	$(info :: Building cabextract )
+ 	cd $(OBJDIR)/libmspack/cabextract && \
+ 	autoreconf -fiv -I /usr/share/gettext/m4/ && \
+-	./configure --prefix=$(PREFIX) --libdir=$(LIBDIR) && \
++	./configure --prefix=$(BASEDIR) --libdir=$(x86_64_LIBDIR) && \
+ 	make
+ 	touch $(@)
+ 
+@@ -56,8 +61,8 @@ cabextract-dist: $(OBJDIR)/.build-cabextract-dist
+ cabextract-install: cabextract-dist
+ 	$(info :: Installing cabextract )
+ 	cd $(OBJDIR)/libmspack/cabextract && \
+-	make DESTDIR=$(INSTALL_DIR) install
+-	rm -r $(INSTALL_DIR)/files/share
++	make DESTDIR=$(TARGET_DIR) install
++	rm -r $(TARGET_DIR)$(BASEDIR)/share
+ 
+ #
+ # libmspack
+@@ -67,7 +72,7 @@ $(OBJDIR)/.build-libmspack-dist: | $(OBJDIR)/libmspack
+ 	$(info :: Building libmspack )
+ 	cd $(OBJDIR)/libmspack/libmspack && \
+ 	autoreconf -vfi && \
+-	./configure --prefix=/files --libdir=/files/lib/x86_64-linux-gnu --disable-static && \
++	./configure --prefix=$(BASEDIR) --libdir=$(x86_64_LIBDIR) --disable-static && \
+ 	sed -i -e 's/ -shared / -Wl,-O1,--as-needed\0/g' libtool && \
+ 	make
+ 	touch $(@)
+@@ -79,10 +84,10 @@ libmspack-dist: $(OBJDIR)/.build-libmspack-dist
+ libmspack-install: libmspack-dist
+ 	$(info :: Installing libmspack )
+ 	cd $(OBJDIR)/libmspack/libmspack && \
+-	make DESTDIR=$(INSTALL_DIR) install
+-	rm -r $(INSTALL_DIR)/files/include
+-	rm -r $(INSTALL_DIR)/files/lib/x86_64-linux-gnu/pkgconfig
+-	rm    $(INSTALL_DIR)/files/lib/x86_64-linux-gnu/libmspack.la
++	make DESTDIR=$(TARGET_DIR) install
++	rm -r $(TARGET_DIR)$(BASEDIR)/include
++	rm -r $(TARGET_DIR)$(BASEDIR)/lib/x86_64-linux-gnu/pkgconfig
++	rm    $(TARGET_DIR)$(BASEDIR)/lib/x86_64-linux-gnu/libmspack.la
+ 
+ #
+ # unzip
+@@ -102,7 +107,7 @@ $(OBJDIR)/.build-unzip-dist: | $(OBJDIR)
+ 	rsync -arx --delete subprojects/unzip $(OBJDIR)
+ 	cd $(OBJDIR)/unzip && \
+ 	$(foreach pch, $(UNZIP_PATCHES),patch -Np1 -i debian/patches/$(pch) &&) \
+-	make -f unix/Makefile D_USE_BZ2=-DUSE_BZIP2 L_BZ2=-lbz2 LF2="$(LDFLAGS)" CF="$(CFLAGS) -I. $(DEFINES)" unzips
++	make -f unix/Makefile prefix=$(BASEDIR) D_USE_BZ2=-DUSE_BZIP2 L_BZ2=-lbz2 LF2="$(LDFLAGS)" CF="$(CFLAGS) -I. $(DEFINES)" unzips
+ 	touch $(@)
+ 
+ .PHONY: unzip-dist
+@@ -112,9 +117,9 @@ unzip-dist: $(OBJDIR)/.build-unzip-dist
+ unzip-install: unzip-dist
+ 	$(info :: Installing unzip )
+ 	cd $(OBJDIR)/unzip && \
+-	make -f unix/Makefile prefix=$(INSTALL_DIR)/files install
++	make -f unix/Makefile prefix=$(TARGET_DIR)$(BASEDIR) install
+ 	# Post install
+-	rm -r $(INSTALL_DIR)/files/man
++	rm -r $(TARGET_DIR)$(BASEDIR)/man
+ 
+ #
+ # python-xlib
+@@ -133,10 +138,10 @@ python-xlib-dist: $(OBJDIR)/.build-python-xlib-dist
+ 
+ python-xlib-install: python-xlib-dist
+ 	$(info :: Installing python-xlib )
+-	mkdir $(INSTALL_DIR)/_vendor
++	mkdir $(TARGET_DIR)/_vendor
+ 	cd $(OBJDIR)/python-xlib && mkdir dist && \
+ 	python setup.py install --root=dist --optimize=1 --skip-build && \
+-	find dist -type d -name Xlib | xargs -I {} mv {} $(INSTALL_DIR)/_vendor; \
++	find dist -type d -name Xlib | xargs -I {} mv {} $(TARGET_DIR)/_vendor;
+ 
+ $(OBJDIR):
+ 	@mkdir -p $(@)
+-- 
+2.49.0
+
+
+From 13ee65c69d0c008207495fbca7bfdcdc3cae8879 Mon Sep 17 00:00:00 2001
+From: Stelios Tsampas <loathingkernel@gmail.com>
+Date: Mon, 12 May 2025 19:58:39 +0300
+Subject: [PATCH 8/9] Makefile: also install `winetricks` under `protonfixes/`
+
+Umu looks for `winetricks` in `<proton>/protonfixes/winetricks` and
+uses the absolute path. Satisfy it for now by also copying it there.
+
+Revert once https://github.com/Open-Wine-Components/umu-launcher/pull/459
+is merged.
+---
+ Makefile | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/Makefile b/Makefile
+index 9315c93..5e382a9 100644
+--- a/Makefile
++++ b/Makefile
+@@ -32,6 +32,7 @@ protonfixes-install: protonfixes
+ 	cp         *.py         $(TARGET_DIR)
+ 	mkdir   -p              $(TARGET_DIR)$(BASEDIR)/bin
+ 	cp         winetricks   $(TARGET_DIR)$(BASEDIR)/bin
++	cp         winetricks   $(TARGET_DIR)
+ 	cp         umu-database.csv   $(TARGET_DIR)
+ 	rm $(TARGET_DIR)/protonfixes_test.py
+ 
+-- 
+2.49.0
+
+
+From c7549afb95603767af31d7f26046dfacf3db0ab0 Mon Sep 17 00:00:00 2001
+From: Stelios Tsampas <loathingkernel@gmail.com>
+Date: Mon, 12 May 2025 18:09:15 +0300
+Subject: [PATCH 9/9] Makefile: skip python-xlib
+
+---
+ Makefile | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 5e382a9..81b75ca 100644
+--- a/Makefile
++++ b/Makefile
+@@ -11,12 +11,12 @@ x86_64_LIBDIR  = $(BASEDIR)/lib/x86_64-linux-gnu
+ 
+ .PHONY: all
+ 
+-all: cabextract-dist libmspack-dist unzip-dist python-xlib-dist
++all: cabextract-dist libmspack-dist unzip-dist
+ 
+ .PHONY: install
+ 
+ # Note: `export DEB_BUILD_MAINT_OPTIONS=hardening=-format` is required for the unzip target
+-install: protonfixes-install cabextract-install libmspack-install unzip-install python-xlib-install
++install: protonfixes-install cabextract-install libmspack-install unzip-install
+ 
+ #
+ # protonfixes
+-- 
+2.49.0
+
