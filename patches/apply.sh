@@ -19,7 +19,7 @@ pushd "$here"/../openfst || exit 1
 popd || exit 1
 
 pushd "$here"/../protonfixes || exit 1
-    patch_cmd "$here"/protonfixes/protonfixes-selfcontained.patch
+    patch_cmd "$here"/protonfixes/protonfixes-0001-Makefile-skip-python-xlib.patch
 popd || exit 1
 
 pushd "$here"/../glslang || exit 1
