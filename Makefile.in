@@ -134,6 +134,7 @@ LIBXKBCOMMON_MESON_ARGS := \
 	-Denable-xkbregistry=true \
 	-Denable-docs=false \
 	-Denable-x11=false \
+	-Denable-bash-completion=false \
 	-Denable-wayland=false
 
 $(eval $(call rules-source,libxkbcommon,$(SRCDIR)/libxkbcommon))
