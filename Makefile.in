@@ -750,7 +750,7 @@ WINE_AUTOCONF_ARGS = \
 WINE_AUTOCONF_ARGS += \
   --with-x \
   --with-gstreamer \
-  --without-ffmpeg \
+  --with-ffmpeg \
   --without-oss \
 
 WINE_x86_64_AUTOCONF_ARGS = \
