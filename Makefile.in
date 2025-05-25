@@ -458,6 +458,12 @@ FFMPEG_CONFIGURE_ARGS := \
 
 FFMPEG_CONFIGURE_ARGS += \
 	$(FFMPEG_LTO) \
+	--enable-decoders \
+	--enable-demuxers \
+	--enable-hwaccels \
+	--enable-parsers \
+	--enable-filters \
+	--enable-bsfs \
 	--enable-decoder=indeo5 \
 	--enable-decoder=adpcm_ms \
 	--enable-decoder=mpegvideo \
