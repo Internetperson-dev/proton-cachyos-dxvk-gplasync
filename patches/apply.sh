@@ -13,10 +13,6 @@ pushd "$here"/../openfst || exit 1
     patch_cmd "$here"/openfst/openfst-18e94e63870ebcf79ebb42b7035cd3cb626ec090.patch
 popd || exit 1
 
-pushd "$here"/../protonfixes || exit 1
-    patch_cmd "$here"/protonfixes/protonfixes-0001-Makefile-skip-python-xlib.patch
-popd || exit 1
-
 pushd "$here"/../glslang || exit 1
     patch_cmd "$here"/glslang/glslang-renderdoc-1.36-gcc15-fix.patch
 popd || exit 1
