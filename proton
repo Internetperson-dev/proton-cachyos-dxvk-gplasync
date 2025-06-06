@@ -1476,7 +1476,6 @@ class Session:
 
         self.env["GST_PLUGIN_SYSTEM_PATH_1_0"] = g_proton.lib_dir + "x86_64-linux-gnu/gstreamer-1.0" + ":" + g_proton.lib_dir + "i386-linux-gnu/gstreamer-1.0"
         self.env["WINE_GST_REGISTRY_DIR"] = g_compatdata.path("gstreamer-1.0/")
-        self.env["GST_GL_WINDOW"] = "surfaceless"
 
         if "STEAM_COMPAT_MEDIA_PATH" in os.environ:
             old_audiofoz_path = os.environ["STEAM_COMPAT_MEDIA_PATH"] + "/audio.foz"
