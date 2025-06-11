@@ -5,6 +5,7 @@
 import fcntl
 import array
 import fnmatch
+import hashlib
 import os
 import shutil
 import errno
@@ -17,6 +18,7 @@ import shlex
 import uuid
 import json
 import time
+import urllib.request
 
 from ctypes import CDLL
 from ctypes import CFUNCTYPE
@@ -592,6 +594,7 @@ class CompatData:
         self.tracked_files_file = self.path("tracked_files")
         self.prefix_lock = FileLock(self.path("pfx.lock"), timeout=-1)
         self.old_machine_guid = None
+        self.fsr4_files = ("amdxcffx64", )
 
     def path(self, d):
         return self.base_dir + d
@@ -910,6 +913,36 @@ class CompatData:
                 os.remove(old)
                 os.symlink(src=link, dst=old)
 
+    __fsr4_version = "67A4D2BC10ad000"
+    __fsr4_urls = {
+        "drive_c/windows/system32/amdxcffx64.dll": "https://download.amd.com/dir/bin/amdxcffx64.dll/" + __fsr4_version + "/amdxcffx64.dll"
+    }
+    __fsr4_sha1sum = {
+        "drive_c/windows/system32/amdxcffx64.dll": "2757844346cfb2bf7210573df732dd3786afd77f",
+    }
+
+    def check_fsr4(self, dst, prefix):
+        if not file_exists(prefix + dst, follow_symlinks=True):
+            return False
+        else:
+            with open(os.path.realpath(prefix + dst), "rb") as f:
+                data = f.read()
+            if hashlib.sha1(data).hexdigest() == self.__fsr4_sha1sum[dst]:
+                return True
+            # Delete file if it failed validation
+            os.unlink(prefix + dst)
+            return False
+
+    def setup_fsr4(self):
+        for f in self.fsr4_files:
+            dst = "drive_c/windows/system32/" + f + ".dll"
+            if not self.check_fsr4(dst, prefix=self.prefix_dir):
+                try:
+                    urllib.request.urlretrieve(self.__fsr4_urls[dst], self.prefix_dir + dst)
+                except Exception as e:
+                    if file_exists(self.prefix_dir + dst, follow_symlinks=False):
+                        os.unlink(self.prefix_dir + dst)
+
     def setup_prefix(self):
         with self.prefix_lock:
             if file_exists(self.version_file, follow_symlinks=True):
@@ -1138,6 +1171,9 @@ class CompatData:
                     if not file_exists(self.prefix_dir + dst, follow_symlinks=False):
                         tracked_files.write(dst + '\n')
                     self.create_symlink(self.prefix_dir + dst, g_proton.lib_dir + "wine/icu/i386-windows/" + f + ".dll")
+
+                if os.environ.get("PROTON_FSR4_UPGRADE", "0") != "0":
+                    self.setup_fsr4()
 
                 # If the user requested the NVAPI be available, copy it into place.
                 # If they didn't, clean up any stray nvapi DLLs.
@@ -1601,6 +1637,7 @@ class Session:
         self.check_environment("PROTON_DISABLE_NVAPI", "disablenvapi")
         self.check_environment("PROTON_FORCE_NVAPI", "forcenvapi")
         self.check_environment("PROTON_HIDE_APU", "hideapu")
+        self.check_environment("PROTON_FSR4_UPGRADE", "fsr4upgrade")
         self.check_environment("PROTON_NATIVE_AGS", "nativeags")
 
         if "noesync" in self.compat_config:
@@ -1784,6 +1821,9 @@ class Session:
         if "PROTON_CRASH_REPORT_DIR" in self.env:
             self.env["WINE_CRASH_REPORT_DIR"] = self.env["PROTON_CRASH_REPORT_DIR"]
 
+        if "fsr4upgrade" in self.compat_config:
+            self.env["FSR4_UPGRADE"] = "1"
+
         # NVIDIA software may check for the "DriverStore" by querying the
         # NGXCore\NGXPath registry key via `D3DDDI_QUERYREGISTRY_SERVICEKEY` for
         # a given adapter. In the case where this path cannot be found, the
@@ -1827,6 +1867,13 @@ class Session:
                         self.log_file.write("User settings " + var + ": " + used_user_settings[var] + "\n")
                     if var in self.env:
                         self.log_file.write("Effective " + var + ": " + self.env[var] + "\n")
+
+                if "fsr4upgrade" in self.compat_config:
+                    files = (g_compatdata.check_fsr4("drive_c/windows/system32/" + f + ".dll", prefix=g_compatdata.prefix_dir) for f in g_compatdata.fsr4_files)
+                    if all(files):
+                        self.log_file.write("INFO: Automatic FSR4 upgrade enabled!\n")
+                    else:
+                        self.log_file.write("ERROR: Failed to download amdxcffx64.dll!\n")
 
                 # check for low fd limit
                 _soft_limit, hard_limit = resource.getrlimit(resource.RLIMIT_NOFILE)
