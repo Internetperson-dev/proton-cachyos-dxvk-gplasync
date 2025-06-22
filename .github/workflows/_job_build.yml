@@ -35,10 +35,11 @@ jobs:
       with:
         fetch-depth: 0
         fetch-tags: true
-        submodules: recursive
+        submodules: false
 
     - name: Patch
       run: |
+        git submodule update --init --filter=tree:0 --recursive
         ./patches/apply.sh
         mkdir ./build
 
