@@ -546,7 +546,6 @@ class Proton:
         self.wine_bin = self.bin_dir + "wine"
         self.wine64_bin = self.bin_dir + "wine64"
         self.wineserver_bin = self.bin_dir + "wineserver"
-        self.dist_lock = FileLock(self.path("dist.lock"), timeout=-1)
 
         if os.environ.get("PROTON_USE_WOW64", None) == "1" or not file_exists(self.wine_bin, follow_symlinks=True):
             self.bin_dir = self.path("files/bin-wow64/")
@@ -2012,10 +2011,18 @@ if __name__ == "__main__":
         log("No compat data path?")
         sys.exit(1)
 
+    # unset steam runtime (scout) stuff for native version
+    if "STEAM_RUNTIME" in os.environ:
+        del os.environ["STEAM_RUNTIME"]
+        if "SYSTEM_LD_LIBRARY_PATH" in os.environ:
+            os.environ["LD_LIBRARY_PATH"] = os.environ["SYSTEM_LD_LIBRARY_PATH"]
+            log("Restoring LD_LIBRARY_PATH to: " + str(os.environ["LD_LIBRARY_PATH"]))
+        if "SYSTEM_PATH" in os.environ:
+            os.environ["PATH"] = os.environ["SYSTEM_PATH"]
+            log("Restoring PATH to: " + str(os.environ["PATH"]))
+
     g_proton = Proton(os.path.dirname(sys.argv[0]))
 
-    g_proton.cleanup_legacy_dist()
-    g_proton.do_steampipe_fixups()
 
     g_compatdata = CompatData(os.environ["STEAM_COMPAT_DATA_PATH"])
 
@@ -2027,7 +2034,8 @@ if __name__ == "__main__":
     os.environ["PROTON_DLL_COPY"] = "*"
 
     if g_proton.missing_default_prefix():
-        g_proton.make_default_prefix()
+        log("Default prefix is missing, something is very wrong.")
+        sys.exit(1)
 
     g_session.init_session(sys.argv[1] != "runinprefix")
 
