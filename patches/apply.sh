@@ -19,12 +19,4 @@ popd || exit 1
 
 pushd "$here"/../vkd3d-proton || exit 1
     patch_cmd "$here"/vkd3d-proton/vkd3d-proton-0001-vkd3d-Load-amdxc64-when-using-AMD.patch
-    patch_cmd "$here"/vkd3d-proton/vkd3d-proton-nvapi-rtxmg-ser.patch
-popd || exit 1
-pushd "$here"/../vkd3d-proton/subprojects/dxil-spirv || exit 1
-	patch_cmd "$here"/vkd3d-proton/dxil-spirv-nvshader.patch
-popd || exit 1
-
-pushd "$here"/../dxvk-nvapi || exit 1
-    patch_cmd "$here"/dxvk-nvapi/dxvk-nvapi-rtxmg-ser.patch
 popd || exit 1
