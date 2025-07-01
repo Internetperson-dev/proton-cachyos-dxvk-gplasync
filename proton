@@ -595,6 +595,7 @@ class CompatData:
         self.prefix_lock = FileLock(self.path("pfx.lock"), timeout=-1)
         self.old_machine_guid = None
         self.fsr4_files = ("amdxcffx64", )
+        self.fsr4_version_file = self.path("fsr4_version")
 
     def path(self, d):
         return self.base_dir + d
@@ -913,35 +914,38 @@ class CompatData:
                 os.remove(old)
                 os.symlink(src=link, dst=old)
 
-    __fsr4_version = "67A4D2BC10ad000"
+    __fsr4_version = "67D435F7d97000"
     __fsr4_urls = {
         "drive_c/windows/system32/amdxcffx64.dll": "https://download.amd.com/dir/bin/amdxcffx64.dll/" + __fsr4_version + "/amdxcffx64.dll"
     }
-    __fsr4_sha1sum = {
-        "drive_c/windows/system32/amdxcffx64.dll": "2757844346cfb2bf7210573df732dd3786afd77f",
-    }
 
-    def check_fsr4(self, dst, prefix):
-        if not file_exists(prefix + dst, follow_symlinks=True):
+    def check_fsr4(self, dst):
+        if not file_exists(self.prefix_dir + dst, follow_symlinks=True):
             return False
         else:
-            with open(os.path.realpath(prefix + dst), "rb") as f:
-                data = f.read()
-            if hashlib.sha1(data).hexdigest() == self.__fsr4_sha1sum[dst]:
+            if not os.path.isfile(self.fsr4_version_file):
+                return False
+            with open(self.fsr4_version_file, "r") as fsr4_version:
+                version = fsr4_version.read()
+            if version == self.__fsr4_version:
                 return True
-            # Delete file if it failed validation
-            os.unlink(prefix + dst)
+            # Delete files if they failed validation
+            os.unlink(self.fsr4_version_file)
+            os.unlink(self.prefix_dir + dst)
             return False
 
     def setup_fsr4(self):
         for f in self.fsr4_files:
             dst = "drive_c/windows/system32/" + f + ".dll"
-            if not self.check_fsr4(dst, prefix=self.prefix_dir):
+            if not self.check_fsr4(dst):
                 try:
                     urllib.request.urlretrieve(self.__fsr4_urls[dst], self.prefix_dir + dst)
                 except Exception as e:
                     if file_exists(self.prefix_dir + dst, follow_symlinks=False):
                         os.unlink(self.prefix_dir + dst)
+                else:
+                    with open(self.fsr4_version_file, "w") as fsr4_version:
+                        fsr4_version.write(self.__fsr4_version)
 
     def setup_prefix(self):
         with self.prefix_lock:
@@ -1885,7 +1889,7 @@ class Session:
                         self.log_file.write("Effective " + var + ": " + self.env[var] + "\n")
 
                 if "fsr4" in self.compat_config:
-                    files = (g_compatdata.check_fsr4("drive_c/windows/system32/" + f + ".dll", prefix=g_compatdata.prefix_dir) for f in g_compatdata.fsr4_files)
+                    files = (g_compatdata.check_fsr4("drive_c/windows/system32/" + f + ".dll") for f in g_compatdata.fsr4_files)
                     if all(files):
                         self.log_file.write("INFO: Automatic FSR4 upgrade enabled!\n")
                     else:
