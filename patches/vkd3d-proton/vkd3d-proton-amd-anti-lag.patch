@@ -1,0 +1,639 @@
+From db437715f96ad02f5fcd900af46f864b9bee8efb Mon Sep 17 00:00:00 2001
+From: Hans-Kristian Arntzen <post@arntzen-software.no>
+Date: Wed, 25 Jun 2025 13:22:57 +0200
+Subject: [PATCH 1/3] vkd3d: Use atomic load-store for low-latency frame ID.
+
+Be a little more robust if ::Present() is called concurrently
+with low-latency API updates.
+
+Signed-off-by: Hans-Kristian Arntzen <post@arntzen-software.no>
+---
+ libs/vkd3d/device_vkd3d_ext.c |  3 ++-
+ libs/vkd3d/swapchain.c        |  3 ++-
+ libs/vkd3d/vkd3d_private.h    | 14 +++++++++-----
+ 3 files changed, 13 insertions(+), 7 deletions(-)
+
+diff --git a/libs/vkd3d/device_vkd3d_ext.c b/libs/vkd3d/device_vkd3d_ext.c
+index 1b522bca..5262d978 100644
+--- a/libs/vkd3d/device_vkd3d_ext.c
++++ b/libs/vkd3d/device_vkd3d_ext.c
+@@ -704,7 +704,8 @@ static HRESULT STDMETHODCALLTYPE d3d12_low_latency_device_SetLatencyMarker(d3d_l
+                 WARN("PRESENT_START_NV is non-monotonic %"PRIu64" <= %"PRIu64".\n",
+                         internal_frame_id, device->frame_markers.present);
+             }
+-            device->frame_markers.present = internal_frame_id;
++            vkd3d_atomic_uint64_store_explicit(
++                    &device->frame_markers.present, internal_frame_id, vkd3d_memory_order_release);
+             break;
+         default:
+             break;
+diff --git a/libs/vkd3d/swapchain.c b/libs/vkd3d/swapchain.c
+index 24be771d..e0767a7d 100644
+--- a/libs/vkd3d/swapchain.c
++++ b/libs/vkd3d/swapchain.c
+@@ -1031,7 +1031,8 @@ static HRESULT STDMETHODCALLTYPE dxgi_vk_swap_chain_Present(IDXGIVkSwapChain2 *i
+     request->dxgi_hdr_metadata = chain->user.dxgi_hdr_metadata;
+     request->modifies_hdr_metadata = chain->user.modifies_hdr_metadata;
+     request->begin_frame_time_ns = chain->user.begin_frame_time_ns;
+-    request->low_latency_frame_id = chain->queue->device->frame_markers.present;
++    request->low_latency_frame_id = vkd3d_atomic_uint64_load_explicit(
++            &chain->queue->device->frame_markers.present, vkd3d_memory_order_acquire);
+ 
+     if (chain->debug_latency && request->low_latency_frame_id)
+         INFO("Presenting with low latency frame ID: %"PRIu64".\n", request->low_latency_frame_id);
+diff --git a/libs/vkd3d/vkd3d_private.h b/libs/vkd3d/vkd3d_private.h
+index 521e6e07..d1f5b0bc 100644
+--- a/libs/vkd3d/vkd3d_private.h
++++ b/libs/vkd3d/vkd3d_private.h
+@@ -4885,16 +4885,20 @@ struct vkd3d_device_swapchain_info
+     uint32_t swapchain_count;
+     bool mode;
+     bool boost;
+-    uint32_t minimum_us;
++    union
++    {
++        uint32_t minimum_us; /* LL2 variant */
++        uint32_t max_fps; /* AntiLag variant */
++    };
+ };
+ 
+ #define VKD3D_LOW_LATENCY_FRAME_ID_STRIDE 10000
+ struct vkd3d_device_frame_markers
+ {
+-    uint64_t simulation;
+-    uint64_t render;
+-    uint64_t present;
+-    uint64_t consumed_present_id;
++    UINT64 simulation;
++    UINT64 render;
++    UINT64 present;
++    UINT64 consumed_present_id;
+ };
+ 
+ /* ID3D12Device */
+-- 
+2.50.0
+
+
+From 997b6d732e904a6612c0caa79253baab27963c6d Mon Sep 17 00:00:00 2001
+From: Hans-Kristian Arntzen <post@arntzen-software.no>
+Date: Wed, 25 Jun 2025 13:25:55 +0200
+Subject: [PATCH 2/3] vkd3d: Implement IAmdExtAntiLagApi
+
+Signed-off-by: Hans-Kristian Arntzen <post@arntzen-software.no>
+---
+ include/vkd3d_device_vkd3d_ext.idl |  41 ++++++++++
+ libs/vkd3d/device.c                |  22 +++++
+ libs/vkd3d/device_vkd3d_ext.c      | 125 +++++++++++++++++++++++++++++
+ libs/vkd3d/swapchain.c             |  67 +++++++++++++++-
+ libs/vkd3d/vkd3d_private.h         |   3 +
+ libs/vkd3d/vulkan_procs.h          |   3 +
+ 6 files changed, 260 insertions(+), 1 deletion(-)
+
+diff --git a/include/vkd3d_device_vkd3d_ext.idl b/include/vkd3d_device_vkd3d_ext.idl
+index 9f45819a..1a485673 100644
+--- a/include/vkd3d_device_vkd3d_ext.idl
++++ b/include/vkd3d_device_vkd3d_ext.idl
+@@ -96,3 +96,44 @@ interface ID3D12DeviceExt1 : ID3D12DeviceExt
+     HRESULT CreateResourceFromBorrowedHandle(const D3D12_RESOURCE_DESC1 *desc, UINT64 vk_handle, ID3D12Resource **resource);
+     HRESULT GetVulkanQueueInfoEx(ID3D12CommandQueue *queue, VkQueue *vk_queue, UINT32 *vk_queue_index, UINT32 *vk_queue_flags, UINT32 *vk_queue_family);
+ }
++
++/* 1:1 implementation of ffx_antilag2_dx12.h */
++struct AmdAntiLagAPIData_v1
++{
++    UINT uiSize;
++    UINT uiVersion;
++    UINT eMode;
++    const char *sControlStr;
++    UINT uiControlStrLength;
++    UINT maxFPS;
++};
++
++
++struct AmdAntiLagAPIData_v2
++{
++    UINT uiSize;
++    UINT uiVersion;
++    struct
++    {
++        UINT unused0               : 1;
++        UINT unused1               : 1;
++        UINT signalFgFrameType     : 1;
++        UINT isInterpolatedFrame   : 1;
++        UINT signalGetUserInputIdx : 1;
++        UINT signalEndOfFrameIdx   : 1;
++        UINT reserved              :26;
++    } flags;
++    UINT64 iiFrameIdx;
++    UINT64 uiiReserved[19];
++};
++
++[
++    uuid(44085fbe-e839-40c5-bf38-0ebc5ab4d0a6),
++    object,
++    local,
++    pointer_default(unique)
++]
++interface IAmdExtAntiLagApi : IUnknown
++{
++    HRESULT UpdateAntiLagState(void *pData);
++}
+diff --git a/libs/vkd3d/device.c b/libs/vkd3d/device.c
+index faaf70b9..42e0ad17 100644
+--- a/libs/vkd3d/device.c
++++ b/libs/vkd3d/device.c
+@@ -129,6 +129,7 @@ static const struct vkd3d_optional_extension_info optional_device_extensions[] =
+     VK_EXTENSION(AMD_DEVICE_COHERENT_MEMORY, AMD_device_coherent_memory),
+     VK_EXTENSION(AMD_SHADER_CORE_PROPERTIES, AMD_shader_core_properties),
+     VK_EXTENSION(AMD_SHADER_CORE_PROPERTIES_2, AMD_shader_core_properties2),
++    VK_EXTENSION(AMD_ANTI_LAG, AMD_anti_lag),
+     /* NV extensions */
+     VK_EXTENSION(NV_OPTICAL_FLOW, NV_optical_flow),
+     VK_EXTENSION(NV_SHADER_SM_BUILTINS, NV_shader_sm_builtins),
+@@ -2144,6 +2145,12 @@ static void vkd3d_physical_device_info_init(struct vkd3d_physical_device_info *i
+         vk_prepend_struct(&info->features2, &info->cooperative_matrix2_features_nv);
+     }
+ 
++    if (vulkan_info->AMD_anti_lag)
++    {
++        info->anti_lag_amd.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ANTI_LAG_FEATURES_AMD;
++        vk_prepend_struct(&info->features2, &info->anti_lag_amd);
++    }
++
+     VK_CALL(vkGetPhysicalDeviceFeatures2(device->vk_physical_device, &info->features2));
+     VK_CALL(vkGetPhysicalDeviceProperties2(device->vk_physical_device, &info->properties2));
+ 
+@@ -3926,6 +3933,7 @@ void d3d12_device_return_query_pool(struct d3d12_device *device, const struct vk
+ extern ULONG STDMETHODCALLTYPE d3d12_device_vkd3d_ext_AddRef(d3d12_device_vkd3d_ext_iface *iface);
+ extern ULONG STDMETHODCALLTYPE d3d12_dxvk_interop_device_AddRef(d3d12_dxvk_interop_device_iface *iface);
+ extern ULONG STDMETHODCALLTYPE d3d12_low_latency_device_AddRef(ID3DLowLatencyDevice *iface);
++extern ULONG STDMETHODCALLTYPE d3d12_amd_ext_anti_lag_AddRef(IAmdExtAntiLagApi *iface);
+ 
+ HRESULT STDMETHODCALLTYPE d3d12_device_QueryInterface(d3d12_device_iface *iface,
+         REFIID riid, void **object)
+@@ -3981,6 +3989,18 @@ HRESULT STDMETHODCALLTYPE d3d12_device_QueryInterface(d3d12_device_iface *iface,
+         return S_OK;
+     }
+ 
++    if (IsEqualGUID(riid, &IID_IAmdExtAntiLagApi))
++    {
++        if (device->device_info.anti_lag_amd.antiLag)
++        {
++            d3d12_amd_ext_anti_lag_AddRef(&device->IAmdExtAntiLagApi_iface);
++            *object = &device->IAmdExtAntiLagApi_iface;
++            return S_OK;
++        }
++        else
++            return E_NOINTERFACE;
++    }
++
+     if (IsEqualGUID(riid, &IID_ID3DDestructionNotifier))
+     {
+         ID3DDestructionNotifier_AddRef(&device->destruction_notifier.ID3DDestructionNotifier_iface);
+@@ -9546,6 +9566,7 @@ static void d3d12_device_replace_vtable(struct d3d12_device *device)
+ extern CONST_VTBL struct ID3D12DeviceExt1Vtbl d3d12_device_vkd3d_ext_vtbl;
+ extern CONST_VTBL struct ID3D12DXVKInteropDevice1Vtbl d3d12_dxvk_interop_device_vtbl;
+ extern CONST_VTBL struct ID3DLowLatencyDeviceVtbl d3d_low_latency_device_vtbl;
++extern CONST_VTBL struct IAmdExtAntiLagApiVtbl d3d_amd_ext_anti_lag_vtbl;
+ 
+ static void vkd3d_scratch_pool_init(struct d3d12_device *device)
+ {
+@@ -9638,6 +9659,7 @@ static HRESULT d3d12_device_init(struct d3d12_device *device,
+     device->ID3D12DeviceExt_iface.lpVtbl = &d3d12_device_vkd3d_ext_vtbl;
+     device->ID3D12DXVKInteropDevice_iface.lpVtbl = &d3d12_dxvk_interop_device_vtbl;
+     device->ID3DLowLatencyDevice_iface.lpVtbl = &d3d_low_latency_device_vtbl;
++    device->IAmdExtAntiLagApi_iface.lpVtbl = &d3d_amd_ext_anti_lag_vtbl;
+ 
+     if ((rc = rwlock_init(&device->vertex_input_lock)))
+     {
+diff --git a/libs/vkd3d/device_vkd3d_ext.c b/libs/vkd3d/device_vkd3d_ext.c
+index 5262d978..51e6dda8 100644
+--- a/libs/vkd3d/device_vkd3d_ext.c
++++ b/libs/vkd3d/device_vkd3d_ext.c
+@@ -763,3 +763,128 @@ CONST_VTBL struct ID3DLowLatencyDeviceVtbl d3d_low_latency_device_vtbl =
+     d3d12_low_latency_device_SetLatencyMarker,
+     d3d12_low_latency_device_GetLatencyInfo
+ };
++
++static inline struct d3d12_device *d3d12_device_from_IAmdExtAntiLag(IAmdExtAntiLagApi *iface)
++{
++    return CONTAINING_RECORD(iface, struct d3d12_device, IAmdExtAntiLagApi_iface);
++}
++
++ULONG STDMETHODCALLTYPE d3d12_amd_ext_anti_lag_AddRef(IAmdExtAntiLagApi *iface)
++{
++    struct d3d12_device *device = d3d12_device_from_IAmdExtAntiLag(iface);
++    TRACE("iface %p", iface);
++    return d3d12_device_add_ref(device);
++}
++
++static ULONG STDMETHODCALLTYPE d3d12_amd_ext_anti_lag_Release(IAmdExtAntiLagApi *iface)
++{
++    struct d3d12_device *device = d3d12_device_from_IAmdExtAntiLag(iface);
++    TRACE("iface %p", iface);
++    return d3d12_device_release(device);
++}
++
++static HRESULT STDMETHODCALLTYPE d3d12_amd_ext_anti_lag_QueryInterface(IAmdExtAntiLagApi *iface,
++        REFIID iid, void **out)
++{
++    struct d3d12_device *device = d3d12_device_from_IAmdExtAntiLag(iface);
++    TRACE("iface %p, iid %s, out %p.\n", iface, debugstr_guid(iid), out);
++    return d3d12_device_QueryInterface(&device->ID3D12Device_iface, iid, out);
++}
++
++static HRESULT STDMETHODCALLTYPE d3d12_amd_ext_anti_lag_UpdateAntiLagState(
++        IAmdExtAntiLagApi *iface, void *pData)
++{
++    struct d3d12_device *device = d3d12_device_from_IAmdExtAntiLag(iface);
++    const struct vkd3d_vk_device_procs *vk_procs = &device->vk_procs;
++    const struct AmdAntiLagAPIData_v1 *v1 = pData;
++    const struct AmdAntiLagAPIData_v2 *v2 = pData;
++
++    /* Don't try to use LL2 and AMD anti-lag at the same time. */
++    if (!device->device_info.anti_lag_amd.antiLag || device->vk_info.NV_low_latency2)
++        return S_OK;
++
++    /* The assumption is that this function cannot be called concurrently,
++     * but it probably can be called concurrently with e.g. Present and ExecuteCommandList. */
++
++    if (!pData)
++    {
++        struct vkd3d_queue_timeline_trace_cookie cookie = { 0 };
++        VkAntiLagPresentationInfoAMD present_info;
++        VkAntiLagDataAMD anti_lag;
++
++        /* Purely inserts a delay. The API wrapper never seems to pass down anything useful for
++         * frame IDs, so just invent them ourselves. */
++
++        memset(&anti_lag, 0, sizeof(anti_lag));
++        memset(&present_info, 0, sizeof(present_info));
++        anti_lag.sType = VK_STRUCTURE_TYPE_ANTI_LAG_DATA_AMD;
++        anti_lag.mode = device->swapchain_info.mode ? VK_ANTI_LAG_MODE_ON_AMD : VK_ANTI_LAG_MODE_OFF_AMD;
++        anti_lag.maxFPS = device->swapchain_info.max_fps;
++        anti_lag.pPresentationInfo = &present_info;
++
++        present_info.sType = VK_STRUCTURE_TYPE_ANTI_LAG_PRESENTATION_INFO_AMD;
++        present_info.frameIndex = device->frame_markers.present + 1;
++        present_info.stage = VK_ANTI_LAG_STAGE_INPUT_AMD;
++
++        TRACE("AntiLag input timeline, frame %"PRIu64".\n", present_info.frameIndex);
++        if (device->swapchain_info.mode)
++            cookie = vkd3d_queue_timeline_trace_register_low_latency_sleep(&device->queue_timeline_trace, present_info.frameIndex);
++        VK_CALL(vkAntiLagUpdateAMD(device->vk_device, &anti_lag));
++        if (device->swapchain_info.mode)
++            vkd3d_queue_timeline_trace_complete_low_latency_sleep(&device->queue_timeline_trace, cookie);
++
++        /* Any present after this point will map to this frameIndex. */
++        vkd3d_atomic_uint64_store_explicit(&device->frame_markers.present,
++                present_info.frameIndex, vkd3d_memory_order_release);
++    }
++    else if (v1->uiVersion == 1)
++    {
++        /* Mode setting for v1. */
++        if (v1->uiSize != sizeof(*v1))
++        {
++            ERR("Invalid size for API structure.\n");
++            return E_INVALIDARG;
++        }
++
++        spinlock_acquire(&device->low_latency_swapchain_spinlock);
++        device->swapchain_info.max_fps = v1->maxFPS;
++        device->swapchain_info.mode = v1->eMode == 1;
++        spinlock_release(&device->low_latency_swapchain_spinlock);
++        TRACE("AntiLag v1 config: MaxFPS = %u, Enabled = %u\n",
++                device->swapchain_info.max_fps, device->swapchain_info.mode);
++    }
++    else if (v2->uiVersion == 2)
++    {
++        /* Mode setting for v2. */
++        if (v2->uiSize != sizeof(*v2))
++        {
++            ERR("Invalid size for API structure.\n");
++            return E_INVALIDARG;
++        }
++
++        /* This structure only seems to flag certain things, and does not modify the mode?
++         * There isn't much we can do with this struct right now I think other than logging ... */
++        TRACE("AntiLag v2 config: Frame = %"PRIu64", signalFgFrameType = %u, isInterpolatedFrame = %u, signalGetUserInputIdx = %u, signalEndOfFrameIdx = %u\n",
++                v2->iiFrameIdx,
++                v2->flags.signalFgFrameType, v2->flags.isInterpolatedFrame,
++                v2->flags.signalGetUserInputIdx, v2->flags.signalEndOfFrameIdx);
++    }
++    else
++    {
++        ERR("Invalid uiVersion %u.\n", v1->uiVersion);
++        return E_INVALIDARG;
++    }
++
++    return S_OK;
++}
++
++CONST_VTBL struct IAmdExtAntiLagApiVtbl d3d_amd_ext_anti_lag_vtbl =
++{
++    /* IUnknown methods */
++    d3d12_amd_ext_anti_lag_QueryInterface,
++    d3d12_amd_ext_anti_lag_AddRef,
++    d3d12_amd_ext_anti_lag_Release,
++
++    /* IAmdExtAntiLag methods */
++    d3d12_amd_ext_anti_lag_UpdateAntiLagState
++};
+diff --git a/libs/vkd3d/swapchain.c b/libs/vkd3d/swapchain.c
+index e0767a7d..09f3da1e 100644
+--- a/libs/vkd3d/swapchain.c
++++ b/libs/vkd3d/swapchain.c
+@@ -56,6 +56,12 @@ struct low_latency_state
+     uint32_t minimum_interval_us;
+ };
+ 
++struct anti_lag_state
++{
++    bool mode;
++    uint32_t max_fps;
++};
++
+ struct dxgi_vk_swap_chain_present_request
+ {
+     uint64_t begin_frame_time_ns;
+@@ -66,7 +72,11 @@ struct dxgi_vk_swap_chain_present_request
+     DXGI_VK_HDR_METADATA dxgi_hdr_metadata;
+     uint32_t swap_interval;
+     uint64_t low_latency_frame_id;
+-    struct low_latency_state requested_low_latency_state;
++    union
++    {
++        struct low_latency_state requested_low_latency_state;
++        struct anti_lag_state requested_anti_lag_state;
++    };
+     bool low_latency_update_requested;
+     bool modifies_hdr_metadata;
+ };
+@@ -1048,6 +1058,13 @@ static HRESULT STDMETHODCALLTYPE dxgi_vk_swap_chain_Present(IDXGIVkSwapChain2 *i
+         low_latency_enable = chain->requested_low_latency_state.mode;
+         pthread_mutex_unlock(&chain->present.low_latency_state_update_lock);
+     }
++    else if (chain->queue->device->device_info.anti_lag_amd.antiLag)
++    {
++        spinlock_acquire(&chain->queue->device->low_latency_swapchain_spinlock);
++        request->requested_anti_lag_state.mode = chain->queue->device->swapchain_info.mode;
++        request->requested_anti_lag_state.max_fps = chain->queue->device->swapchain_info.max_fps;
++        spinlock_release(&chain->queue->device->low_latency_swapchain_spinlock);
++    }
+     else
+     {
+         memset(&request->requested_low_latency_state, 0, sizeof(request->requested_low_latency_state));
+@@ -1715,6 +1732,49 @@ static void dxgi_vk_swap_chain_low_latency_state_update(struct dxgi_vk_swap_chai
+     }
+ }
+ 
++static void dxgi_vk_swap_chain_anti_lag_state_update(struct dxgi_vk_swap_chain *chain)
++{
++    struct d3d12_device *device = chain->queue->device;
++
++    if (chain->request.low_latency_frame_id)
++    {
++        const struct vkd3d_vk_device_procs *vk_procs = &device->vk_procs;
++        VkAntiLagPresentationInfoAMD present_info;
++        VkAntiLagDataAMD anti_lag;
++        bool should_signal;
++
++        memset(&anti_lag, 0, sizeof(anti_lag));
++        memset(&present_info, 0, sizeof(present_info));
++        anti_lag.sType = VK_STRUCTURE_TYPE_ANTI_LAG_DATA_AMD;
++        anti_lag.mode = chain->request.requested_anti_lag_state.mode ?
++                VK_ANTI_LAG_MODE_ON_AMD : VK_ANTI_LAG_MODE_OFF_AMD;
++        anti_lag.maxFPS = chain->request.requested_anti_lag_state.max_fps;
++        anti_lag.pPresentationInfo = &present_info;
++
++        present_info.sType = VK_STRUCTURE_TYPE_ANTI_LAG_PRESENTATION_INFO_AMD;
++        present_info.frameIndex = chain->request.low_latency_frame_id;
++        present_info.stage = VK_ANTI_LAG_STAGE_PRESENT_AMD;
++
++        /* Don't submit the same frame marker over and over. This will probably matter for frame-gen. */
++        spinlock_acquire(&chain->queue->device->low_latency_swapchain_spinlock);
++        should_signal = present_info.frameIndex > device->frame_markers.consumed_present_id;
++        if (should_signal)
++            device->frame_markers.consumed_present_id = present_info.frameIndex;
++        spinlock_release(&chain->queue->device->low_latency_swapchain_spinlock);
++
++        /* There is no strong requirement that frame index is submitted monotonically,
++         * so it should be fine to drop the lock while calling UpdateAMD.
++         * We don't want to hold a lock while calling AntiLagUpdateAMD.
++         * This is only a theoretical problem if there are two physical queues that concurrently call
++         * QueuePresentKHR. */
++        if (should_signal)
++        {
++            TRACE("AntiLag present timeline, frame %"PRIu64".\n", present_info.frameIndex);
++            VK_CALL(vkAntiLagUpdateAMD(device->vk_device, &anti_lag));
++        }
++    }
++}
++
+ static void dxgi_vk_swap_chain_recreate_swapchain_in_present_task(struct dxgi_vk_swap_chain *chain)
+ {
+     const struct vkd3d_vk_device_procs *vk_procs = &chain->queue->device->vk_procs;
+@@ -2370,6 +2430,11 @@ static void dxgi_vk_swap_chain_present_iteration(struct dxgi_vk_swap_chain *chai
+     if (!dxgi_vk_swap_chain_submit_blit(chain, swapchain_index))
+         return;
+ 
++    /* Only mark anti-lag update after we have submitted blit
++     * so we don't get wrong associations. */
++    if (chain->queue->device->device_info.anti_lag_amd.antiLag)
++        dxgi_vk_swap_chain_anti_lag_state_update(chain);
++
+     memset(&present_info, 0, sizeof(present_info));
+     present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+     present_info.pSwapchains = &chain->present.vk_swapchain;
+diff --git a/libs/vkd3d/vkd3d_private.h b/libs/vkd3d/vkd3d_private.h
+index d1f5b0bc..faa27cf4 100644
+--- a/libs/vkd3d/vkd3d_private.h
++++ b/libs/vkd3d/vkd3d_private.h
+@@ -181,6 +181,7 @@ struct vkd3d_vulkan_info
+     bool AMD_device_coherent_memory;
+     bool AMD_shader_core_properties;
+     bool AMD_shader_core_properties2;
++    bool AMD_anti_lag;
+     /* NV device extensions */
+     bool NV_optical_flow;
+     bool NV_shader_sm_builtins;
+@@ -4809,6 +4810,7 @@ struct vkd3d_physical_device_info
+     VkPhysicalDeviceOpacityMicromapFeaturesEXT opacity_micromap_features;
+     VkPhysicalDeviceShaderFloat8FeaturesEXT shader_float8_features;
+     VkPhysicalDeviceCooperativeMatrix2FeaturesNV cooperative_matrix2_features_nv;
++    VkPhysicalDeviceAntiLagFeaturesAMD anti_lag_amd;
+ 
+     VkPhysicalDeviceFeatures2 features2;
+ 
+@@ -5164,6 +5166,7 @@ struct d3d12_device
+     d3d12_device_vkd3d_ext_iface ID3D12DeviceExt_iface;
+     d3d12_dxvk_interop_device_iface ID3D12DXVKInteropDevice_iface;
+     d3d_low_latency_device_iface ID3DLowLatencyDevice_iface;
++    IAmdExtAntiLagApi IAmdExtAntiLagApi_iface;
+     LONG refcount;
+ 
+     VkDevice vk_device;
+diff --git a/libs/vkd3d/vulkan_procs.h b/libs/vkd3d/vulkan_procs.h
+index 7ee4e007..5032e6fe 100644
+--- a/libs/vkd3d/vulkan_procs.h
++++ b/libs/vkd3d/vulkan_procs.h
+@@ -387,6 +387,9 @@ VK_DEVICE_EXT_PFN(vkCmdBuildMicromapsEXT)
+ VK_DEVICE_EXT_PFN(vkCmdWriteMicromapsPropertiesEXT)
+ VK_DEVICE_EXT_PFN(vkCmdCopyMicromapEXT)
+ 
++/* VK_AMD_anti_lag */
++VK_DEVICE_EXT_PFN(vkAntiLagUpdateAMD)
++
+ #undef VK_INSTANCE_PFN
+ #undef VK_INSTANCE_EXT_PFN
+ #undef VK_DEVICE_PFN
+-- 
+2.50.0
+
+
+From b26a83a983f18a0da0b342d8e827c5cd6775833d Mon Sep 17 00:00:00 2001
+From: Hans-Kristian Arntzen <post@arntzen-software.no>
+Date: Wed, 25 Jun 2025 14:54:20 +0200
+Subject: [PATCH 3/3] frog: Add some test stimulus.
+
+---
+ demos/demo_xcb.h | 24 ++++++++++++++++++++++++
+ demos/gears.c    | 35 +++++++++++++++++++++--------------
+ 2 files changed, 45 insertions(+), 14 deletions(-)
+
+diff --git a/demos/demo_xcb.h b/demos/demo_xcb.h
+index 5e414985..32a4793a 100644
+--- a/demos/demo_xcb.h
++++ b/demos/demo_xcb.h
+@@ -32,6 +32,7 @@
+ #include <dlfcn.h>
+ #include <sys/eventfd.h>
+ #include <stdio.h>
++#include "vkd3d_device_vkd3d_ext.h"
+ 
+ struct demo
+ {
+@@ -73,6 +74,7 @@ struct demo_swapchain
+ {
+     IDXGIVkSwapChain *swapchain;
+     IDXGIVkSurfaceFactory *surface_factory;
++    IAmdExtAntiLagApi *anti_lag;
+     int fd;
+ };
+ 
+@@ -281,6 +283,8 @@ static inline void demo_swapchain_destroy(struct demo_swapchain *swapchain)
+ {
+     IDXGIVkSwapChain_Release(swapchain->swapchain);
+     IDXGIVkSurfaceFactory_Release(swapchain->surface_factory);
++    if (swapchain->anti_lag)
++        IAmdExtAntiLagApi_Release(swapchain->anti_lag);
+     /* FD 0 is never returned as a valid fd. */
+     if (swapchain->fd > 0)
+         close(swapchain->fd);
+@@ -418,6 +422,7 @@ static inline struct demo_swapchain *demo_swapchain_create(ID3D12CommandQueue *c
+     IDXGIVkSwapChainFactory *factory = NULL;
+     struct demo_swapchain *swapchain;
+     DXGI_SWAP_CHAIN_DESC1 swap_desc;
++    ID3D12Device *device;
+ 
+     swapchain = calloc(1, sizeof(*swapchain));
+ 
+@@ -446,6 +451,23 @@ static inline struct demo_swapchain *demo_swapchain_create(ID3D12CommandQueue *c
+     swapchain->fd = (int)(intptr_t)IDXGIVkSwapChain_GetFrameLatencyEvent(swapchain->swapchain);
+     acquire_eventfd(swapchain->fd);
+ 
++    ID3D12CommandQueue_GetDevice(command_queue, &IID_ID3D12Device, (void **)&device);
++    if (FAILED(ID3D12Device_QueryInterface(device, &IID_IAmdExtAntiLagApi, (void **)&swapchain->anti_lag)))
++        swapchain->anti_lag = NULL;
++    ID3D12Device_Release(device);
++
++    if (swapchain->anti_lag)
++    {
++        struct AmdAntiLagAPIData_v1 v1;
++        memset(&v1, 0, sizeof(v1));
++        v1.uiVersion = 1;
++        v1.uiSize = sizeof(v1);
++        v1.eMode = 1;
++        v1.maxFPS = 0;
++        IAmdExtAntiLagApi_UpdateAntiLagState(swapchain->anti_lag, &v1);
++        IAmdExtAntiLagApi_UpdateAntiLagState(swapchain->anti_lag, NULL);
++    }
++
+     if (factory)
+         IDXGIVkSwapChainFactory_Release(factory);
+     return swapchain;
+@@ -475,6 +497,8 @@ static inline ID3D12Resource *demo_swapchain_get_back_buffer(struct demo_swapcha
+ static inline void demo_swapchain_present(struct demo_swapchain *swapchain)
+ {
+     IDXGIVkSwapChain_Present(swapchain->swapchain, 1, 0, NULL);
++    if (swapchain->anti_lag)
++        IAmdExtAntiLagApi_UpdateAntiLagState(swapchain->anti_lag, NULL);
+     acquire_eventfd(swapchain->fd);
+ }
+ 
+diff --git a/demos/gears.c b/demos/gears.c
+index 3eb3b3bb..f90b8628 100644
+--- a/demos/gears.c
++++ b/demos/gears.c
+@@ -187,16 +187,19 @@ static void cxg_populate_command_list(struct cx_gears *cxg, unsigned int rt_idx)
+     ID3D12GraphicsCommandList_IASetIndexBuffer(command_list, &cxg->ibv);
+     ID3D12GraphicsCommandList_IASetVertexBuffers(command_list, 0, 2, cxg->vbv);
+ 
+-    for (i = 0; i < ARRAY_SIZE(cxg->draws); ++i)
++    for (int j = 0; j < 4000; j++)
+     {
+-        ID3D12GraphicsCommandList_DrawIndexedInstanced(command_list, cxg->draws[i].flat_index_count,
+-                1, cxg->draws[i].flat_index_idx, cxg->draws[i].vertex_idx, i);
++        for (i = 0; i < ARRAY_SIZE(cxg->draws); ++i)
++        {
++            ID3D12GraphicsCommandList_DrawIndexedInstanced(command_list, cxg->draws[i].flat_index_count,
++                    1, cxg->draws[i].flat_index_idx, cxg->draws[i].vertex_idx, i);
+ 
+-        ID3D12GraphicsCommandList_SetPipelineState(command_list, cxg->pipeline_state_smooth);
+-        ID3D12GraphicsCommandList_DrawIndexedInstanced(command_list, cxg->draws[i].smooth_index_count,
+-                1, cxg->draws[i].smooth_index_idx, cxg->draws[i].vertex_idx, i);
++            ID3D12GraphicsCommandList_SetPipelineState(command_list, cxg->pipeline_state_smooth);
++            ID3D12GraphicsCommandList_DrawIndexedInstanced(command_list, cxg->draws[i].smooth_index_count,
++                    1, cxg->draws[i].smooth_index_idx, cxg->draws[i].vertex_idx, i);
+ 
+-        ID3D12GraphicsCommandList_SetPipelineState(command_list, cxg->pipeline_state_flat);
++            ID3D12GraphicsCommandList_SetPipelineState(command_list, cxg->pipeline_state_flat);
++        }
+     }
+ 
+     barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+@@ -210,19 +213,23 @@ static void cxg_populate_command_list(struct cx_gears *cxg, unsigned int rt_idx)
+ static void cxg_wait_for_previous_frame(struct cx_gears *cxg)
+ {
+     struct cxg_fence *fence = &cxg->fence;
+-    const UINT64 v = fence->value;
++    UINT64 v = ++fence->value;
+     HRESULT hr;
+ 
+     hr = ID3D12CommandQueue_Signal(cxg->command_queue, fence->fence, v);
+     assert(SUCCEEDED(hr));
+ 
+-    ++fence->value;
+-
+-    if (ID3D12Fence_GetCompletedValue(fence->fence) < v)
++    if (v)
+     {
+-        hr = ID3D12Fence_SetEventOnCompletion(fence->fence, v, fence->event);
+-        assert(SUCCEEDED(hr));
+-        demo_wait_event(fence->event);
++        /* Keep one frame outstanding */
++        v--;
++
++        if (ID3D12Fence_GetCompletedValue(fence->fence) < v)
++        {
++            hr = ID3D12Fence_SetEventOnCompletion(fence->fence, v, fence->event);
++            assert(SUCCEEDED(hr));
++            demo_wait_event(fence->event);
++        }
+     }
+ 
+     cxg->rt_idx = demo_swapchain_get_current_back_buffer_index(cxg->swapchain);
+-- 
+2.50.0
+
