@@ -18,10 +18,17 @@ about: Game compatibility issues.
 ## I confirm:
 - [ ] that I haven't found an existing compatibility report for this game.
 - [ ] that I have checked whether there are updates for my system available.
+- [ ] that I have verified the issue is present when using [Proton-CachyOS-SLR](https://github.com/CachyOS/proton-cachyos/releases) from this repository.
+
 
 <!-- Please add `PROTON_LOG=1 %command%` to the game's launch options and
 attach the generated $HOME/steam-$APPID.log to this issue report as a file.
 (Proton logs compress well if needed.)-->
+
+<!-- Please provide logs from both CachyOS repository version (native),
+if this issue was first noticed there, and the Steam Linux Runtime version (SLR)
+from this repository.-->
+
 
 ## Symptoms <!-- What's the problem? -->
 
