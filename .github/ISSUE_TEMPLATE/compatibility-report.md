@@ -19,6 +19,7 @@ about: Game compatibility issues.
 - [ ] that I haven't found an existing compatibility report for this game.
 - [ ] that I have checked whether there are updates for my system available.
 - [ ] that I have verified the issue is present when using [Proton-CachyOS-SLR](https://github.com/CachyOS/proton-cachyos/releases) from this repository.
+- [ ] that I haven't encountered the issue using an official Proton, such as Proton, Proton Experimental or Proton Bleeding Edge.
 
 
 <!-- Please add `PROTON_LOG=1 %command%` to the game's launch options and
