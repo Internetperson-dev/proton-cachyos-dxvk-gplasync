@@ -914,7 +914,7 @@ class CompatData:
                 os.remove(old)
                 os.symlink(src=link, dst=old)
 
-    __fsr4_version = "67D435F7d97000"
+    __fsr4_version = "67A4D2BC10ad000"
     __fsr4_urls = {
         "drive_c/windows/system32/amdxcffx64.dll": "https://download.amd.com/dir/bin/amdxcffx64.dll/" + __fsr4_version + "/amdxcffx64.dll"
     }
