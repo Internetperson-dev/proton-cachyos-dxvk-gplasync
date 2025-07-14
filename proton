@@ -1672,11 +1672,11 @@ class Session:
         self.check_environment("PROTON_HIDE_APU", "hideapu")
         self.check_environment("PROTON_ENABLE_MEDIACONV", "mediaconv")
         self.check_environment("PROTON_NO_WM_DECORATION", "nowmdecoration")
-        self.check_environment("PROTON_ENABLE_WAYLAND", "enablewayland")
-        self.check_environment("PROTON_ENABLE_HDR", "enablehdr")
+        self.check_environment("PROTON_ENABLE_WAYLAND", "wayland")
+        self.check_environment("PROTON_ENABLE_HDR", "hdr")
         self.check_environment("PROTON_PREFER_SDL", "sdlinput")
-        self.check_environment("PROTON_FSR4_UPGRADE", "fsr4up")
-        self.check_environment("PROTON_DLSS_UPGRADE", "dlssup")
+        self.check_environment("PROTON_FSR4_UPGRADE", "fsr4")
+        self.check_environment("PROTON_DLSS_UPGRADE", "dlss")
         self.check_environment("PROTON_NATIVE_AGS", "nativeags")
 
         if "noesync" in self.compat_config:
@@ -1715,7 +1715,7 @@ class Session:
             #nvidia override
             self.env["__GL_ExtensionStringVersion"] = "17700"
 
-        if "enablewayland" in self.compat_config:
+        if "wayland" in self.compat_config:
             if self.env.get("WAYLAND_DISPLAY", False):
                 self.dlloverrides["winex11.drv"] = ""
                 self.dlloverrides["winewayland.drv"] = "b"
@@ -1724,7 +1724,7 @@ class Session:
                 self.env["PROTON_NO_STEAMINPUT"] = "1"
                 if "SDL_GAMECONTROLLER_IGNORE_DEVICES" in self.env:
                     del self.env["SDL_GAMECONTROLLER_IGNORE_DEVICES"]
-                if "enablehdr" in self.compat_config:
+                if "hdr" in self.compat_config:
                     self.env["DXVK_HDR"] = "1"
 
         if os.environ.get("SteamGameId", 0) in [
@@ -1869,7 +1869,7 @@ class Session:
         if "fnad3d11" in self.compat_config and "FNA3D_FORCE_DRIVER" not in self.env:
             self.env["FNA3D_FORCE_DRIVER"] = "D3D11"
 
-        if "fsr4up" in self.compat_config:
+        if "fsr4" in self.compat_config:
             self.env["FSR4_UPGRADE"] = "1"
 
         # NVIDIA software may check for the "DriverStore" by querying the
@@ -1916,7 +1916,7 @@ class Session:
                     if var in self.env:
                         self.log_file.write("Effective " + var + ": " + self.env[var] + "\n")
 
-                if "fsr4up" in self.compat_config:
+                if "fsr4" in self.compat_config:
                     files = (g_compatdata.check_fsr4("drive_c/windows/system32/" + f + ".dll") for f in g_compatdata.fsr4_files)
                     if all(files):
                         self.log_file.write("INFO: Automatic FSR4 upgrade enabled!\n")
