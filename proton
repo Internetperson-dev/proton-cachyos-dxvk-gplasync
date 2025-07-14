@@ -595,6 +595,8 @@ class CompatData:
         self.old_machine_guid = None
         self.fsr4_files = ("amdxcffx64", )
         self.fsr4_version_file = self.path("fsr4_version")
+        self.dlss_files = ("nvngx_dlss.dll", "nvngx_dlssd.dll", "nvngx_dlssg.dll", )
+        self.dlss_version_file = self.path("dlss_version")
 
     def path(self, d):
         return self.base_dir + d
@@ -913,9 +915,17 @@ class CompatData:
                 os.remove(old)
                 os.symlink(src=link, dst=old)
 
+    __dlss_version = "310.3.0.0"
+    __dlss_urls = {
+        "drive_c/windows/system32/nvngx_dlss.dll": "https://dlss-swapper-downloads.beeradmoore.com/dlss/dlss_v310.3.0.0_436BD84602A538C63C4953F78B668204.zip",
+        "drive_c/windows/system32/nvngx_dlssd.dll": "https://dlss-swapper-downloads.beeradmoore.com/dlss_d/dlss_d_v310.3.0.0_FC7A45AFE0A8EFA3E9426C875F0CDF2B.zip",
+        "drive_c/windows/system32/nvngx_dlssg.dll": "https://dlss-swapper-downloads.beeradmoore.com/dlss_g/dlss_g_v310.3.0.0_ED5ACC14FFCBD33B0FAF2EAEFCC84F89.zip",
+    }
+
+
     __fsr4_version = "67A4D2BC10ad000"
     __fsr4_urls = {
-        "drive_c/windows/system32/amdxcffx64.dll": "https://download.amd.com/dir/bin/amdxcffx64.dll/" + __fsr4_version + "/amdxcffx64.dll"
+        "drive_c/windows/system32/amdxcffx64.dll": "https://download.amd.com/dir/bin/amdxcffx64.dll/" + __fsr4_version + "/amdxcffx64.dll",
     }
 
     def check_fsr4(self, dst):
@@ -1651,6 +1661,7 @@ class Session:
         self.check_environment("PROTON_ENABLE_HDR", "enablehdr")
         self.check_environment("PROTON_PREFER_SDL", "sdlinput")
         self.check_environment("PROTON_FSR4_UPGRADE", "fsr4up")
+        self.check_environment("PROTON_DLSS_UPGRADE", "dlssup")
         self.check_environment("PROTON_NATIVE_AGS", "nativeags")
 
         if "noesync" in self.compat_config:
