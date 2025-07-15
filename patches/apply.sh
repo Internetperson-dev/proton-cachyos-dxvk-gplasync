@@ -18,5 +18,4 @@ pushd "$here"/../glslang || exit 1
 popd || exit 1
 
 pushd "$here"/../vkd3d-proton || exit 1
-    patch_cmd "$here"/vkd3d-proton/vkd3d-proton-amd-anti-lag.patch
 popd || exit 1
