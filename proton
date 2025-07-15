@@ -6,6 +6,7 @@ import fcntl
 import array
 import fnmatch
 import hashlib
+import io
 import os
 import shutil
 import errno
@@ -19,6 +20,7 @@ import uuid
 import json
 import time
 import urllib.request
+import zipfile
 
 from ctypes import CDLL
 from ctypes import CFUNCTYPE
@@ -593,9 +595,7 @@ class CompatData:
         self.tracked_files_file = self.path("tracked_files")
         self.prefix_lock = FileLock(self.path("pfx.lock"), timeout=-1)
         self.old_machine_guid = None
-        self.fsr4_files = ("amdxcffx64", )
         self.fsr4_version_file = self.path("fsr4_version")
-        self.dlss_files = ("nvngx_dlss.dll", "nvngx_dlssd.dll", "nvngx_dlssg.dll", )
         self.dlss_version_file = self.path("dlss_version")
 
     def path(self, d):
@@ -921,40 +921,60 @@ class CompatData:
         "drive_c/windows/system32/nvngx_dlssd.dll": "https://dlss-swapper-downloads.beeradmoore.com/dlss_d/dlss_d_v310.3.0.0_FC7A45AFE0A8EFA3E9426C875F0CDF2B.zip",
         "drive_c/windows/system32/nvngx_dlssg.dll": "https://dlss-swapper-downloads.beeradmoore.com/dlss_g/dlss_g_v310.3.0.0_ED5ACC14FFCBD33B0FAF2EAEFCC84F89.zip",
     }
-
-
     __fsr4_version = "67A4D2BC10ad000"
     __fsr4_urls = {
         "drive_c/windows/system32/amdxcffx64.dll": "https://download.amd.com/dir/bin/amdxcffx64.dll/" + __fsr4_version + "/amdxcffx64.dll",
     }
 
-    def check_fsr4(self, dst):
-        if not file_exists(self.prefix_dir + dst, follow_symlinks=True):
-            return False
-        else:
-            if not os.path.isfile(self.fsr4_version_file):
+    def __check_upscaler_files(self, files, version, version_file):
+        for dst in files.keys():
+            if not file_exists(self.prefix_dir + dst, follow_symlinks=True):
                 return False
-            with open(self.fsr4_version_file, "r") as fsr4_version:
-                version = fsr4_version.read()
-            if version == self.__fsr4_version:
-                return True
-            # Delete files if they failed validation
-            os.unlink(self.fsr4_version_file)
-            os.unlink(self.prefix_dir + dst)
+
+        if not os.path.isfile(version_file):
             return False
+        with open(version_file, "r") as version_fd:
+            old_version = version_fd.read()
+        if old_version == version:
+            return True
+
+        return False
+
+    def check_dlss(self):
+        return self.__check_upscaler_files(self.__dlss_urls, self.__dlss_version, self.dlss_version_file)
+
+    def check_fsr4(self):
+        return self.__check_upscaler_files(self.__fsr4_urls, self.__fsr4_version, self.fsr4_version_file)
+
+    def __setup_upscaler_files(self, files, dlfunc, version, version_file):
+        for dst in files.keys():
+            try:
+                dlfunc(files[dst], self.prefix_dir + dst)
+            except Exception as e:
+                print(e)
+                if file_exists(self.prefix_dir + dst, follow_symlinks=False):
+                    os.unlink(self.prefix_dir + dst)
+                return
+        with open(version_file, "w") as version_fd:
+            version_fd.write(version)
+
+    def setup_dlss(self):
+        if self.check_dlss():
+            return
+        def download_dlss(url, dst):
+            request = urllib.request.Request(
+                url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64; rv:40.0) Gecko/20100101 Firefox/40.0"}
+            )
+            with zipfile.ZipFile(io.BytesIO(urllib.request.urlopen(request).read())) as zipfd:
+                zipfd.extractall(os.path.dirname(dst))
+        self.__setup_upscaler_files(self.__dlss_urls, download_dlss, self.__dlss_version, self.dlss_version_file)
 
     def setup_fsr4(self):
-        for f in self.fsr4_files:
-            dst = "drive_c/windows/system32/" + f + ".dll"
-            if not self.check_fsr4(dst):
-                try:
-                    urllib.request.urlretrieve(self.__fsr4_urls[dst], self.prefix_dir + dst)
-                except Exception as e:
-                    if file_exists(self.prefix_dir + dst, follow_symlinks=False):
-                        os.unlink(self.prefix_dir + dst)
-                else:
-                    with open(self.fsr4_version_file, "w") as fsr4_version:
-                        fsr4_version.write(self.__fsr4_version)
+        if self.check_fsr4():
+            return
+        def download_fsr4(url, dst):
+            urllib.request.urlretrieve(url, dst)
+        self.__setup_upscaler_files(self.__fsr4_urls, download_fsr4, self.__fsr4_version, self.fsr4_version_file)
 
     def setup_prefix(self):
         with self.prefix_lock:
@@ -1187,6 +1207,9 @@ class CompatData:
 
                 if os.environ.get("PROTON_FSR4_UPGRADE", "0") != "0":
                     self.setup_fsr4()
+
+                if os.environ.get("PROTON_DLSS_UPGRADE", "0") != "0":
+                    self.setup_dlss()
 
                 # If the user requested the NVAPI be available, copy it into place.
                 # If they didn't, clean up any stray nvapi DLLs.
@@ -1844,6 +1867,10 @@ class Session:
 
         if "fsr4" in self.compat_config:
             self.env["FSR4_UPGRADE"] = "1"
+            self.env["WINE_LOADDLL_REPLACE"] = "fsr4"
+
+        if "dlss" in self.compat_config:
+            self.env["WINE_LOADDLL_REPLACE"] = "dlss"
 
         # NVIDIA software may check for the "DriverStore" by querying the
         # NGXCore\NGXPath registry key via `D3DDDI_QUERYREGISTRY_SERVICEKEY` for
@@ -1890,11 +1917,16 @@ class Session:
                         self.log_file.write("Effective " + var + ": " + self.env[var] + "\n")
 
                 if "fsr4" in self.compat_config:
-                    files = (g_compatdata.check_fsr4("drive_c/windows/system32/" + f + ".dll") for f in g_compatdata.fsr4_files)
-                    if all(files):
+                    if g_compatdata.check_fsr4():
                         self.log_file.write("INFO: Automatic FSR4 upgrade enabled!\n")
                     else:
                         self.log_file.write("ERROR: Failed to download amdxcffx64.dll!\n")
+
+                if "dlss" in self.compat_config:
+                    if g_compatdata.check_dlss():
+                        self.log_file.write("INFO: Automatic DLSS upgrade enabled!\n")
+                    else:
+                        self.log_file.write("ERROR: Failed to download nvngx_dlss*.dll!\n")
 
                 # check for low fd limit
                 _soft_limit, hard_limit = resource.getrlimit(resource.RLIMIT_NOFILE)
