@@ -5,7 +5,6 @@
 import fcntl
 import array
 import fnmatch
-import hashlib
 import io
 import os
 import shutil
@@ -951,7 +950,6 @@ class CompatData:
             try:
                 dlfunc(files[dst], self.prefix_dir + dst)
             except Exception as e:
-                print(e)
                 if file_exists(self.prefix_dir + dst, follow_symlinks=False):
                     os.unlink(self.prefix_dir + dst)
                 return
@@ -1204,12 +1202,6 @@ class CompatData:
                     if not file_exists(self.prefix_dir + dst, follow_symlinks=False):
                         tracked_files.write(dst + '\n')
                     self.create_symlink(self.prefix_dir + dst, g_proton.lib_dir + "wine/icu/i386-windows/" + f + ".dll")
-
-                if "PROTON_FSR4_UPGRADE" in os.environ and nonzero(os.environ["PROTON_FSR4_UPGRADE"]):
-                    self.setup_fsr4()
-
-                if "PROTON_DLSS_UPGRADE" in os.environ and nonzero(os.environ["PROTON_DLSS_UPGRADE"]):
-                    self.setup_dlss()
 
                 # If the user requested the NVAPI be available, copy it into place.
                 # If they didn't, clean up any stray nvapi DLLs.
@@ -1736,6 +1728,7 @@ class Session:
         self.check_environment("PROTON_ENABLE_HDR", "hdr")
         self.check_environment("PROTON_PREFER_SDL", "sdlinput")
         self.check_environment("PROTON_FSR4_UPGRADE", "fsr4")
+        self.check_environment("PROTON_FSR4_RDNA3_UPGRADE", "fsr4rdna3")
         self.check_environment("PROTON_DLSS_UPGRADE", "dlss")
         self.check_environment("PROTON_DLSS_INDICATOR", "dlsshud")
         self.check_environment("PROTON_NATIVE_AGS", "nativeags")
@@ -1933,25 +1926,6 @@ class Session:
         if "PROTON_CRASH_REPORT_DIR" in self.env:
             self.env["WINE_CRASH_REPORT_DIR"] = self.env["PROTON_CRASH_REPORT_DIR"]
 
-        if "fsr4" in self.compat_config:
-            self.env["FSR4_UPGRADE"] = "1"
-            self.env["WINE_LOADDLL_REPLACE"] = "fsr4"
-
-        if "dlss" in self.compat_config:
-            self.env["DXVK_NVAPI_DRS_SETTINGS"] = str(
-                "ngx_dlss_sr_override=on,"
-                "ngx_dlss_rr_override=on,"
-                "ngx_dlss_fg_override=on,"
-                "ngx_dlss_sr_override_render_preset_selection=render_preset_latest,"
-                "ngx_dlss_rr_override_render_preset_selection=render_preset_latest,"
-            )
-            self.env["WINE_LOADDLL_REPLACE"] = "dlss"
-
-        if "dlsshud" in self.compat_config:
-            self.env["DXVK_NVAPI_SET_NGX_DEBUG_OPTIONS"] = "DLSSIndicator=1024,DLSSGIndicator=2,"
-        else:
-            self.env["DXVK_NVAPI_SET_NGX_DEBUG_OPTIONS"] = "DLSSIndicator=0,DLSSGIndicator=0,"
-
         # NVIDIA software may check for the "DriverStore" by querying the
         # NGXCore\NGXPath registry key via `D3DDDI_QUERYREGISTRY_SERVICEKEY` for
         # a given adapter. In the case where this path cannot be found, the
@@ -1996,18 +1970,6 @@ class Session:
                     if var in self.env:
                         self.log_file.write("Effective " + var + ": " + self.env[var] + "\n")
 
-                if "fsr4" in self.compat_config:
-                    if g_compatdata.check_fsr4():
-                        self.log_file.write("INFO: Automatic FSR4 upgrade enabled!\n")
-                    else:
-                        self.log_file.write("ERROR: Failed to download amdxcffx64.dll!\n")
-
-                if "dlss" in self.compat_config:
-                    if g_compatdata.check_dlss():
-                        self.log_file.write("INFO: Automatic DLSS upgrade enabled!\n")
-                    else:
-                        self.log_file.write("ERROR: Failed to download nvngx_dlss*.dll!\n")
-
                 # check for low fd limit
                 _soft_limit, hard_limit = resource.getrlimit(resource.RLIMIT_NOFILE)
                 if hard_limit < 524288:
@@ -2031,6 +1993,46 @@ class Session:
 
         if update_prefix_files:
             g_compatdata.setup_prefix()
+
+        if "fsr4rdna3" in self.compat_config:
+            self.compat_config.add("fsr4")
+
+        if "fsr4" in self.compat_config:
+            g_compatdata.setup_fsr4()
+            if g_compatdata.check_fsr4():
+                self.env["FSR4_UPGRADE"] = "1"
+                self.env["WINE_LOADDLL_REPLACE"] = "fsr4"
+                if "fsr4rdna3" in self.compat_config:
+                    self.env["DXIL_SPIRV_CONFIG"] = "wmma_rdna3_workaround"
+
+        if "dlss" in self.compat_config:
+            g_compatdata.setup_dlss()
+            if g_compatdata.check_dlss():
+                self.env["DXVK_NVAPI_DRS_SETTINGS"] = str(
+                    "ngx_dlss_sr_override=on,"
+                    "ngx_dlss_rr_override=on,"
+                    "ngx_dlss_fg_override=on,"
+                    "ngx_dlss_sr_override_render_preset_selection=render_preset_latest,"
+                    "ngx_dlss_rr_override_render_preset_selection=render_preset_latest,"
+                )
+                self.env["WINE_LOADDLL_REPLACE"] = "dlss"
+
+        if "dlsshud" in self.compat_config:
+            self.env["DXVK_NVAPI_SET_NGX_DEBUG_OPTIONS"] = "DLSSIndicator=1024,DLSSGIndicator=2,"
+        else:
+            self.env["DXVK_NVAPI_SET_NGX_DEBUG_OPTIONS"] = "DLSSIndicator=0,DLSSGIndicator=0,"
+
+        if self.log_file is not None:
+            if "fsr4" in self.compat_config and g_compatdata.check_fsr4():
+                self.log_file.write("INFO: Automatic FSR4 upgrade enabled\n")
+            elif "fsr4" in self.compat_config:
+                self.log_file.write("ERROR: Failed to download amdxcffx64.dll\n")
+            if "dlss" in self.compat_config and g_compatdata.check_dlss():
+                self.log_file.write("INFO: Automatic DLSS upgrade enabled\n")
+            elif "dlss" in self.compat_config:
+                self.log_file.write("ERROR: Failed to download nvngx_dlss*.dll\n")
+            self.log_file.write("======================\n")
+            self.log_file.flush()
 
         if "nod3d11" in self.compat_config:
             self.dlloverrides["d3d11"] = ""
