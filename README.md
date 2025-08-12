@@ -314,4 +314,27 @@ the Wine prefix. Removing the option will revert to the previous behavior.
 | `seccomp`             | `PROTON_USE_SECCOMP`               | **Note: Obsoleted in Proton 5.13.** In older versions, enable seccomp-bpf filter to emulate native syscalls, required for some DRM protections to work. |
 | `d9vk`                | `PROTON_USE_D9VK`                  | **Note: Obsoleted in Proton 5.0.** In older versions, use Vulkan-based DXVK instead of OpenGL-based wined3d for d3d9. |
 
+Proton-CachyOS Config Options
+----------------------
+| Compat config string  | Environment Variable        | Description  |
+| :-------------------- |:----------------------------| :----------- |
+|                       | `PROTON_FSR4_UPGRADE`       |  |
+|                       | `PROTON_FSR4_RDNA3_UPGRADE` |  |
+|                       | `PROTON_DLSS_UPGRADE`       |  |
+|                       | `PROTON_DLSS_INDICATOR`     |  |
+|                       | `PROTON_XESS_UPGRADE`       |  |
+|                       | `PROTON_NVIDIA_LIBS`        |  |
+|                       | `PROTON_NVIDIA_NVCUDA`      |  |
+|                       | `PROTON_NVIDIA_NVENC`       |  |
+|                       | `PROTON_NVIDIA_NVML`        |  |
+|                       | `PROTON_NVIDIA_NVOPTIX`     |  |
+|                       | `PROTON_ENABLE_MEDIACONV`   |  |
+|                       | `PROTON_NO_WM_DECORATION`   |  |
+|                       | `PROTON_ENABLE_WAYLAND`     |  |
+|                       | `PROTON_ENABLE_HDR`         |  |
+|                       | `PROTON_PREFER_SDL`         |  |
+|                       | `PROTON_NO_STEAMINPUT`      |  |
+|                       | `PROTON_LOCAL_SHADER_CACHE` |  |
+
+
 <!-- Target:  GitHub Flavor Markdown.  To test locally:  pandoc -f markdown_github -t html README.md  -->
