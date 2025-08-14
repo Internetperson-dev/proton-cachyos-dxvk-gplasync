@@ -26,6 +26,10 @@ about: Game compatibility issues.
 attach the generated $HOME/steam-$APPID.log to this issue report as a file.
 (Proton logs compress well if needed.)-->
 
+<!-- If your issue is with videos/audio not playing or being replaced by the
+[SMPTE color bars](https://en.wikipedia.org/wiki/SMPTE_color_bars),please generate the log by using 
+`PROTON_LOG="+mfplat,+quartz,+wmvcore,+wmadec,+dmo" %command%` instead.-->
+
 <!-- Please provide logs from both CachyOS repository version (native),
 if this issue was first noticed there, and the Steam Linux Runtime version (SLR)
 from this repository.-->
