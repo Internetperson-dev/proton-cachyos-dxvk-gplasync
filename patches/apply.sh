@@ -19,3 +19,7 @@ popd || exit 1
 
 pushd "$here"/../vkd3d-proton || exit 1
 popd || exit 1
+
+pushd "$here"/../dxvk-sarek || exit 1
+popd || exit 1
+
