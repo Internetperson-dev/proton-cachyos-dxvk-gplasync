@@ -2133,13 +2133,14 @@ class Session:
         if "dlss" in self.compat_config:
             g_compatdata.setup_dlss()
             if g_compatdata.check_dlss():
-                self.env["DXVK_NVAPI_DRS_SETTINGS"] = str(
-                    "ngx_dlss_sr_override=on,"
-                    "ngx_dlss_rr_override=on,"
-                    "ngx_dlss_fg_override=on,"
-                    "ngx_dlss_sr_override_render_preset_selection=render_preset_latest,"
-                    "ngx_dlss_rr_override_render_preset_selection=render_preset_latest,"
-                )
+                if "DXVK_NVAPI_DRS_SETTINGS" not in self.env:
+                    self.env["DXVK_NVAPI_DRS_SETTINGS"] = str(
+                        "ngx_dlss_sr_override=on,"
+                        "ngx_dlss_rr_override=on,"
+                        "ngx_dlss_fg_override=on,"
+                        "ngx_dlss_sr_override_render_preset_selection=render_preset_latest,"
+                        "ngx_dlss_rr_override_render_preset_selection=render_preset_latest,"
+                    )
                 self.env["WINE_LOADDLL_REPLACE"] = "dlss"
 
         if "dlsshud" in self.compat_config:
