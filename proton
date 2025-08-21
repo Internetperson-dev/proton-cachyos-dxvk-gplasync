@@ -1298,16 +1298,20 @@ class CompatData:
                     g_session.dlloverrides["nvencodeapi"] = "n,b"
                 else:
                     nvcuvid32_dll = self.prefix_dir + "drive_c/windows/syswow64/nvcuvid.dll"
-                    nvencodeapi_dll = self.prefix_dir + "drive_c/windows/syswow64/nvencodeapi.dll"
+                    nvencodeapi32_dll = self.prefix_dir + "drive_c/windows/syswow64/nvencodeapi.dll"
                     if file_exists(nvcuvid32_dll, follow_symlinks=False):
                         os.unlink(nvcuvid32_dll)
-                    if file_exists(nvencodeapi_dll, follow_symlinks=False):
-                        os.unlink(nvencodeapi_dll)
+                    if file_exists(nvencodeapi32_dll, follow_symlinks=False):
+                        os.unlink(nvencodeapi32_dll)
 
                 if use_nvml and use_nvapi:
                     g_session.env["WINEDLLPATH"] = ":".join(
                         [g_proton.lib_dir + "wine/nvidia-libs/nvml/wine", g_proton.lib_dir + "vkd3d", g_proton.lib_dir + "wine"]
                     )
+                else:
+                    nvml64_dll = self.prefix_dir + "drive_c/windows/system32/nvml.dll"
+                    if file_exists(nvml64_dll, follow_symlinks=False):
+                        os.unlink(nvml64_dll)
 
                 if use_nvoptix and use_nvapi:
                     try_copy(g_proton.lib_dir + "wine/nvidia-libs/nvoptix/x86_64-windows/nvoptix.dll.so", "drive_c/windows/system32/nvoptix.dll",
