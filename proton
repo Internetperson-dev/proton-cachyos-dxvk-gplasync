@@ -596,6 +596,7 @@ class CompatData:
         self.old_machine_guid = None
         self.dlss_version_file = self.path("dlss_version")
         self.xess_version_file = self.path("xess_version")
+        self.fsr3_version_file = self.path("fsr3_version")
         self.fsr4_version_file = self.path("fsr4_version")
 
     def path(self, d):
@@ -927,6 +928,11 @@ class CompatData:
         "drive_c/windows/system32/libxell.dll": "https://dlss-swapper-downloads.beeradmoore.com/xell/xell_v1.2.0.9_7371177F39EFBBB60A3F1274244C3ECA.zip",
         "drive_c/windows/system32/libxess_fg.dll": "https://dlss-swapper-downloads.beeradmoore.com/xess_fg/xess_fg_v1.2.0.87_904116C83B5C6115CBE41FF3BE513997.zip",
     }
+    __fsr3_version = "1.0.1.41314"
+    __fsr3_urls = {
+        "drive_c/windows/system32/amd_fidelityfx_vk.dll": "https://dlss-swapper-downloads.beeradmoore.com/fsr_31_vk/fsr_31_vk_v1.0.1.41314_9718FD774C61BE1AF6AF411CF65394CD.zip",
+        "drive_c/windows/system32/amd_fidelityfx_dx12.dll": "https://dlss-swapper-downloads.beeradmoore.com/fsr_31_dx12/fsr_31_dx12_v1.0.1.41314_49230AD94ED6169933CD0457501D9CB4.zip",
+    }
     __fsr4_version = "67A4D2BC10ad000"
     __fsr4_urls = {
         "drive_c/windows/system32/amdxcffx64.dll": "https://download.amd.com/dir/bin/amdxcffx64.dll/" + __fsr4_version + "/amdxcffx64.dll",
@@ -951,6 +957,9 @@ class CompatData:
 
     def check_xess(self):
         return self.__check_upscaler_files(self.__xess_urls, self.__xess_version, self.xess_version_file)
+
+    def check_fsr3(self):
+        return self.__check_upscaler_files(self.__fsr3_urls, self.__fsr3_version, self.fsr3_version_file)
 
     def check_fsr4(self):
         return self.__check_upscaler_files(self.__fsr4_urls, self.__fsr4_version, self.fsr4_version_file)
@@ -983,6 +992,11 @@ class CompatData:
         if self.check_xess():
             return
         self.__setup_upscaler_files(self.__xess_urls, self.__download_extract_zip, self.__xess_version, self.xess_version_file)
+
+    def setup_fsr3(self):
+        if self.check_fsr3():
+            return
+        self.__setup_upscaler_files(self.__fsr3_urls, self.__download_extract_zip, self.__fsr3_version, self.fsr3_version_file)
 
     def setup_fsr4(self):
         if self.check_fsr4():
@@ -1842,6 +1856,7 @@ class Session:
         self.check_environment("PROTON_ENABLE_WAYLAND", "wayland")
         self.check_environment("PROTON_ENABLE_HDR", "hdr")
         self.check_environment("PROTON_PREFER_SDL", "sdlinput")
+        self.check_environment("PROTON_FSR3_UPGRADE", "fsr3")
         self.check_environment("PROTON_FSR4_UPGRADE", "fsr4")
         self.check_environment("PROTON_FSR4_RDNA3_UPGRADE", "fsr4rdna3")
         self.check_environment("PROTON_DLSS_UPGRADE", "dlss")
@@ -2122,17 +2137,20 @@ class Session:
         if "fsr4rdna3" in self.compat_config:
             self.compat_config.add("fsr4")
 
+        loaddll_replace = set()
+
         if "fsr4" in self.compat_config:
             g_compatdata.setup_fsr4()
             if g_compatdata.check_fsr4():
+                loaddll_replace.add("fsr4")
                 self.env["FSR4_UPGRADE"] = "1"
-                self.env["WINE_LOADDLL_REPLACE"] = "fsr4"
                 if "fsr4rdna3" in self.compat_config:
                     self.env["DXIL_SPIRV_CONFIG"] = "wmma_rdna3_workaround"
 
         if "dlss" in self.compat_config:
             g_compatdata.setup_dlss()
             if g_compatdata.check_dlss():
+                loaddll_replace.add("dlss")
                 if "DXVK_NVAPI_DRS_SETTINGS" not in self.env:
                     self.env["DXVK_NVAPI_DRS_SETTINGS"] = str(
                         "ngx_dlss_sr_override=on,"
@@ -2141,7 +2159,6 @@ class Session:
                         "ngx_dlss_sr_override_render_preset_selection=render_preset_latest,"
                         "ngx_dlss_rr_override_render_preset_selection=render_preset_latest,"
                     )
-                self.env["WINE_LOADDLL_REPLACE"] = "dlss"
 
         if "dlsshud" in self.compat_config:
             self.env["DXVK_NVAPI_SET_NGX_DEBUG_OPTIONS"] = "DLSSIndicator=1024,DLSSGIndicator=2,"
@@ -2151,7 +2168,15 @@ class Session:
         if "xess" in self.compat_config:
             g_compatdata.setup_xess()
             if g_compatdata.check_xess():
-                self.env["WINE_LOADDLL_REPLACE"] = "xess"
+                loaddll_replace.add("xess")
+
+        if "fsr3" in self.compat_config:
+            g_compatdata.setup_fsr3()
+            if g_compatdata.check_fsr3():
+                loaddll_replace.add("fsr3")
+
+        if loaddll_replace:
+            self.env["WINE_LOADDLL_REPLACE"] = ",".join(loaddll_replace)
 
         if self.log_file is not None:
             if "fsr4" in self.compat_config and g_compatdata.check_fsr4():
@@ -2166,6 +2191,10 @@ class Session:
                 self.log_file.write("INFO: Automatic XeSS upgrade enabled\n")
             elif "xess" in self.compat_config:
                 self.log_file.write("ERROR: Failed to download libxe*.dll\n")
+            if "fsr3" in self.compat_config and g_compatdata.check_xess():
+                self.log_file.write("INFO: Automatic FSR3 upgrade enabled\n")
+            elif "fsr3" in self.compat_config:
+                self.log_file.write("ERROR: Failed to download amd_fidelityfx_*.dll\n")
             self.log_file.write("======================\n")
             self.log_file.flush()
 
