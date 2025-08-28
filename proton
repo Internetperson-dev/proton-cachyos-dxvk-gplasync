@@ -916,11 +916,11 @@ class CompatData:
                 os.remove(old)
                 os.symlink(src=link, dst=old)
 
-    __dlss_version = "310.3.0.0"
+    __dlss_version = "310.4.0.0"
     __dlss_urls = {
-        "drive_c/windows/system32/nvngx_dlss.dll": "https://dlss-swapper-downloads.beeradmoore.com/dlss/dlss_v310.3.0.0_436BD84602A538C63C4953F78B668204.zip",
-        "drive_c/windows/system32/nvngx_dlssd.dll": "https://dlss-swapper-downloads.beeradmoore.com/dlss_d/dlss_d_v310.3.0.0_FC7A45AFE0A8EFA3E9426C875F0CDF2B.zip",
-        "drive_c/windows/system32/nvngx_dlssg.dll": "https://dlss-swapper-downloads.beeradmoore.com/dlss_g/dlss_g_v310.3.0.0_ED5ACC14FFCBD33B0FAF2EAEFCC84F89.zip",
+        "drive_c/windows/system32/nvngx_dlss.dll": "https://dlss-swapper-downloads.beeradmoore.com/dlss/dlss_v310.4.0.0_F2956394EB8A8474C79B7DE83AF4D473.zip",
+        "drive_c/windows/system32/nvngx_dlssd.dll": "https://dlss-swapper-downloads.beeradmoore.com/dlss_d/dlss_d_v310.4.0.0_4D2D5AA25FEFDAFE119666AB33B38138.zip",
+        "drive_c/windows/system32/nvngx_dlssg.dll": "https://dlss-swapper-downloads.beeradmoore.com/dlss_g/dlss_g_v310.4.0.0_9FD3C2A5AF635D573CB313BDE86E7058.zip",
     }
     __xess_version = "2.1.0"
     __xess_urls = {
