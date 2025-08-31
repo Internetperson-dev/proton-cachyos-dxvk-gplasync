@@ -5,7 +5,6 @@
 import fcntl
 import array
 import fnmatch
-import io
 import os
 import shutil
 import errno
@@ -18,8 +17,6 @@ import shlex
 import uuid
 import json
 import time
-import urllib.request
-import zipfile
 
 from ctypes import CDLL
 from ctypes import CFUNCTYPE
@@ -39,6 +36,7 @@ from ctypes import c_size_t
 from ctypes import c_ssize_t
 
 from filelock import FileLock
+from utilities import setup_upscalers, setup_local_shader_cache
 from random import randrange
 
 #To enable debug logging, copy "user_settings.sample.py" to "user_settings.py"
@@ -594,10 +592,6 @@ class CompatData:
         self.tracked_files_file = self.path("tracked_files")
         self.prefix_lock = FileLock(self.path("pfx.lock"), timeout=-1)
         self.old_machine_guid = None
-        self.dlss_version_file = self.path("dlss_version")
-        self.xess_version_file = self.path("xess_version")
-        self.fsr3_version_file = self.path("fsr3_version")
-        self.fsr4_version_file = self.path("fsr4_version")
 
     def path(self, d):
         return self.base_dir + d
@@ -915,103 +909,6 @@ class CompatData:
             elif os.path.islink(old) and not (os.readlink(old) == link):
                 os.remove(old)
                 os.symlink(src=link, dst=old)
-
-    __dlss_version = "310.4.0.0"
-    __dlss_urls = {
-        "drive_c/windows/system32/nvngx_dlss.dll": "https://dlss-swapper-downloads.beeradmoore.com/dlss/dlss_v310.4.0.0_F2956394EB8A8474C79B7DE83AF4D473.zip",
-        "drive_c/windows/system32/nvngx_dlssd.dll": "https://dlss-swapper-downloads.beeradmoore.com/dlss_d/dlss_d_v310.4.0.0_4D2D5AA25FEFDAFE119666AB33B38138.zip",
-        "drive_c/windows/system32/nvngx_dlssg.dll": "https://dlss-swapper-downloads.beeradmoore.com/dlss_g/dlss_g_v310.4.0.0_9FD3C2A5AF635D573CB313BDE86E7058.zip",
-    }
-    __xess_version = "2.1.0"
-    __xess_urls = {
-        "drive_c/windows/system32/libxess.dll": "https://dlss-swapper-downloads.beeradmoore.com/xess/xess_v2.0.2.53_B6D2A108369FE3CD7FC82AF14DD8C60C.zip",
-        "drive_c/windows/system32/libxell.dll": "https://dlss-swapper-downloads.beeradmoore.com/xell/xell_v1.2.0.9_7371177F39EFBBB60A3F1274244C3ECA.zip",
-        "drive_c/windows/system32/libxess_fg.dll": "https://dlss-swapper-downloads.beeradmoore.com/xess_fg/xess_fg_v1.2.0.87_904116C83B5C6115CBE41FF3BE513997.zip",
-    }
-    __fsr3_version = "1.0.1.41314"
-    __fsr3_urls = {
-        "drive_c/windows/system32/amd_fidelityfx_vk.dll": "https://dlss-swapper-downloads.beeradmoore.com/fsr_31_vk/fsr_31_vk_v1.0.1.41314_9718FD774C61BE1AF6AF411CF65394CD.zip",
-        "drive_c/windows/system32/amd_fidelityfx_dx12.dll": "https://dlss-swapper-downloads.beeradmoore.com/fsr_31_dx12/fsr_31_dx12_v1.0.1.41314_49230AD94ED6169933CD0457501D9CB4.zip",
-    }
-    __fsr4_version = "67A4D2BC10ad000"
-    __fsr4_urls = {
-        "drive_c/windows/system32/amdxcffx64.dll": "https://download.amd.com/dir/bin/amdxcffx64.dll/" + __fsr4_version + "/amdxcffx64.dll",
-    }
-
-    def __check_upscaler_files(self, files, version, version_file, ignore_version):
-        for dst in files.keys():
-            if not file_exists(self.prefix_dir + dst, follow_symlinks=True):
-                return False
-
-        if not os.path.isfile(version_file):
-            return False
-        with open(version_file, "r") as version_fd:
-            old_version = version_fd.read()
-        if old_version == version or ignore_version:
-            return True
-
-        return False
-
-    def check_dlss(self, ignore_version = False):
-        return self.__check_upscaler_files(self.__dlss_urls, self.__dlss_version, self.dlss_version_file, ignore_version)
-
-    def check_xess(self, ignore_version = False):
-        return self.__check_upscaler_files(self.__xess_urls, self.__xess_version, self.xess_version_file, ignore_version)
-
-    def check_fsr3(self, ignore_version = False):
-        return self.__check_upscaler_files(self.__fsr3_urls, self.__fsr3_version, self.fsr3_version_file, ignore_version)
-
-    def check_fsr4(self, ignore_version = False):
-        return self.__check_upscaler_files(self.__fsr4_urls, self.__fsr4_version, self.fsr4_version_file, ignore_version)
-
-    def __setup_upscaler_files(self, files, dlfunc, version, version_file):
-        for dst in files.keys():
-            new_file = self.prefix_dir + dst
-            old_file = self.prefix_dir + dst + ".old"
-            try:
-                if file_exists(new_file, follow_symlinks=False):
-                    os.rename(new_file, old_file)
-                dlfunc(files[dst], new_file)
-                if file_exists(old_file, follow_symlinks=False):
-                    os.unlink(old_file)
-            except Exception as e:
-                if file_exists(new_file, follow_symlinks=False):
-                    os.unlink(new_file)
-                if file_exists(old_file, follow_symlinks=False):
-                    os.rename(old_file, new_file)
-                return
-        with open(version_file, "w") as version_fd:
-            version_fd.write(version)
-
-    @staticmethod
-    def __download_extract_zip(url, dst):
-        request = urllib.request.Request(
-            url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64; rv:40.0) Gecko/20100101 Firefox/40.0"}
-        )
-        with zipfile.ZipFile(io.BytesIO(urllib.request.urlopen(request).read())) as zipfd:
-            zipfd.extractall(os.path.dirname(dst))
-
-    def setup_dlss(self):
-        if self.check_dlss():
-            return
-        self.__setup_upscaler_files(self.__dlss_urls, self.__download_extract_zip, self.__dlss_version, self.dlss_version_file)
-
-    def setup_xess(self):
-        if self.check_xess():
-            return
-        self.__setup_upscaler_files(self.__xess_urls, self.__download_extract_zip, self.__xess_version, self.xess_version_file)
-
-    def setup_fsr3(self):
-        if self.check_fsr3():
-            return
-        self.__setup_upscaler_files(self.__fsr3_urls, self.__download_extract_zip, self.__fsr3_version, self.fsr3_version_file)
-
-    def setup_fsr4(self):
-        if self.check_fsr4():
-            return
-        def download_fsr4(url, dst):
-            urllib.request.urlretrieve(url, dst)
-        self.__setup_upscaler_files(self.__fsr4_urls, download_fsr4, self.__fsr4_version, self.fsr4_version_file)
 
     def setup_prefix(self):
         with self.prefix_lock:
@@ -1749,48 +1646,6 @@ class Session:
         self.log_file = open(lfile_path, "a")
         return True
 
-    def setup_local_shader_cache(self):
-        path = os.environ.get("STEAM_COMPAT_SHADER_PATH", "")
-        if not path:
-            return
-        shader_cache_name = "steamapp_shader_cache"
-        shader_cache_vars = {
-            # Nvidia
-            "__GL_SHADER_DISK_CACHE_APP_NAME": shader_cache_name,
-            "__GL_SHADER_DISK_CACHE_PATH": os.path.join(path, "nvidiav1"),
-            "__GL_SHADER_DISK_CACHE_READ_ONLY_APP_NAME": "steam_shader_cache;steamapp_merged_shader_cache",
-            #"__GL_SHADER_DISK_CACHE_SIZE": "5000000000",
-            "__GL_SHADER_DISK_CACHE_SKIP_CLEANUP": "1",
-            # Mesa
-            "MESA_DISK_CACHE_READ_ONLY_FOZ_DBS": "steam_cache,steam_precompiled",
-            "MESA_DISK_CACHE_SINGLE_FILE": "1",
-            "MESA_GLSL_CACHE_DIR": path,
-            "MESA_GLSL_CACHE_MAX_SIZE": "5G",
-            "MESA_SHADER_CACHE_DIR": path,
-            "MESA_SHADER_CACHE_MAX_SIZE": "5G",
-            # AMD VK
-            "AMD_VK_PIPELINE_CACHE_FILENAME": shader_cache_name,
-            "AMD_VK_PIPELINE_CACHE_PATH": os.path.join(path, "AMDv1"),
-            "AMD_VK_USE_PIPELINE_CACHE": "1",
-            # DXVK
-            "DXVK_STATE_CACHE_PATH": os.path.join(path, "DXVK_state_cache"),
-            # VKD3D
-            "VKD3D_SHADER_CACHE_PATH": os.path.join(path, "VKD3D_shader_cache")
-        }
-        for var, val in shader_cache_vars.items():
-            if var in os.environ:
-                continue
-            if var in {
-                "__GL_SHADER_DISK_CACHE_PATH",
-                "MESA_GLSL_CACHE_DIR",
-                "MESA_SHADER_CACHE_DIR",
-                "AMD_VK_PIPELINE_CACHE_PATH",
-                "DXVK_STATE_CACHE_PATH",
-                "VKD3D_SHADER_CACHE_PATH",
-            }:
-                makedirs(val)
-            self.env[var] = val
-
     def init_session(self, update_prefix_files):
         self.env["WINEPREFIX"] = g_compatdata.prefix_dir
 
@@ -1930,7 +1785,7 @@ class Session:
                     self.env["DXVK_HDR"] = "1"
 
         if "localshadercache" in self.compat_config:
-            self.setup_local_shader_cache()
+            setup_local_shader_cache(self.env)
 
         if os.environ.get("SteamGameId", 0) in [
                 "661920", #Claybook
@@ -2142,70 +1997,42 @@ class Session:
         if update_prefix_files:
             g_compatdata.setup_prefix()
 
-        if "fsr4rdna3" in self.compat_config:
-            self.compat_config.add("fsr4")
+        enabled_upscalers = setup_upscalers(
+            self.compat_config,
+            self.env,
+            g_compatdata.base_dir,
+            g_compatdata.prefix_dir,
+        )
 
-        loaddll_replace = set()
+        if "fsr4" in enabled_upscalers:
+            self.env["DISABLE_LAYER_MESA_ANTI_LAG"] = "1"
+            self.env["FSR4_UPGRADE"] = "1"
+            if "fsr4rdna3" in self.compat_config:
+                self.env["DXIL_SPIRV_CONFIG"] = "wmma_rdna3_workaround"
 
-        if "fsr4" in self.compat_config:
-            g_compatdata.setup_fsr4()
-            if g_compatdata.check_fsr4(ignore_version=True):
-                loaddll_replace.add("fsr4")
-                self.env["DISABLE_LAYER_MESA_ANTI_LAG"] = "1"
-                self.env["FSR4_UPGRADE"] = "1"
-                if "fsr4rdna3" in self.compat_config:
-                    self.env["DXIL_SPIRV_CONFIG"] = "wmma_rdna3_workaround"
-
-        if "dlss" in self.compat_config:
-            g_compatdata.setup_dlss()
-            if g_compatdata.check_dlss(ignore_version=True):
-                loaddll_replace.add("dlss")
-                if "DXVK_NVAPI_DRS_SETTINGS" not in self.env:
-                    self.env["DXVK_NVAPI_DRS_SETTINGS"] = str(
-                        "ngx_dlss_sr_override=on,"
-                        "ngx_dlss_rr_override=on,"
-                        "ngx_dlss_fg_override=on,"
-                        "ngx_dlss_sr_override_render_preset_selection=render_preset_latest,"
-                        "ngx_dlss_rr_override_render_preset_selection=render_preset_latest,"
-                    )
+        if "dlss" in enabled_upscalers:
+            if "DXVK_NVAPI_DRS_SETTINGS" not in self.env:
+                self.env["DXVK_NVAPI_DRS_SETTINGS"] = str(
+                    "ngx_dlss_sr_override=on,"
+                    "ngx_dlss_rr_override=on,"
+                    "ngx_dlss_fg_override=on,"
+                    "ngx_dlss_sr_override_render_preset_selection=render_preset_latest,"
+                    "ngx_dlss_rr_override_render_preset_selection=render_preset_latest,"
+                )
 
         if "dlsshud" in self.compat_config:
             self.env["DXVK_NVAPI_SET_NGX_DEBUG_OPTIONS"] = "DLSSIndicator=1024,DLSSGIndicator=2,"
         else:
             self.env["DXVK_NVAPI_SET_NGX_DEBUG_OPTIONS"] = "DLSSIndicator=0,DLSSGIndicator=0,"
 
-        if "xess" in self.compat_config:
-            g_compatdata.setup_xess()
-            if g_compatdata.check_xess(ignore_version=True):
-                loaddll_replace.add("xess")
+        if "xess" in enabled_upscalers:
+            pass
 
-        if "fsr3" in self.compat_config:
-            g_compatdata.setup_fsr3()
-            if g_compatdata.check_fsr3(ignore_version=True):
-                loaddll_replace.add("fsr3")
+        if "fsr3" in enabled_upscalers:
+            pass
 
-        if loaddll_replace:
-            self.env["WINE_LOADDLL_REPLACE"] = ",".join(loaddll_replace)
-
-        if self.log_file is not None:
-            if "fsr4" in self.compat_config and g_compatdata.check_fsr4(ignore_version=True):
-                self.log_file.write("INFO: Automatic FSR4 upgrade enabled\n")
-            elif "fsr4" in self.compat_config:
-                self.log_file.write("ERROR: Failed to download amdxcffx64.dll\n")
-            if "dlss" in self.compat_config and g_compatdata.check_dlss(ignore_version=True):
-                self.log_file.write("INFO: Automatic DLSS upgrade enabled\n")
-            elif "dlss" in self.compat_config:
-                self.log_file.write("ERROR: Failed to download nvngx_dlss*.dll\n")
-            if "xess" in self.compat_config and g_compatdata.check_xess(ignore_version=True):
-                self.log_file.write("INFO: Automatic XeSS upgrade enabled\n")
-            elif "xess" in self.compat_config:
-                self.log_file.write("ERROR: Failed to download libxe*.dll\n")
-            if "fsr3" in self.compat_config and g_compatdata.check_fsr3(ignore_version=True):
-                self.log_file.write("INFO: Automatic FSR3 upgrade enabled\n")
-            elif "fsr3" in self.compat_config:
-                self.log_file.write("ERROR: Failed to download amd_fidelityfx_*.dll\n")
-            self.log_file.write("======================\n")
-            self.log_file.flush()
+        if enabled_upscalers:
+            self.env["WINE_LOADDLL_REPLACE"] = ",".join(enabled_upscalers)
 
         if "nod3d11" in self.compat_config:
             self.dlloverrides["d3d11"] = ""
