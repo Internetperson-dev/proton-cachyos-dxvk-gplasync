@@ -185,7 +185,7 @@ function configure() {
     fi
 
     echo "HOST_CFLAGS := ${CFLAGS:--O2 -march=nocona -mtune=core-avx2}"
-    echo "HOST_RUSTFLAGS := ${RUSTFLAGS:--Copt-level=2 -Ctarget-cpu=nocona}"
+    echo "HOST_RUSTFLAGS := ${RUSTFLAGS:--Copt-level=3 -Ctarget-cpu=nocona}"
     echo "USE_LTO := ${USE_LTO:-0}"
 
     # Include base
