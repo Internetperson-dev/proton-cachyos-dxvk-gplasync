@@ -1,3 +1,38 @@
+### Version 10.0-20250919
+* Proton (SLR and Native)
+  - DXVK is under heavy development at the moment of this release. DXVK and VKD3D-Proton have been updated to the latest version but issues might still arise. Reproduce any issues with Valve's Proton Experimental Bleeding Edge and report them upstream.
+  - Updated `PROTON_(DLSS|XESS|FRS4|FSR3)_UPGRADE` cache to hold the compressed archives instead of the extracted DLLs to reduce storage requirements. If you want to remove the old files, delete `~/.cache/protonfixes/upscalers` directory, as they won't be automatically removed.
+  - The per-game cache is not enabled by default any more as it seemed to cause confusion. You can enable it using `PROTON_LOCAL_SHADER_CACHE=1` if you want the previous behavior.
+  - Removed `GST_GL_WINDOW=surfaceless` when enabling Wayland as it is not as compatible as `x11`. If your game spawns an invisible window on the taskbar under Wayland when playing videos, you can use the previous value to get rid of it.
+  - Removed the temporary `DISABLE_LAYER_MESA_ANTI_LAG` flag when using FSR4 upgrade as Anti-Lag 2 should be working properly now. For information on why this was added in the first place refer to https://github.com/CachyOS/proton-cachyos/issues/47.
+  - Updated `protonfixes` to https://github.com/Open-Wine-Components/umu-protonfixes/commit/1cec05549e2af5cf454fa748a80b76714ef2e940.
+* Proton (SLR specific)
+  - None
+* Proton (Native specific)
+  - This release won't have a native package in CachyOS repositories or the AUR. The reason is that there is too much work-in-progress in DXVK that might cause breakages, and there isn't a user-friendly way to downgrade CachyOS or AUR packages.
+  - Despite the above, the source is present in the repository for anyone wanting to build it locally by modifying the existing PKGBUILD, or from my own [repository here](https://github.com/loathingKernel/PKGBUILDs/releases/tag/loathk-public).
+  - Removed `piper`, `openfst`, `kaldi` and `vosk` from the build to reduce size and compile time as they were not linking correctly in the native build. They might be included again sometime in the future.
+* Wine (Standalone)
+  - Removed the "Disable hidraw/Enable SDL" patch as it breaks PlayStation glyphs in games with native DualSense support. You can still disable `hidraw` just like in Proton with `PROTON_DISABLE_HIDRAW=1`. Thanks to @NelloKudo.
+  - Imported upstream wine patches to enable `wow64` on multilib builds using `WINEARCH=wow64`. Using `wow64` should fix games that don't play videos due to missing lib32 `ffmpeg` and `gst-plugins` in Arch/CachyOS but also might cause issues with various applications and installers.
+
+> [!WARNING]
+> This release includes a `x86_64_v4` package. This package is largely untested and experimental.
+> It may exhibit issues or completely refuse to work. Use at your own discretion and report issues [here](https://github.com/CachyOS/proton-cachyos/issues/51) only.
+
+> [!NOTE]
+> For Wayland specific flags and options, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/EM-ADDITIONS.md
+
+> [!NOTE]
+> For FSR4 related documentation, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/FSR4.md
+
+> [!NOTE]
+> For DXVK-Sarek specific options to tune its behavior refer to: https://github.com/pythonlover02/DXVK-Sarek?tab=readme-ov-file#shader-compilation
+
+**Base:** https://github.com/ValveSoftware/Proton/tree/experimental-10.0-20250919
+
+---
+
 ### Version 10.0-20250906
 * Proton (SLR and Native)
   - Fixed `PROTON_(DLSS|XESS|FRS4|FSR3)_UPGRADE` to not download developement versions of upscaler DLLs. This also introduces checksum validation for the cached and installed DLLs.
@@ -26,7 +61,6 @@
 ---
 
 ### Version 10.0-20250905
-Version 10.0-20250905
 * Proton (SLR and Native)
   - Extended `PROTON_(DLSS|XESS|FRS4|FSR3)_UPGRADE` infrastructure to allow version selection and also cache downloaded DLLs.
     
