@@ -542,7 +542,7 @@ FFMPEG_CONFIGURE_ARGS += \
 	--enable-protocol=rtsp \
 
 FFMPEG_i386-unix_CONFIGURE_ARGS := \
-	--cross-prefix=i686-linux-gnu- \
+	--cross-prefix=i686-pc-linux-gnu- \
 	--arch=x86 \
 	--target-os=linux
 
@@ -550,7 +550,7 @@ FFMPEG_i386-unix_CONFIGURE_ARGS += \
 	--optflags="$(CFLAGS) $(i386_CFLAGS)"
 
 FFMPEG_x86_64-unix_CONFIGURE_ARGS := \
-	--cross-prefix=x86_64-linux-gnu- \
+	--cross-prefix=x86_64-pc-linux-gnu- \
 	--arch=x86_64 \
 	--target-os=linux
 
@@ -683,15 +683,6 @@ $(eval $(call rules-makedep,steamexe,x86_64))
 ## piper
 ##
 
-$(eval $(call rules-source,piper,$(SRCDIR)/piper))
-$(eval $(call rules-cmake,piper,x86_64,unix))
-
-$(OBJ)/.piper-x86_64-post-build:
-	mkdir -p $(PIPER_x86_64_DST)/lib/$(x86_64-unix_TARGET)
-	mv $(PIPER_x86_64_DST)/*.so* $(PIPER_x86_64_DST)/lib/$(x86_64-unix_TARGET)
-	mkdir -p $(DST_DIR)/share
-	cp -a $(PIPER_x86_64_DST)/{espeak-ng-data,libtashkeel_model.ort} $(DST_DIR)/share/
-	touch $@
 
 ##
 ## openfst
@@ -732,9 +723,6 @@ OPENFST_CONFIGURE_ARGS = \
   --with-pic \
   --disable-bin \
 
-$(eval $(call rules-source,openfst,$(SRCDIR)/openfst))
-$(eval $(call rules-configure,openfst,i386,unix))
-$(eval $(call rules-configure,openfst,x86_64,unix))
 
 
 ##
@@ -755,9 +743,6 @@ KALDI_CMAKE_ARGS = \
 
 KALDI_DEPENDS = openfst
 
-$(eval $(call rules-source,kaldi,$(SRCDIR)/kaldi))
-$(eval $(call rules-cmake,kaldi,i386,unix))
-$(eval $(call rules-cmake,kaldi,x86_64,unix))
 
 
 ##
@@ -769,17 +754,11 @@ VOSK_CMAKE_ARGS = \
 
 VOSK_DEPENDS = openfst kaldi
 
-$(eval $(call rules-source,vosk,$(SRCDIR)/vosk-api))
-$(eval $(call rules-cmake,vosk,i386,unix))
-$(eval $(call rules-cmake,vosk,x86_64,unix))
 
 
 ##
 ## wine
 ##
-
-# HACK: glib 2.0 in the runtime is old and causes a lot of errors with a newer GCC
-WINE_CFLAGS += -Wno-discarded-qualifiers
 
 WINE_SOURCE_ARGS = \
   --exclude configure \
@@ -827,8 +806,7 @@ WINE_x86_64_AUTOCONF_ARGS += \
   VKD3D_PE_CFLAGS="-I$(VULKAN_HEADERS_x86_64_DST)/include -I$(VKD3D_x86_64_DST)/include/vkd3d" \
   VKD3D_PE_LIBS="-L$(VKD3D_x86_64_LIBDIR)/vkd3d/x86_64-windows -l:libvkd3d-1.dll -l:libvkd3d-shader-1.dll"
 
-WINE_DEPENDS = gst_orc gstreamer gst_base vkd3d ffmpeg openfst kaldi vosk
-WINE_x86_64_DEPENDS = piper
+WINE_DEPENDS = gst_orc gstreamer gst_base vkd3d ffmpeg
 
 WINE_DEPENDS += libxkbcommon
 
@@ -1462,15 +1440,15 @@ $(FONTS_OBJ)/source-han/%.ttf: $$(%.ttf_CIDFONT) $$(%.ttf_FEATURES) $$(%.ttf_SEQ
 	mkdir -p $(FONTS_OBJ)/source-han
 	# Do not immediately create the target file, so that make is interrupted
 	# it will restart again
-	afdko makeotfexe -f $($(notdir $@)_CIDFONT) -omitMacNames -ff $($(notdir $@)_FEATURES) \
+	makeotfexe -f $($(notdir $@)_CIDFONT) -omitMacNames -ff $($(notdir $@)_FEATURES) \
 		-lic ADOBE -mf $($(notdir $@)_MENUNAMEDB) -r -nS -cs 25 -ch $($(notdir $@)_UNISOURCE) \
 		-ci $($(notdir $@)_SEQUENCES) -o $@.tmp
-	afdko tx -cff +S -no_futile $($(notdir $@)_CIDFONT) $@.cff
+	tx -cff +S -no_futile $($(notdir $@)_CIDFONT) $@.cff
 	# sftnedit uses a hardcoded temporary file in the local directory, so we have
 	# to run it in a dedicated temporary directory to prevent concurrent instances
 	# to step onto each other's feet
-	(TEMP_DIR=`mktemp -d` && cd $$TEMP_DIR && afdko sfntedit -a CFF=$(abspath $($(notdir $@)).cff) $(abspath $@.tmp) && rm -fr $$TEMP_DIR)
-	if [ "$(notdir $@)" = "msyh.ttf" ]; then afdko otf2ttf -o $@.tmp.ttf $@.tmp; mv -f $@.tmp.ttf $@.tmp; fi
+	(TEMP_DIR=`mktemp -d` && cd $$TEMP_DIR && sfntedit -a CFF=$(abspath $($(notdir $@)).cff) $(abspath $@.tmp) && rm -fr $$TEMP_DIR)
+	if [ "$(notdir $@)" = "msyh.ttf" ]; then otf2ttf -o $@.tmp.ttf $@.tmp; mv -f $@.tmp.ttf $@.tmp; fi
 	mv $@.tmp $@
 
 $(FONTS_OBJ)/ume-gothic/%.ttf: $$(%.ttf_FONT) $$(%.ttf_NAMETABLE_PATCH)
@@ -1480,12 +1458,12 @@ $(FONTS_OBJ)/ume-gothic/%.ttf: $$(%.ttf_FONT) $$(%.ttf_NAMETABLE_PATCH)
 	ttx -o $@ -m $($(notdir $@)_FONT) $(FONTS_OBJ)/ume-gothic/$(notdir $(basename $($(notdir $@)_NAMETABLE_PATCH))).ttx
 
 $(simsun.ttc): $(simsun.ttf) $(nsimsun.ttf)
-	afdko otf2otc -o $@.tmp $^
-	afdko otf2ttf -o $@ $@.tmp
+	otf2otc -o $@.tmp $^
+	otf2ttf -o $@ $@.tmp
 	rm $@.tmp
 
 $(msgothic.ttc): $(msgothic.ttf) $(mspgothic.ttf) $(msuigothic.ttf)
-	afdko otf2otc -o $@ $^
+	otf2otc -o $@ $^
 
 $(micross.ttf): $(FONTS)/scripts/merge.py $(noto_sans.ttf) $(noto_sans_arabic.ttf) $(noto_sans_armenian.ttf) $(noto_sans_bengali.ttf) $(noto_sans_coptic.ttf) \
 		$(noto_sans_georgian.ttf) $(noto_sans_gujarati.ttf) $(noto_sans_hebrew.ttf) $(noto_sans_khmer.ttf) $(noto_sans_tamil.ttf) \
@@ -1820,7 +1798,6 @@ ifeq ($(ENABLE_CCACHE),1)
 	export CCACHE_DIR := $(if $(CCACHE_DIR),$(CCACHE_DIR),$(HOME)/.ccache)
 	override DOCKER_OPTS := -v $(CCACHE_DIR):$(CCACHE_DIR)$(CONTAINER_MOUNT_OPTS) $(CCACHE_ENV) -e CCACHE_DIR=$(CCACHE_DIR) $(DOCKER_OPTS)
 else
-	export CCACHE_DISABLE := 1
 	override DOCKER_OPTS := $(CCACHE_ENV) -e CCACHE_DISABLE=1 $(DOCKER_OPTS)
 endif
 
@@ -1835,9 +1812,6 @@ ifeq ($(CONTAINER_ENGINE),)
 	CONTAINER_ENGINE := docker
 endif
 
-DOCKER_BASE = $(CONTAINER_ENGINE) run --rm -v $(SRC):$(SRC)$(CONTAINER_MOUNT_OPTS) -v $(OBJ):$(OBJ)$(CONTAINER_MOUNT_OPTS) \
-                -w $(OBJ) -e MAKEFLAGS \
-                $(DOCKER_OPTS) $(STEAMRT_IMAGE)
 
 .PHONY: dist deploy redist symstore-tarball
 .DEFAULT dist deploy redist symstore-tarball:
