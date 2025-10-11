@@ -1,3 +1,69 @@
+### Version 10.0-20251006
+* Proton (SLR and Native)
+  - Imported a couple of commits from upstream wine to fix Genshin Impact performance. Thanks to @NelloKudo.
+  - Imported latest wayland-related commits from Proton-EM. They should fix dead keys when using `winewayland.drv` and DPI scaling. Thanks to @Etaash-mathamsetty.
+  - Added an override for umu to use `steam.exe` instead of `start.exe` when launching applications. This is required by certain anime games on Linux. Use `UMU_USE_STEAM=1` to use this alternative path.
+  - Updated the default shader cache size for Mesa to 10GB when using `PROTON_LOCAL_SHADER_CACHE=1`.
+  - Updated `nvidia-libs/nvcuda` to https://github.com/SveSop/nvcuda/tree/d65952d3814453a91a7e4511ee0fd8203f3a416c .
+  - Updated `dxvk-sarek` to https://github.com/pythonlover02/DXVK-Sarek/tree/8843c627ffb4a32f184d5ba8100cc31999918a64 .
+  - Updated `protonfixes` to https://github.com/open-wine-components/umu-protonfixes/tree/f7a576d59904936faa39b7ab1c9eb975d04d9aa9 .
+* Proton (SLR specific)
+  - None
+* Proton (Native specific)
+  - None
+* Wine (Standalone)
+  - Imported lsteamclient as a wine module from miniproton. 
+
+> [!WARNING]
+> This release includes a `x86_64_v4` package. This package is largely untested and experimental.
+> It may exhibit issues or completely refuse to work. Use at your own discretion and report issues [here](https://github.com/CachyOS/proton-cachyos/issues/51) only.
+
+> [!NOTE]
+> For Wayland specific flags and options, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/EM-ADDITIONS.md
+
+> [!NOTE]
+> For FSR4 related documentation, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/FSR4.md
+
+> [!NOTE]
+> For DXVK-Sarek specific options to tune its behavior refer to: https://github.com/pythonlover02/DXVK-Sarek?tab=readme-ov-file#shader-compilation
+
+**Base:** https://github.com/ValveSoftware/Proton/tree/experimental-10.0-20251006
+
+---
+
+### Version 10.0-20251006
+* Proton (SLR and Native)
+  - Imported a couple of commits from upstream wine to fix Genshin Impact performance. Thanks to @NelloKudo.
+  - Imported latest wayland-related commits from Proton-EM. They should fix dead keys when using `winewayland.drv` and DPI scaling. Thanks to @Etaash-mathamsetty.
+  - Added an override for umu to use `steam.exe` instead of `start.exe` when launching applications. This is required by certain anime games on Linux. Use `UMU_USE_STEAM=1` to use this alternative path.
+  - Updated the default shader cache size for Mesa to 10GB when using `PROTON_LOCAL_SHADER_CACHE=1`.
+  - Updated `nvidia-libs/nvcuda` to https://github.com/SveSop/nvcuda/tree/d65952d3814453a91a7e4511ee0fd8203f3a416c .
+  - Updated `dxvk-sarek` to https://github.com/pythonlover02/DXVK-Sarek/tree/8843c627ffb4a32f184d5ba8100cc31999918a64 .
+  - Updated `protonfixes` to https://github.com/open-wine-components/umu-protonfixes/tree/f7a576d59904936faa39b7ab1c9eb975d04d9aa9 .
+* Proton (SLR specific)
+  - None
+* Proton (Native specific)
+  - None
+* Wine (Standalone)
+  - Imported lsteamclient as a wine module from miniproton. 
+
+> [!WARNING]
+> This release includes a `x86_64_v4` package. This package is largely untested and experimental.
+> It may exhibit issues or completely refuse to work. Use at your own discretion and report issues [here](https://github.com/CachyOS/proton-cachyos/issues/51) only.
+
+> [!NOTE]
+> For Wayland specific flags and options, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/EM-ADDITIONS.md
+
+> [!NOTE]
+> For FSR4 related documentation, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/FSR4.md
+
+> [!NOTE]
+> For DXVK-Sarek specific options to tune its behavior refer to: https://github.com/pythonlover02/DXVK-Sarek?tab=readme-ov-file#shader-compilation
+
+**Base:** https://github.com/ValveSoftware/Proton/tree/experimental-10.0-20251006
+
+---
+
 ### Version 10.0-20250919
 * Proton (SLR and Native)
   - DXVK is under heavy development at the moment of this release. DXVK and VKD3D-Proton have been updated to the latest version but issues might still arise. Reproduce any issues with Valve's Proton Experimental Bleeding Edge and report them upstream.
