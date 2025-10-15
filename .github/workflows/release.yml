@@ -70,7 +70,6 @@ jobs:
           - name: proton-${{ github.ref_name }}-x86_64
           - name: proton-${{ github.ref_name }}-x86_64_v2
           - name: proton-${{ github.ref_name }}-x86_64_v3
-          - name: proton-${{ github.ref_name }}-x86_64_v4
     uses: ./.github/workflows/_job_upload.yml
     with:
       version: ${{ github.ref_name }}
