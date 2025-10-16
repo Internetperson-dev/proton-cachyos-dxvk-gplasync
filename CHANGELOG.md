@@ -377,24 +377,6 @@ For wayland specific flags and options, please refer to: https://github.com/Etaa
 
 ---
 
-### Version 10.0-20250601
-* Proton (SLR and Native)
-  - FFmpeg has been bumped from `6.1.2` to `7.1.1`
-  - Every decoder, demuxer, parser, filter has been enabled in FFmpeg
-  - GStreamer and gst-plugins have been bumped to `1.26.1`
-  - Updated protonfixes to https://github.com/Open-Wine-Components/umu-protonfixes/commit/50a611291caf0527b89dc55602afe66070d6c544
-  - Imported new Wayland related patches from [Proton-EM-10.0-19](https://github.com/Etaash-mathamsetty/Proton/releases/tag/EM-10.0-19)
-  - Ignore steam input virtual controller when PROTON_PREFER_SDL is set (thanks to [Etaash-mathamsetty](https://github.com/Etaash-mathamsetty))
-* Proton (SLR specific)
-  - None
-* Proton (Native specific)
-  - Build openfst,kaldi,vosk,piper for native version again (they are still not found while building, so no support in wine yet)
-  - Clean up Steam's default Scout environment when using the native version of `proton-cachyos`
-
-**Base:** https://github.com/ValveSoftware/Proton/tree/experimental-bleeding-edge-10.0-204012-20250601-pdce981-w6a4d0d-d4f47cb-vf96654
-
----
-
 ### Version 10.0-20250515
 * Proton
   - HDR is NOT enabled by default with Wayland any more, use `PROTON_ENABLE_HDR=1` to enable when enabling Wayland.
