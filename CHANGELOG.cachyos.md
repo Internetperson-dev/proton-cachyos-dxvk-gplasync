@@ -1,22 +1,65 @@
-### Version 10.0-20251006
+### Version 10.0-20251015
 * Proton (SLR and Native)
-  - Imported a couple of commits from upstream wine to fix Genshin Impact performance. Thanks to @NelloKudo.
-  - Imported latest wayland-related commits from Proton-EM. They should fix dead keys when using `winewayland.drv` and DPI scaling. Thanks to @Etaash-mathamsetty.
-  - Added an override for umu to use `steam.exe` instead of `start.exe` when launching applications. This is required by certain anime games on Linux. Use `UMU_USE_STEAM=1` to use this alternative path.
-  - Updated the default shader cache size for Mesa to 10GB when using `PROTON_LOCAL_SHADER_CACHE=1`.
-  - Updated `nvidia-libs/nvcuda` to https://github.com/SveSop/nvcuda/tree/d65952d3814453a91a7e4511ee0fd8203f3a416c .
-  - Updated `dxvk-sarek` to https://github.com/pythonlover02/DXVK-Sarek/tree/8843c627ffb4a32f184d5ba8100cc31999918a64 .
-  - Updated `protonfixes` to https://github.com/open-wine-components/umu-protonfixes/tree/f7a576d59904936faa39b7ab1c9eb975d04d9aa9 .
+   - Just a version bump of the base proton bleeding edge version.
 * Proton (SLR specific)
   - None
 * Proton (Native specific)
   - None
 * Wine (Standalone)
-  - Imported lsteamclient as a wine module from miniproton. 
+  - None
 
-> [!WARNING]
-> This release includes a `x86_64_v4` package. This package is largely untested and experimental.
-> It may exhibit issues or completely refuse to work. Use at your own discretion and report issues [here](https://github.com/CachyOS/proton-cachyos/issues/51) only.
+> [!NOTE]
+> For Wayland specific flags and options, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/EM-ADDITIONS.md
+
+> [!NOTE]
+> For FSR4 related documentation, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/FSR4.md
+
+> [!NOTE]
+> For DXVK-Sarek specific options to tune its behavior refer to: https://github.com/pythonlover02/DXVK-Sarek?tab=readme-ov-file#shader-comp>
+
+**Base:** https://github.com/ValveSoftware/Proton/tree/experimental-bleeding-edge-10.0-255917-20251015-p30f753-w92e7a7-ddf74ab-v4ce928
+
+---
+
+### Version 10.0-20251008
+* Proton (SLR and Native)
+   - Updated DXVK to fix issues with Elite Dangerous.
+   - Updated `dxvk` to https://github.com/doitsujin/dxvk/tree/df74ab52
+   - Updated `vkd3d-proton` to https://github.com/HansKristian-Work/vkd3d-proton/tree/4ce92864
+* Proton (SLR specific)
+  - None
+* Proton (Native specific)
+  - None
+* Wine (Standalone)
+  - None
+
+> [!NOTE]
+> For Wayland specific flags and options, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/EM-ADDITIONS.md
+
+> [!NOTE]
+> For FSR4 related documentation, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/FSR4.md
+
+> [!NOTE]
+> For DXVK-Sarek specific options to tune its behavior refer to: https://github.com/pythonlover02/DXVK-Sarek?tab=readme-ov-file#shader-comp>
+
+**Base:** https://github.com/ValveSoftware/Proton/tree/experimental-10.0-20251006b
+
+---
+
+### Version 10.0-20251007
+* Proton (SLR and Native)
+   - Removed a number of commits that reportedly caused issues with various games, such as Marvel's Rivals. This includes the one helping with Genshin Impact performance.
+   - Re-added `DISABLE_LAYER_MESA_ANTI_LAG` when using `PROTON_FSR4_UPGRADE`.
+   - Fixed an issue with nvidia-libs handling that resulted in `nvcuda.dll` missing from the prefix. This would cause DLSS Framegen to be unavailable on certain versions of `nvngx_dlssg.dll` shipped with games.
+   - Updated `dxvk` to https://github.com/doitsujin/dxvk/tree/55ca713b36f02dcab391df3f847d8713e6150d3e
+   - Updated `vkd3d-proton` to https://github.com/HansKristian-Work/vkd3d-proton/tree/abed356c7d6ac592641ed859b9a197b9f00266a0
+   - Updated `protonfixes` to https://github.com/CachyOS/proton-cachyos/tree/898e3a8d16d180e2ca63ba7a9f750cea1fb45d51
+* Proton (SLR specific)
+  - None
+* Proton (Native specific)
+  - None
+* Wine (Standalone)
+  - None
 
 > [!NOTE]
 > For Wayland specific flags and options, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/EM-ADDITIONS.md
@@ -27,7 +70,7 @@
 > [!NOTE]
 > For DXVK-Sarek specific options to tune its behavior refer to: https://github.com/pythonlover02/DXVK-Sarek?tab=readme-ov-file#shader-compilation
 
-**Base:** https://github.com/ValveSoftware/Proton/tree/experimental-10.0-20251006
+**Base:** https://github.com/ValveSoftware/Proton/tree/experimental-10.0-20251006b
 
 ---
 
@@ -37,9 +80,9 @@
   - Imported latest wayland-related commits from Proton-EM. They should fix dead keys when using `winewayland.drv` and DPI scaling. Thanks to @Etaash-mathamsetty.
   - Added an override for umu to use `steam.exe` instead of `start.exe` when launching applications. This is required by certain anime games on Linux. Use `UMU_USE_STEAM=1` to use this alternative path.
   - Updated the default shader cache size for Mesa to 10GB when using `PROTON_LOCAL_SHADER_CACHE=1`.
-  - Updated `nvidia-libs/nvcuda` to https://github.com/SveSop/nvcuda/tree/d65952d3814453a91a7e4511ee0fd8203f3a416c .
-  - Updated `dxvk-sarek` to https://github.com/pythonlover02/DXVK-Sarek/tree/8843c627ffb4a32f184d5ba8100cc31999918a64 .
-  - Updated `protonfixes` to https://github.com/open-wine-components/umu-protonfixes/tree/f7a576d59904936faa39b7ab1c9eb975d04d9aa9 .
+  - Updated `nvidia-libs/nvcuda` to https://github.com/SveSop/nvcuda/tree/d65952d3814453a91a7e4511ee0fd8203f3a416c
+  - Updated `dxvk-sarek` to https://github.com/pythonlover02/DXVK-Sarek/tree/8843c627ffb4a32f184d5ba8100cc31999918a64
+  - Updated `protonfixes` to https://github.com/open-wine-components/umu-protonfixes/tree/f7a576d59904936faa39b7ab1c9eb975d04d9aa9
 * Proton (SLR specific)
   - None
 * Proton (Native specific)
