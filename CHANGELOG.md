@@ -377,6 +377,17 @@ For wayland specific flags and options, please refer to: https://github.com/Etaa
 
 ---
 
+### Version 10.0-20250520
+* Proton
+  - Enable application-specific workarounds when using the Wayland driver by default
+  - Remove media converter from `winedmo` and reenable FFmpeg for Wine, bump it to 6.1.2.
+  - Import patches from Proton-EM to disable mouse acceleration, enable touchpad scrolling, and handling of rotated screens.
+  - Revert to using Valve's Sniper SDK since we do not need to build `python-xlib` presently, and for transparency.
+
+**Base:** https://github.com/ValveSoftware/Proton/tree/experimental-bleeding-edge-10.0-199576-20250520-p6aacad-w900d43-d61b91e-v7e829e
+
+---
+
 ### Version 10.0-20250515
 * Proton
   - HDR is NOT enabled by default with Wayland any more, use `PROTON_ENABLE_HDR=1` to enable when enabling Wayland.
