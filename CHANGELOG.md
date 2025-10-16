@@ -250,6 +250,41 @@
 
 ---
 
+### Version 10.0-20250807
+* Proton (SLR and Native)
+  - Added downloader for XeSS dlls (version **2.1.0**), similar to the DLSS downloader. Use `PROTON_XESS_UPGRADE=1` environment variable to enable it.
+  - Added `PROTON_FSR4_RDNA3_UPGRADE` for RDNA3 GPUs. Does the same thing as `PROTON_FSR4_UPGRADE` but also sets some other necessary variables.
+  - Added completer implementations of Nvidia libraries missing from Proton. Should help with enabling options such as PhysX on games they were disabled before. These Nvidia libraries were integrated from https://github.com/SveSop/nvidia-libs. To enable them use `PROTON_NVIDIA_LIBS=1`.  You can also enable them individually using `PROTON_NVIDIA_NVCUDA`, `PROTON_NVIDIA_NVENC`, `PROTON_NVIDIA_NVML` and `PROTON_NVIDIA_NVOPTIX`. These are incompatible with `wow64` and thus disabled when `PROTON_USE_WOW64=1` is set.
+
+    **Important**: If you are using RTX series 4000 or 5000 GPUs you might encounter bad performance or crashes when enabling these with 32bit games. Use`PROTON_NVIDIA_LIBS_NO_32BIT=1` with any of the options above to disable the 32bit and use the 64bit libraries only. Some 32bit games on RTX 4000 and above might still exhibit bad performance with these libraries enabled, e.g. Mirror's Edge.
+
+    **Note**: It is advised that you report issues with these libraries in their respective issue trackers, [nvcuda](https://github.com/SveSop/nvcuda/issues), [nvenc](https://github.com/SveSop/nvenc/issues), [wine-nvml](https://github.com/Saancreed/wine-nvml/issues) and [wine-nvoptix](https://github.com/SveSop/wine-nvoptix/issues). If you don't know what is causing the problem, feel free to open an issue in [proton-cachyos](https://github.com/CachyOS/proton-cachyos/issues) instead.
+  - Added per-game shader cache, enabled by default, can be disabled with `PROTON_LOCAL_SHADER_CACHE=0`. Shaders will be cached under `<steamlibrary>/shadercache/<appid>` for each game, similarly to when shader pre-caching is enabled. You will get stuttering as the shader cache for each game is rebuilt but the cached shaders won't be evicted due to limited cache size.
+  - Ensured that the codecs in FFmpeg match what Valve has enabled in theirs. We still enable more but now we should not miss any by chance.
+  - Disabled `codecalpha` from gst-bad which was causing issues with some games with WebM videos when Wine is built with FFmpeg, and re-enabled `winedmo`.
+  - Imported wayland related commits from Proton-EM ([up to EM-10.0-2B](https://github.com/Etaash-mathamsetty/Proton/tree/EM-10.0-2B)).
+  - Imported a few upstream commits.
+  - Fix `protonfixes` not de-symlinking prefix files properly. Should fix issues with installing some winetricks verbs.
+  - Updated protonfixes to https://github.com/Open-Wine-Components/umu-protonfixes/commit/5cdfd3608d513bc9ff9c2d1a642ebd85687fbc1e
+* Proton (SLR specific)
+  - None
+* Proton (Native specific)
+  - None
+
+**Note:** There is a testing version with NTSync available here:
+* https://share.cachyos.org/proton/proton-cachyos-10.0-20250807-slr-ntsync-x86_64.tar.xz
+* https://share.cachyos.org/proton/proton-cachyos-10.0-20250807-slr-ntsync-x86_64_v3.tar.xz
+
+To use NTSync you have to set `PROTON_USE_NTSYNC=1`. Do not trust `mangohud`'s indicator, it falsely reports that it is using NTSync without this
+environment variable while in reality it's using FSync/ESync. Verify with `lsof /dev/ntsync`. We want to be certain it doesn't cause regressions
+hence we are not including it with in the main packages. This is not the same patchset as in Proton-GE/Proton-EM, it's compatibility might differ.
+
+**Note:** For wayland specific flags and options, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/EM-ADDITIONS.md
+
+**Base:** https://github.com/ValveSoftware/Proton/tree/experimental-bleeding-edge-10.0-228005-20250807-p29548f-w253fb0-d835e98c-vb72e62
+
+---
+
 ### Version 10.0-20250714
 * Proton (SLR and Native)
   - Added downloader for DLSS dlls (version **310.3.0**), similar to the FSR4 downloader. Use `PROTON_DLSS_UPGRADE=1` environment variable to enable it.
