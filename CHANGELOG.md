@@ -1,3 +1,31 @@
+### Version 10.0-20251017
+* Proton (SLR and Native)
+   - Added `libpcap` for the `wpcap` module in Wine.
+   - Added another alternative DXVK, `dxvk-gplasync`, at the requests of our friends at Dawn Winery. Enable using `PROTON_DXVK_GPLASYNC=1`.
+   - Imported patches to make Blue Protocol: Star Resonance to work. Thanks to Dawn Winery for the many sleepless nights spent on debugging and working out the issue.
+   - Imported `windowscodecs` commits from upstream wine. Might help with taking screenshots in some cases.
+   - Removed a few conflicting `staging` patches that have been superseded in upstream Wine. This also includes the "Hide wine version from applications" patch, as it shouldn't be needed by anything. If that's not the case, please report it by opening an issue.
+   - Updated `protonfixes` to https://github.com/CachyOS/proton-cachyos/tree/596f977
+* Proton (SLR specific)
+  - None
+* Proton (Native specific)
+  - None
+* Wine (Standalone)
+  - None
+
+> [!NOTE]
+> For Wayland specific flags and options, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/EM-ADDITIONS.md
+
+> [!NOTE]
+> For FSR4 related documentation, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/FSR4.md
+
+> [!NOTE]
+> For DXVK-Sarek specific options to tune its behavior refer to: https://github.com/pythonlover02/DXVK-Sarek?tab=readme-ov-file#shader-comp>
+
+**Base:** https://github.com/ValveSoftware/Proton/tree/experimental-10.0-20251017
+
+---
+
 ### Version 10.0-20251015
 * Proton (SLR and Native)
    - Just a version bump of the base proton bleeding edge version.
