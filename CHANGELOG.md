@@ -1,3 +1,33 @@
+### Version 10.0-20251107
+* Proton (SLR and Native)
+   - This is mostly an incremental update to the most recent Proton Experimental release `10.0-20251106b`.
+   - Imported more commits from upstream Wine for `d2d1`, `windowscodecs`, `vccorlib140` and `msvcrt`.
+   - As usual, imported a couple of wayland-related updates from Proton-EM.
+   - Updated `protonfixes` to https://github.com/CachyOS/proton-cachyos/tree/5771780
+* Proton (SLR specific)
+  - None
+* Proton (Native specific)
+  - None
+* Wine (Standalone)
+  - None
+
+> [!WARNING]
+> This release includes a `x86_64_v4` package. This package is largely untested and experimental.
+> It may exhibit issues or completely refuse to work. Use at your own discretion and report issues [here](https://github.com/CachyOS/proton-cachyos/issues/51) only.
+
+> [!NOTE]
+> For Wayland specific flags and options, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/EM-ADDITIONS.md
+
+> [!NOTE]
+> For FSR4 related documentation, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/FSR4.md
+
+> [!NOTE]
+> For DXVK-Sarek specific options to tune its behavior refer to: https://github.com/pythonlover02/DXVK-Sarek?tab=readme-ov-file#shader-comp>
+
+**Base:** https://github.com/ValveSoftware/Proton/tree/experimental-10.0-20251106b
+
+---
+
 ### Version 10.0-20251023
 * Proton (SLR and Native)
    - This is mostly an incremental update to the most recent Proton Experimental release.
