@@ -1,9 +1,46 @@
+### Version 10.0-20251120
+* Proton (SLR and Native)
+   - Updated to the most recent Proton Experimental release `10.0-202511020`.
+   - Fixed an issue that could cause Proton to crash when the Unix environment was too large (https://github.com/CachyOS/proton-cachyos/issues/73)
+   - Added the commits from upstream wine that fix Genshin Impact and Zenless Zone Zero high CPU usage again. This time Marvel's Rivals should not crash.
+   - Added a patch to fix Girls Frontline crashing on startup. Thanks to @NelloKudo.
+   - Added a convinience function in Proton that emulates `DXVK/VKD3D_FRAME_RATE`. It reads the value from the removed `DXVK/VKD3D` env variables, and applies it through `DXVK_CONFIG`. This is added as a convenience and I am not certain if it will remain.
+   - Added an `umu.exe` shim executable to start appliations with when using `umu-launcher`. It is derived from `steam.exe` but the Steam specific bits have been removed. It should stop Proton, and thus umu, from exiting prematurely in some cases after starting the target application.
+   - Updated dxvk-sarek, dxvk-gplasync and nvidia-libs in proton to check if their respective DLLs are available in the release before including them. This allows for selectively disabling them while testing llvm/arm64 builds. Accompaning options have been added in `configure.sh` to exclude them from a build. Our released builds still include them.
+   - Imported a few fixes to NTSync from upstream wine.
+   - Imported more commits from upstream Wine for `d2d1`, `windowscodecs`, `vccorlib140`.
+   - As usual, imported a couple of wayland-related updates from Proton-EM. This time around they should fix some keyboard input issues.
+   - Updated `protonfixes` to https://github.com/open-wine-components/umu-protonfixes/tree/2b33f28
+* Proton (SLR specific)
+  - None
+* Proton (Native specific)
+  - None
+* Wine (Standalone)
+  - None
+
+> [!WARNING]
+> This release includes a `x86_64_v4` package. This package is largely untested and experimental.
+> It may exhibit issues or completely refuse to work. Use at your own discretion and report issues [here](https://github.com/CachyOS/proton-cachyos/issues/51) only.
+
+> [!NOTE]
+> For Wayland specific flags and options, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/EM-ADDITIONS.md
+
+> [!NOTE]
+> For FSR4 related documentation, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/FSR4.md
+
+> [!NOTE]
+> For DXVK-Sarek specific options to tune its behavior refer to: https://github.com/pythonlover02/DXVK-Sarek?tab=readme-ov-file#shader-comp>
+
+**Base:** https://github.com/ValveSoftware/Proton/tree/experimental-10.0-20251120
+
+---
+
 ### Version 10.0-20251107
 * Proton (SLR and Native)
    - This is mostly an incremental update to the most recent Proton Experimental release `10.0-20251106b`.
    - Imported more commits from upstream Wine for `d2d1`, `windowscodecs`, `vccorlib140` and `msvcrt`.
    - As usual, imported a couple of wayland-related updates from Proton-EM.
-   - Updated `protonfixes` to https://github.com/CachyOS/proton-cachyos/tree/5771780
+   - Updated `protonfixes` to https://github.com/open-wine-components/umu-protonfixes/tree/5771780
 * Proton (SLR specific)
   - None
 * Proton (Native specific)
@@ -33,7 +70,7 @@
    - This is mostly an incremental update to the most recent Proton Experimental release.
    - Removed a few more conflicting `staging` patches which have been superseded in upstream Proton/Wine.
    - Removed dualsense related patches which have been superseded in upstream Proton/Wine.
-   - Updated `protonfixes` to https://github.com/CachyOS/proton-cachyos/tree/c8e88a9
+   - Updated `protonfixes` to https://github.com/open-wine-components/umu-protonfixes/tree/c8e88a9
 * Proton (SLR specific)
   - None
 * Proton (Native specific)
@@ -65,7 +102,7 @@
    - Imported patches to make Blue Protocol: Star Resonance to work. Thanks to Dawn Winery for the many sleepless nights spent on debugging and working out the issue.
    - Imported `windowscodecs` commits from upstream wine. Might help with taking screenshots in some cases.
    - Removed a few conflicting `staging` patches that have been superseded in upstream Wine. This also includes the "Hide wine version from applications" patch, as it shouldn't be needed by anything. If that's not the case, please report it by opening an issue.
-   - Updated `protonfixes` to https://github.com/CachyOS/proton-cachyos/tree/596f977
+   - Updated `protonfixes` to https://github.com/open-wine-components/umu-protonfixes/tree/596f977
 * Proton (SLR specific)
   - None
 * Proton (Native specific)
@@ -141,7 +178,7 @@
    - Fixed an issue with nvidia-libs handling that resulted in `nvcuda.dll` missing from the prefix. This would cause DLSS Framegen to be unavailable on certain versions of `nvngx_dlssg.dll` shipped with games.
    - Updated `dxvk` to https://github.com/doitsujin/dxvk/tree/55ca713b36f02dcab391df3f847d8713e6150d3e
    - Updated `vkd3d-proton` to https://github.com/HansKristian-Work/vkd3d-proton/tree/abed356c7d6ac592641ed859b9a197b9f00266a0
-   - Updated `protonfixes` to https://github.com/CachyOS/proton-cachyos/tree/898e3a8d16d180e2ca63ba7a9f750cea1fb45d51
+   - Updated `protonfixes` to https://github.com/open-wine-components/umu-protonfixes/tree/898e3a8d16d180e2ca63ba7a9f750cea1fb45d51
 * Proton (SLR specific)
   - None
 * Proton (Native specific)
