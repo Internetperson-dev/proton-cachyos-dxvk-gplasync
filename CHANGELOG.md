@@ -1,3 +1,31 @@
+### Version 10.0-20251126
+* Proton (SLR and Native)
+   - Updated to the most recent Proton Experimental release `10.0-202511025` (`experimental-bleeding-edge-10.0-275645-20251126-p1c3998-wdefa42-d8d58ad-vcc9e5e` to be exact).
+   - Fixed an issue with Resonite caused by the recently imported wine environment changes (https://github.com/CachyOS/proton-cachyos/issues/80)
+* Proton (SLR specific)
+  - None
+* Proton (Native specific)
+  - None
+* Wine (Standalone)
+  - None
+
+> [!WARNING]
+> This release includes a `x86_64_v4` package. This package is largely untested and experimental.
+> It may exhibit issues or completely refuse to work. Use at your own discretion and report issues [here](https://github.com/CachyOS/proton-cachyos/issues/51) only.
+
+> [!NOTE]
+> For Wayland specific flags and options, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/EM-ADDITIONS.md
+
+> [!NOTE]
+> For FSR4 related documentation, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/FSR4.md
+
+> [!NOTE]
+> For DXVK-Sarek specific options to tune its behavior refer to: https://github.com/pythonlover02/DXVK-Sarek?tab=readme-ov-file#shader-comp>
+
+**Base:** https://github.com/ValveSoftware/Proton/tree/experimental-bleeding-edge-10.0-275645-20251126-p1c3998-wdefa42-d8d58ad-vcc9e5e
+
+---
+
 ### Version 10.0-20251120
 * Proton (SLR and Native)
    - Updated to the most recent Proton Experimental release `10.0-202511020`.
