@@ -70,9 +70,9 @@ $$(OBJ)/.$(1)-$(3)-configure: $$(OBJ)/.wine-$$(HOST_ARCH)-tools
 $$(OBJ)/.$(1)-$(3)-build:
 	@echo ":: building $(1)-$(3)..." >&2
 	+cd "$$($(2)_$(3)_OBJ)" && env $$($(2)_$(3)_ENV) \
-	$$(BEAR) $$(MAKE)
+	$$(BEAR) $$(MAKE) -j$$(SUBJOBS)
 	cd "$$($(2)_$(3)_OBJ)" && env $$($(2)_$(3)_ENV) \
-	$$(MAKE) install
+	$$(MAKE) -j$$(SUBJOBS) install
 	touch $$@
 endif
 endef
