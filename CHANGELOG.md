@@ -1,3 +1,43 @@
+### Version 10.0-20260101
+* Proton (SLR and Native)
+   - Bugfix release based on version `10.0-20251222`.
+   - Imported dualsense patches from https://github.com/xzn/proton-ds5-haptic. Development and issues are discussed in https://github.com/ValveSoftware/Proton/issues/5900
+   - Re-synced a few wayland patches with Proton-EM. Due to some outdated cherry-picks, certain keyboard layouts would not work when using `winewayland.drv`.
+   - Removed a long standing patch that might have been causing degraded 1% lows in some cases. Since the difference was very small, I am certain yet, but after a lot of benchmarks, 1% lows seem to be ~3fps higher consistently. Hopefully removed commit was the culprit.
+   - Updated `protonfixes` to https://github.com/open-wine-components/umu-protonfixes/tree/f78be4d
+* Proton (SLR specific)
+  - None
+* Proton (Native specific)
+  - None
+* Wine (Standalone)
+  - None
+
+> [!IMPORTANT]
+> I know that we have a lot of different packages that might cause confusion. My suggestion is to be conservative and use either `x86_64`
+> or `x86_64_v2`. `x86_64_v3` should be absolutely identical with `x86_64_v2` across the board, and `x86_64_v4` can be worse in some cases.
+> Feel free to experiment and see which fits better for your system, of course.
+
+> [!NOTE]
+> We have been building Arm64 packages of Proton-CachyOS for the past few versions. They are not part of the release but their artifacts can be found in the
+> release's workflow. We are looking for testers, if you are interested, feel free to contact me (`@loathingKernel`) in the CachyOS Discord server.
+
+> [!WARNING]
+> This release includes a `x86_64_v4` package. This package is largely untested and experimental.
+> It may exhibit issues or completely refuse to work. Use at your own discretion and report issues [here](https://github.com/CachyOS/proton-cachyos/issues/51) only.
+
+> [!NOTE]
+> For Wayland specific flags and options, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/EM-ADDITIONS.md
+
+> [!NOTE]
+> For FSR4 related documentation, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/FSR4.md
+
+> [!NOTE]
+> For DXVK-Sarek specific options to tune its behavior refer to: https://github.com/pythonlover02/DXVK-Sarek?tab=readme-ov-file#shader-comp>
+
+**Base:** https://github.com/ValveSoftware/Proton/tree/experimental-10.0-20251222
+
+---
+
 ### Version 10.0-20251222
 * Proton (SLR and Native)
    - Updated to the most recent Proton Experimental release `10.0-20251222`.
@@ -6,7 +46,7 @@
    - `PROTON_FSR4_INDICATOR` now also sets `MLFG_WATERMARK=1` along with `FSR$_WATERMARK=1`.
    - When enabling `winewayland`, `ENABLE_HDR_WSI=1` will also be set automatically if and Nvidia GPU is detected. 
    - Imported a number of commits from Proton-EM that implement FSR4 MLFG.
-   - Imported a number of commits from Proton-EM that implement better keyboard layout support an HDR under `winewayland`.
+   - Imported a number of commits from Proton-EM that implement better keyboard layout support and HDR under `winewayland`.
    - Added `WINE_BLOCK_HOSTS` to provide a list of hosts for Wine to not connect to. The list can be either comma (`,`) or semicolon (`;`) separated, i.e `WINE_BLOCK_HOSTS=host1.org,host2.net`. The maximum number of hosts is 16 and the maximum length of each host is 256 characters.
    - Updated `protonfixes` to https://github.com/open-wine-components/umu-protonfixes/tree/82b2927
 * Proton (SLR specific)
