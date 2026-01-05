@@ -1,0 +1,26 @@
+From 10a391844dad175b50a1f1140aa5f4882951b5f8 Mon Sep 17 00:00:00 2001
+From: Stelios Tsampas <loathingkernel@gmail.com>
+Date: Mon, 5 Jan 2026 20:30:47 +0200
+Subject: [PATCH] upscalers: add support for upgrading libxess_dx11.dll
+
+---
+ upscalers.py | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/upscalers.py b/upscalers.py
+index 6a5ab93..12d704b 100644
+--- a/upscalers.py
++++ b/upscalers.py
+@@ -83,6 +83,9 @@ def __get_dlss_dlls(version: str = 'default') -> dict:
+ def __get_xess_dlls(version: str = 'default') -> dict:
+     return {
+         'drive_c/windows/system32/libxess.dll': __get_dll_manifest('xess', version),
++        'drive_c/windows/system32/libxess_dx11.dll': __get_dll_manifest(
++            'xess_dx11', version
++        ),
+         'drive_c/windows/system32/libxell.dll': __get_dll_manifest('xell', version),
+         'drive_c/windows/system32/libxess_fg.dll': __get_dll_manifest(
+             'xess_fg', version
+-- 
+2.52.0
+
