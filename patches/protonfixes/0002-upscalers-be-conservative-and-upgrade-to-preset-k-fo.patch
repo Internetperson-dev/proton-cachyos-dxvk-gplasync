@@ -1,0 +1,26 @@
+From dc0cd875ff9f33042b91aab4b12f365a3f3ff78d Mon Sep 17 00:00:00 2001
+From: Stelios Tsampas <loathingkernel@gmail.com>
+Date: Tue, 6 Jan 2026 12:52:38 +0200
+Subject: [PATCH 2/2] upscalers: be conservative and upgrade to preset k for
+ DLSS SR
+
+---
+ upscalers.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/upscalers.py b/upscalers.py
+index 12d704b..2854d30 100644
+--- a/upscalers.py
++++ b/upscalers.py
+@@ -428,7 +428,7 @@ def setup_upscalers(
+                 'ngx_dlss_sr_override=on,'
+                 'ngx_dlss_rr_override=on,'
+                 'ngx_dlss_fg_override=on,'
+-                'ngx_dlss_sr_override_render_preset_selection=render_preset_latest,'
++                'ngx_dlss_sr_override_render_preset_selection=render_preset_k,'
+                 'ngx_dlss_rr_override_render_preset_selection=render_preset_latest,'
+             ),
+         )
+-- 
+2.52.0
+
