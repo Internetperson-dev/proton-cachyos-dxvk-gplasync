@@ -1,0 +1,27 @@
+From 6889e25eed7b3986124a3474ad20813ea5796074 Mon Sep 17 00:00:00 2001
+From: Stelios Tsampas <loathingkernel@gmail.com>
+Date: Wed, 7 Jan 2026 00:35:50 +0200
+Subject: [PATCH 3/3] upscalers: set preset selection to default for now
+
+---
+ upscalers.py | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/upscalers.py b/upscalers.py
+index 2854d30..12122a3 100644
+--- a/upscalers.py
++++ b/upscalers.py
+@@ -428,8 +428,8 @@ def setup_upscalers(
+                 'ngx_dlss_sr_override=on,'
+                 'ngx_dlss_rr_override=on,'
+                 'ngx_dlss_fg_override=on,'
+-                'ngx_dlss_sr_override_render_preset_selection=render_preset_k,'
+-                'ngx_dlss_rr_override_render_preset_selection=render_preset_latest,'
++                'ngx_dlss_sr_override_render_preset_selection=default,'
++                'ngx_dlss_rr_override_render_preset_selection=default,'
+             ),
+         )
+ 
+-- 
+2.52.0
+
