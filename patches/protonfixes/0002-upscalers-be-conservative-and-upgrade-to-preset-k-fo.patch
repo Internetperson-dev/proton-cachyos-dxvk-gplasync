@@ -1,7 +1,7 @@
 From dc0cd875ff9f33042b91aab4b12f365a3f3ff78d Mon Sep 17 00:00:00 2001
 From: Stelios Tsampas <loathingkernel@gmail.com>
 Date: Tue, 6 Jan 2026 12:52:38 +0200
-Subject: [PATCH 2/3] upscalers: be conservative and upgrade to preset k for
+Subject: [PATCH 2/4] upscalers: be conservative and upgrade to preset k for
  DLSS SR
 
 ---

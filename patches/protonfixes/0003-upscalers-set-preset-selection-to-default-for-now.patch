@@ -1,7 +1,7 @@
 From 6889e25eed7b3986124a3474ad20813ea5796074 Mon Sep 17 00:00:00 2001
 From: Stelios Tsampas <loathingkernel@gmail.com>
 Date: Wed, 7 Jan 2026 00:35:50 +0200
-Subject: [PATCH 3/3] upscalers: set preset selection to default for now
+Subject: [PATCH 3/4] upscalers: set preset selection to default for now
 
 ---
  upscalers.py | 4 ++--
