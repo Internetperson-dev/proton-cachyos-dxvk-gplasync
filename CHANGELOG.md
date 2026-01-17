@@ -1,3 +1,42 @@
+### Version 10.0-20260102
+* Proton (SLR and Native)
+   - Development release based on version `10.0-20260101`. Because this update is meant for testing, this release will NOT be availabe in the CachyOS repos or the AUR.
+   - Add and build `d7vk` module. Use the **temporary** `PROTON_DXVK_DDRAW=1` environment variable to use `ddraw.dll` from d7vk.
+   - Patched `protonfixes` to use the `default` preset when upgrading DLSS. This is supposed to allow DLSS to choose the preset to use according to the currently selected upscale mode.
+   - Patched `protonfixes` and `wine` to download and redirect `libxess_dx11.dll`.
+* Proton (SLR specific)
+  - None
+* Proton (Native specific)
+  - None
+* Wine (Standalone)
+  - None
+
+> [!IMPORTANT]
+> I know that we have a lot of different packages that might cause confusion. My suggestion is to be conservative and use either `x86_64`
+> or `x86_64_v2`. `x86_64_v3` should be absolutely identical with `x86_64_v2` across the board, and `x86_64_v4` can be worse in some cases.
+> Feel free to experiment and see which fits better for your system, of course.
+
+> [!WARNING]
+> This release includes a `x86_64_v4` package. This package is largely untested and experimental.
+> It may exhibit issues or completely refuse to work. Use at your own discretion and report issues [here](https://github.com/CachyOS/proton-cachyos/issues/51) only.
+
+> [!NOTE]
+> For Wayland specific flags and options, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/EM-ADDITIONS.md
+
+> [!NOTE]
+> For FSR4 related documentation, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/FSR4.md
+
+> [!NOTE]
+> For DXVK-Sarek specific options to tune its behavior refer to: https://github.com/pythonlover02/DXVK-Sarek?tab=readme-ov-file#shader-comp>
+
+> [!NOTE]
+> We have been building Arm64 packages of Proton-CachyOS for the past few versions. They are not part of the release but their artifacts can be found in the
+> release's workflow. We are looking for testers, if you are interested, feel free to contact me (`@loathingKernel`) in the CachyOS Discord server.
+
+**Base:** https://github.com/ValveSoftware/Proton/tree/experimental-10.0-20251222
+
+---
+
 ### Version 10.0-20260101
 * Proton (SLR and Native)
    - Bugfix release based on version `10.0-20251222`.
