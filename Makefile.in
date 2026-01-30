@@ -1121,6 +1121,8 @@ default_pfx: dxvk-sarek
 endif # WITHOUT_SAREK
 
 
+ifneq ($(WITHOUT_D7VK),1)
+
 ##
 ## d7vk
 ##
@@ -1152,6 +1154,8 @@ $(OBJ)/.d7vk-post-source:
 	touch $@
 
 default_pfx: d7vk
+
+endif # WITHOUT_D7VK
 
 
 ##
