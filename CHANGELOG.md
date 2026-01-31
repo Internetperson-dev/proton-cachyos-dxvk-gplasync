@@ -1,3 +1,46 @@
+### Version 10.0-20260127
+* Proton (SLR and Native)
+   - Updated to the most recent Proton Experimental release `10.0-20260127`.
+   - Imported fixes for EA App from `steam_helper` to `umu_helper`.
+   - Imported upstream wine changes to fix an issue that caused applications to hang on exit. Thanks to @NelloKudo.
+   - Imported upstream wine changes to fix a crash under odd circumstances. https://github.com/CachyOS/proton-cachyos/issues/89
+   - Imported some winewayland fixes from Proton-EM.
+   - Updated `d7vk` to https://github.com/WinterSnowfall/d7vk/tree/9459afe6
+   - Updated `dxvk-sarek` to https://github.com/pythonlover02/DXVK-Sarek/tree/b8d84197
+   - Updated `protonfixes` to https://github.com/open-wine-components/umu-protonfixes/tree/ac8eeea
+   - The arm64 build is now based on Valve's steamrt4 arm64 SDK instead of our local sniper arm64 SDK used previously.* Proton (SLR specific)
+  - None
+* Proton (Native specific)
+  - None
+* Wine (Standalone)
+  - None
+
+> [!IMPORTANT]
+> I know that we have a lot of different packages that might cause confusion. My suggestion is to be conservative and use `x86_64`. The `x86_64_v2`
+> and `x86_64_v3` should be absolutely identical between them and with `x86_64` across the board, and `x86_64_v4` can be worse in some cases.
+> Feel free to experiment and see which fits better for your system, of course.
+
+> [!WARNING]
+> This release includes a `x86_64_v4` package. This package is largely untested and experimental.
+> It may exhibit issues or completely refuse to work. Use at your own discretion and report issues [here](https://github.com/CachyOS/proton-cachyos/issues/51) only.
+
+> [!NOTE]
+> For Wayland specific flags and options, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/EM-ADDITIONS.md
+
+> [!NOTE]
+> For FSR4 related documentation, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/FSR4.md
+
+> [!NOTE]
+> For DXVK-Sarek specific options to tune its behavior refer to: https://github.com/pythonlover02/DXVK-Sarek?tab=readme-ov-file#shader-comp>
+
+> [!NOTE]
+> We have been building Arm64 packages of Proton-CachyOS for the past few versions. They are not part of the release but their artifacts can be found in the
+> release's workflow. We are looking for testers, if you are interested, feel free to contact me (`@loathingKernel`) in the CachyOS Discord server.
+
+**Base:** https://github.com/ValveSoftware/Proton/tree/experimental-10.0-20260127
+
+---
+
 ### Version 10.0-20260102
 * Proton (SLR and Native)
    - Development release based on version `10.0-20260101`. Because this update is meant for testing, this release will NOT be availabe in the CachyOS repos or the AUR.
