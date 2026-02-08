@@ -1,3 +1,49 @@
+### Version 10.0-20260207
+* Proton (SLR and Native)
+   - Update release to address a few minor issues of the previous one, based on `bleeding-edge`.
+   - Partially re-added the DualSense haptics patchset. The hotplug support patchets are omitted as they were causing issues. Thanks to @xzn for taking an interest and providing an updated patchset.
+   - Removed some faulty `print()` statements in the `proton` script that messed up parsing Proton's `stdout` when using `getnativepath`/`getcompatpath`. https://github.com/CachyOS/proton-cachyos/issues/96
+   - Updated `d7vk` to https://github.com/WinterSnowfall/d7vk/tree/v1.3
+   - Updated `protonfixes` to https://github.com/open-wine-components/umu-protonfixes/tree/d37ce42
+* Proton (SLR specific)
+  - None
+* Proton (Native specific)
+  - None
+* Wine (Standalone)
+  - Added workflow to build `wine-cachyos` redistributables, potentially usable by Lutris etc. Still under consideration. Thanks to @NelloKudo
+
+> [!NOTE]
+> We have been building `arm64` packages of Proton-CachyOS for the past few versions. They are now part of the release but they are untested and possibly
+> broken. To use this build you will need to get and build a WIP version of `umu-launcher` from https://github.com/loathingKernel/umu-launcher/tree/tool_info_arm64,
+> specifically the `tool_info_arm64` branch. From the CLI interface it should work normally by pointing `PROTONPATH` to this proton build. If you want to enter
+> the `steamrt4` container to inspect it without running proton, you can do so by running `PROTONPATH=umu-steamrt4-arm64 umu-run xterm`.
+> 
+> I also provide unpatched builds of Proton Experimental with support for `umu-launcher` in my personal repository https://github.com/loathingKernel/Proton/releases which can be used for testing `arm64`
+> 
+> We are looking for testers, if you are interested, feel free to contact me (`@loathingKernel`) in the [CachyOS Discord server](https://discord.gg/r2C4gAdh).
+
+> [!IMPORTANT]
+> I know that we have a lot of different packages that might cause confusion. My suggestion is to be conservative and use `x86_64`. The `x86_64_v2`
+> and `x86_64_v3` should be absolutely identical between them and with `x86_64` across the board, and `x86_64_v4` can be worse in some cases.
+> Feel free to experiment and see which fits better for your system, of course.
+
+> [!WARNING]
+> This release includes a `x86_64_v4` package. This package is largely untested and experimental.
+> It may exhibit issues or completely refuse to work. Use at your own discretion and report issues [here](https://github.com/CachyOS/proton-cachyos/issues/51) only.
+
+> [!NOTE]
+> For Wayland specific flags and options, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/EM-ADDITIONS.md
+
+> [!NOTE]
+> For FSR4 related documentation, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/FSR4.md
+
+> [!NOTE]
+> For DXVK-Sarek specific options to tune its behavior refer to: https://github.com/pythonlover02/DXVK-Sarek?tab=readme-ov-file#shader-comp>
+
+**Base:** https://github.com/ValveSoftware/Proton/tree/experimental-bleeding-edge-10.0-308355-20260207-p6f42a5-w1d3dc8-d00b599-v3d306e
+
+---
+
 ### Version 10.0-20260203
 * Proton (SLR and Native)
    - Update release to address a few minor issues of the previous one, based on `bleeding-edge`.
