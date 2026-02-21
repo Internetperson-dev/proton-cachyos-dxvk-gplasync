@@ -16,7 +16,7 @@ body:
     attributes:
       label: Game name
       description: The full name of the game experiencing the compatibility issue.
-      placeholder: e.g. The Witcher 3: Wild Hunt
+      placeholder: "e.g. The Witcher 3: Wild Hunt"
     validations:
       required: true
 
