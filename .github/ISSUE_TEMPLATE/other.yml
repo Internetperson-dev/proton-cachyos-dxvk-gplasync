@@ -20,7 +20,7 @@ body:
     attributes:
       label: Affected game(s)
       description: Title(s) of any games related to this issue, if applicable.
-      placeholder: e.g. The Witcher 3: Wild Hunt
+      placeholder: "e.g. The Witcher 3: Wild Hunt"
     validations:
       required: false
 
