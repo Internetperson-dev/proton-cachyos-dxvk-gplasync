@@ -1,0 +1,33 @@
+name: Other
+description: Use this only if no other issue template applies.
+title: "[Other]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please always mention the Proton-CachyOS version and the title(s) of any games you are seeing an issue with.
+
+  - type: input
+    id: proton_version
+    attributes:
+      label: Proton-CachyOS version
+      placeholder: e.g. 10.0-1
+    validations:
+      required: true
+
+  - type: input
+    id: game_name
+    attributes:
+      label: Affected game(s)
+      description: Title(s) of any games related to this issue, if applicable.
+      placeholder: e.g. The Witcher 3: Wild Hunt
+    validations:
+      required: false
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Describe your issue or question in as much detail as possible.
+    validations:
+      required: true
