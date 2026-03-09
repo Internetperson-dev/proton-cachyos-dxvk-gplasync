@@ -1,3 +1,58 @@
+### Version 10.0-20260228
+* Proton (SLR and Native)
+   - Update release to address a few concerns around `DXVK-GPLALL` in the previous one, based on [`10.0-20260227`](https://github.com/ValveSoftware/Proton/tree/experimental-10.0-20260227).
+   - Due to issues reported with `DXVK-GPLALL`, for example introducing lag-spikes when `gplasync` was disabled, it has been replaced with the individual patchsets from [dxvk-low-latency](https://github.com/netborg-afps/dxvk/) and [dxvk-gplasync](https://gitlab.com/Ph42oN/dxvk-gplasync/), without further modifications. Accordingly, a couple of convenience options have been introduced to exclusively enable only one of the components instead of both. We refer to this version as `dxvk-llasync` internally for convenience, but it is **NOT** a fork or its own project. The newly introduced configuration is as follows.
+     | Environment variable | Description |
+     |----------------------|-------------|
+     | `PROTON_DXVK_LLASYNC`    | When set to `1` it will enable the alternative DXVK with default configuration. This means that both `lowlatency` and `gplasync` will be enabled. This option **SHOULD NOT** be used with anti-cheat/multiplayer games. |
+     | `PROTON_DXVK_LOWLATENCY` | When set to `1` it will enable the alternative DXVK with configuration to enable only the `low-latency` component. The configuration is applied by appending to `DXVK_CONFIG` and is equivalent to `DXVK_CONFIG="dxvk.enableAsync=False"`. This option should make it safe to use with anti-cheat/multiplayer games. |
+     | `PROTON_DXVK_GPLASYNC`   | When set to `1` it will enable the alternative DXVK with configuration to enable only the `gplasync` component. The configuration is applied by appending to `DXVK_CONFIG` and is equivalent to `DXVK_CONFIG="dxvk.framePace=max-frame-latency"`. This option **SHOULD NOT** be used with anti-cheat/multiplayer games. |
+
+     When any of these options is used, the number of DXVK compiler threads is set to `NUMBER_OF_CPUS - 2` with a lower limit of `3`. I.e, if your CPU has 8 threads, DXVK will use up to 6, if your CPU has 4 threads it will use up to 3. This is meant to help with interactivity when compiling shaders during gameplay.
+* Proton (SLR specific)
+  - None
+* Proton (Native specific)
+  - None
+* Wine (Standalone)
+  - None
+
+> [!NOTE]
+> We have been building `arm64` packages of Proton-CachyOS for the past few versions. They are now part of the release but they are untested and possibly
+> broken. To use this build you will need to get and build a development version of `umu-launcher` from https://github.com/Open-Wine-Components/umu-launcher.
+> From the CLI interface it should work normally by pointing `PROTONPATH` to this proton build. If you want to enter the `steamrt4` container to inspect it
+> without running proton, you can do so by running `PROTONPATH=umu-steamrt4-arm64 umu-run xterm`.
+> 
+> I also provide unpatched builds of Proton Experimental with support for `umu-launcher` in my personal repository
+> https://github.com/loathingKernel/Proton/releases which can be used for testing `arm64`
+> 
+> We are looking for testers, if you are interested, feel free to contact me (`@loathingKernel`) in the [CachyOS Discord server](https://discord.gg/r2C4gAdh).
+
+> [!IMPORTANT]
+> I know that we have a lot of different packages that might cause confusion. My suggestion is to be conservative and use `x86_64`. The `x86_64_v2`
+> and `x86_64_v3` should be absolutely identical between them and with `x86_64` across the board, and `x86_64_v4` can be worse in some cases.
+> Feel free to experiment and see which fits better for your system, of course.
+
+> [!WARNING]
+> This release includes a `x86_64_v4` package. This package is largely untested and experimental.
+> It may exhibit issues or completely refuse to work. Use at your own discretion and report issues [here](https://github.com/CachyOS/proton-cachyos/issues/51) only.
+
+> [!NOTE]
+> For Wayland specific flags and options, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/EM-ADDITIONS.md
+
+> [!NOTE]
+> For FSR4 related documentation, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/FSR4.md
+
+> [!NOTE]
+> For DXVK-Sarek specific options to tune its behavior refer to: https://github.com/pythonlover02/DXVK-Sarek?tab=readme-ov-file#shader-compilation
+
+> [!NOTE]
+> For the `low-latency` related options to tune its behavior refer to: https://github.com/netborg-afps/dxvk-low-latency?tab=readme-ov-file#dxvk-low-latency
+> For the `gplasync` related options to tune its behavior refer to: https://gitlab.com/Ph42oN/dxvk-gplasync/
+
+**Base:** https://github.com/ValveSoftware/Proton/tree/experimental-10.0-20260227
+
+---
+
 ### Version 10.0-20260227
 * Proton (SLR and Native)
    - Updated to the most recent Proton Experimental release [`10.0-20260227`](https://github.com/ValveSoftware/Proton/tree/experimental-10.0-20260227).
