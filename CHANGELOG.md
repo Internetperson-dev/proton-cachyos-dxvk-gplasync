@@ -1,3 +1,57 @@
+### Version 10.0-20260312
+* Proton (SLR and Native)
+   - Updated to the most recent Proton Experimental release [`10.0-20260312`](https://github.com/ValveSoftware/Proton/tree/experimental-10.0-20260312).
+   - Enabled [`wine-nvml`](https://github.com/Saancreed/wine-nvml) by default for Nvidia GPUs at the request of its developer in order to get wider testing for it. `wine-nvml` allows applications running under Wine to call some NVML functions as if the native Windows driver was installed into the prefix with the purposes of monitoring GPU temperature, utilization, etc. It gives the benefits of [GPU utilization reporting](https://docs.nvidia.com/datacenter/tesla/driver-installation-guide/gaming.html#gpu-utilization-reporting-steam-play-proton) without going through the manual installation process. It can still be disabled with `PROTON_NVIDIA_NVML=0` if needed.
+   - `ntsync` has been enabled by default. It can still be disabled when required with `PROTON_USE_NTSYNC=0`.
+   - `gplasync` has been removed from our alternative DXVK, and with it `PROTON_DXVK_GPLASYNC`. `PROTON_DXVK_LOWLATENCY` remains, and it is the only option now.
+   - Imported `winewayland.drv` updates from Proton-EM (up to [Proton-EM 10.0-34](https://github.com/Etaash-mathamsetty/Proton/releases/tag/EM-10.0-34)).
+   - IME is **NOT** disabled by default on `winewayland.drv` any more, repeat keys should work now regardless.
+   - Updated **D7VK** to [v1.5](https://github.com/WinterSnowfall/d7vk/releases/tag/v1.5)
+   - Updated **protonfixes** to https://github.com/Open-Wine-Components/umu-protonfixes/commit/c5da693
+   - Fixed the **FSR4** downloader to fallback to a previous version if the required DLL could not be found. Recently AMD removed all the `amdxcffx64.dll` versions other than `4.0.0`, so now both `PROTON_FSR4_UPGRADE` and `PROTON_FSR4_RDNA3_UPGRADE` will download that version. The downloader will try to find and download newer versions if they become available again.
+* Proton (SLR specific)
+  - None
+* Proton (Native specific)
+  - None
+* Wine (Standalone)
+  - None
+
+> [!NOTE]
+> We have been building `arm64` packages of Proton-CachyOS for the past few versions. They are now part of the release but they are untested and possibly
+> broken. To use this build you will need to get and build a development version of `umu-launcher` from https://github.com/Open-Wine-Components/umu-launcher.
+> From the CLI interface it should work normally by pointing `PROTONPATH` to this proton build. If you want to enter the `steamrt4` container to inspect it
+> without running proton, you can do so by running `PROTONPATH=umu-steamrt4-arm64 umu-run xterm`.
+> 
+> I also provide unpatched builds of Proton Experimental with support for `umu-launcher` in my personal repository
+> https://github.com/loathingKernel/Proton/releases which can be used for testing `arm64`
+> 
+> We are looking for testers, if you are interested, feel free to contact me (`@loathingKernel`) in the [CachyOS Discord server](https://discord.gg/r2C4gAdh).
+
+> [!IMPORTANT]
+> I know that we have a lot of different packages that might cause confusion. My suggestion is to be conservative and use `x86_64`. The `x86_64_v2`
+> and `x86_64_v3` should be absolutely identical between them and with `x86_64` across the board, and `x86_64_v4` can be worse in some cases.
+> Feel free to experiment and see which fits better for your system, of course.
+
+> [!WARNING]
+> This release includes a `x86_64_v4` package. This package is largely untested and experimental.
+> It may exhibit issues or completely refuse to work. Use at your own discretion and report issues [here](https://github.com/CachyOS/proton-cachyos/issues/51) only.
+
+> [!NOTE]
+> For Wayland specific flags and options, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/EM-ADDITIONS.md
+
+> [!NOTE]
+> For FSR4 related documentation, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/FSR4.md
+
+> [!NOTE]
+> For DXVK-Sarek specific options to tune its behavior refer to: https://github.com/pythonlover02/DXVK-Sarek?tab=readme-ov-file#shader-compilation
+
+> [!NOTE]
+> For the `low-latency` related options to tune its behavior refer to: https://github.com/netborg-afps/dxvk-low-latency?tab=readme-ov-file#dxvk-low-latency
+
+**Base:** https://github.com/ValveSoftware/Proton/tree/experimental-10.0-20260312
+
+---
+
 ### Version 10.0-20260228
 * Proton (SLR and Native)
    - Update release to address a few concerns around `DXVK-GPLALL` in the previous one, based on [`10.0-20260227`](https://github.com/ValveSoftware/Proton/tree/experimental-10.0-20260227).
