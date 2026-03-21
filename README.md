@@ -375,6 +375,16 @@ In case you want to manually provide the `amdxcffx64.dll` DLL, there are two way
 * Copy the DLL you want to use in `<compatdata>/pfx/drive_c/windows/system32/` after you already have run of the game using `PROTON_FSR4_UPGRADE` at least once. The downloader will not replace it in subsequent runs unless another version is passed through `PROTON_FSR4_UPGRADE` or an newer version becomes available again.
 * Copy the DLL you want to use into `~/.cache/protonfixes/upscalers/` with the filename `amdxcffx64_v4.0.0_67A4D2BC10ad000.dll` (needs to be exactly like this, it's case-sensitive), and the use `PROTON_FSR4_UPGRADE=4.0.0` or `PROTON_FSR4_RDNA3_UPGRADE=4.0.0` and the downloader will use the cached DLL. This will only work for new prefixes or if the previous version was a different version, it will not work if the DLL is already present in the prefix.
 
+You can also source your own dlls and copy them into `~/.cache/protonfixes/upscalers` with one of the follwing names
+
+- `amdxcffx64_v4.0.0_67A4D2BC10ad000.dll`
+- `amdxcffx64_v4.0.1_67D435F7d97000.dll`
+- `amdxcffx64_v4.0.2_68840348eb8000.dll`
+- `amdxcffx64_v4.0.3_6930960536b9000.dll`
+- `amdxcffx64_v4.1.0_69A0952A304a000.dll`
+
+each one representing their respective version. The can use the version the want through `PROTON_FSR4_[_RDNA3]UPGRADE=<version>` where version one of `4.0.0`, `4.0.1`, `4.0.2`, `4.0.3` or `4.1.0`.
+
 Other Useful Config Options
 ----------------------
 | Compat config string | Environment Variable          | Description                                                                                                                                                                                                                                                                                                                                                 |
