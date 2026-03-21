@@ -1,7 +1,7 @@
 From e73e15800c79142ef0eb47d9ed6fe3129ef62231 Mon Sep 17 00:00:00 2001
 From: Arkadiusz Hiler <ahiler@codeweavers.com>
 Date: Thu, 12 Mar 2026 13:17:46 +0200
-Subject: [PATCH 01/18] amend! winhttp: Stub WinHttpSetOption(
+Subject: [PATCH 01/22] amend! winhttp: Stub WinHttpSetOption(
  WINHTTP_OPTION_DECOMPRESSION ).
 
 winhttp: Stub WinHttpSetOption( WINHTTP_OPTION_DECOMPRESSION ).
@@ -14,7 +14,7 @@ CW-Bug-Id: #26726
 From b310f0cb430231afb8401915ddadb4304fce0065 Mon Sep 17 00:00:00 2001
 From: Paul Gofman <pgofman@codeweavers.com>
 Date: Thu, 12 Mar 2026 10:59:20 -0600
-Subject: [PATCH 02/18] win32u: Disable undecorated windows hack for Rei and
+Subject: [PATCH 02/22] win32u: Disable undecorated windows hack for Rei and
  the Floating City.
 
 CW-Bug-Id: #26767
@@ -49,7 +49,7 @@ index a00648ded8c..9dc6b5655ce 100644
 From 0d8f7db42d1a7b351308582f4769b8000fbf1f36 Mon Sep 17 00:00:00 2001
 From: Brendan McGrath <bmcgrath@codeweavers.com>
 Date: Thu, 12 Mar 2026 14:05:07 +1100
-Subject: [PATCH 03/18] mfmediaengine: Reset the sample requested flag on Stop.
+Subject: [PATCH 03/22] mfmediaengine: Reset the sample requested flag on Stop.
 
 When a sink is stopped, all pending requests are discarded by the client
 (for example IMFMediaSession).
@@ -78,7 +78,7 @@ index a79cd5f8644..00b4332f69c 100644
 From 26e45414cba31c367fc13ffa23d67bb03be86155 Mon Sep 17 00:00:00 2001
 From: Brendan McGrath <bmcgrath@codeweavers.com>
 Date: Thu, 12 Mar 2026 14:06:06 +1100
-Subject: [PATCH 04/18] mfmediaengine: Implement looping behaviour.
+Subject: [PATCH 04/22] mfmediaengine: Implement looping behaviour.
 
 CW-Bug-Id: #26771
 ---
@@ -132,7 +132,7 @@ index 5c600747224..93e44241dd8 100644
 From 22e444ffcf4b73bcf5742d3f1d5af9d436d2ea0c Mon Sep 17 00:00:00 2001
 From: Brendan McGrath <bmcgrath@codeweavers.com>
 Date: Fri, 13 Mar 2026 12:15:51 +1100
-Subject: [PATCH 05/18] mfmediaengine: Keep the last presentation sample on
+Subject: [PATCH 05/22] mfmediaengine: Keep the last presentation sample on
  flush.
 
 On Windows, if IMFMediaEngine::TransferVideoFrame is called after the
@@ -168,7 +168,7 @@ index 00b4332f69c..383198b753e 100644
 From 9e682354748c33b66c1c83bc7a7699da09cbe33c Mon Sep 17 00:00:00 2001
 From: Paul Gofman <pgofman@codeweavers.com>
 Date: Mon, 16 Mar 2026 12:02:26 -0600
-Subject: [PATCH 06/18] fixup! HACK: proton: ntdll: Strip
+Subject: [PATCH 06/22] fixup! HACK: proton: ntdll: Strip
  gameoverlayrenderer.so from LD_PRELOAD before executing explorer.exe.
 
 CW-Bug-Id: #26532
@@ -217,7 +217,7 @@ index f4edba3f7fa..7caa12e6318 100644
 From 62f0237b17940856f05a7e596b96cc442dc86558 Mon Sep 17 00:00:00 2001
 From: Paul Gofman <pgofman@codeweavers.com>
 Date: Mon, 16 Mar 2026 09:48:51 -0600
-Subject: [PATCH 07/18] server: Cache timezone bias adjustment in
+Subject: [PATCH 07/22] server: Cache timezone bias adjustment in
  set_user_shared_data_time().
 
 (cherry picked from commit d5ca5d0dcc6684e2516c24099f80c1f986ca28f6)
@@ -272,7 +272,7 @@ index a7351b80d95..628057bcadb 100644
 From 09c7407b3016a6bf3834b3d9e233597a6dfce3f9 Mon Sep 17 00:00:00 2001
 From: Zhou Qiankang <wszqkzqk@qq.com>
 Date: Mon, 16 Mar 2026 19:37:09 +0800
-Subject: [PATCH 08/18] ntdll: Avoid expensive inverted DST check on
+Subject: [PATCH 08/22] ntdll: Avoid expensive inverted DST check on
  get_timezone_info() cache hit path.
 
 inverted DST detection (two mktime() calls) out of the cache hit fast path in
@@ -336,7 +336,7 @@ index 477eb314502..a24c2600f81 100644
 From b6d69f27ddbc822397bfb909249e9747a3adb6f0 Mon Sep 17 00:00:00 2001
 From: Brendan McGrath <bmcgrath@codeweavers.com>
 Date: Tue, 17 Mar 2026 10:22:42 +1100
-Subject: [PATCH 09/18] amend! mfmediaengine: Reset the sample requested flag
+Subject: [PATCH 09/22] amend! mfmediaengine: Reset the sample requested flag
  on Stop.
 
 mfmediaengine: Reset the sample requested flag on Stop.
@@ -354,7 +354,7 @@ CW-Bug-Id: #26771
 From b5704cfc95802edfb9e4467474f439d607b8dd9d Mon Sep 17 00:00:00 2001
 From: Brendan McGrath <bmcgrath@codeweavers.com>
 Date: Tue, 17 Mar 2026 10:23:09 +1100
-Subject: [PATCH 10/18] amend! mfmediaengine: Implement looping behaviour.
+Subject: [PATCH 10/22] amend! mfmediaengine: Implement looping behaviour.
 
 mfmediaengine: Implement looping behaviour.
 
@@ -368,7 +368,7 @@ CW-Bug-Id: #26771
 From 6d1b420e3c396a1ebd74b973a3f913c16b15920c Mon Sep 17 00:00:00 2001
 From: Brendan McGrath <bmcgrath@codeweavers.com>
 Date: Tue, 17 Mar 2026 10:23:30 +1100
-Subject: [PATCH 11/18] amend! mfmediaengine: Keep the last presentation sample
+Subject: [PATCH 11/22] amend! mfmediaengine: Keep the last presentation sample
  on flush.
 
 mfmediaengine: Keep the last presentation sample on flush.
@@ -386,7 +386,7 @@ CW-Bug-Id: #26771
 From e36d5482fd796f292e328cf37a41a7cc8d8ab8b8 Mon Sep 17 00:00:00 2001
 From: Paul Gofman <pgofman@codeweavers.com>
 Date: Tue, 17 Mar 2026 10:00:46 -0600
-Subject: [PATCH 12/18] win32u: Align absolute mouse event coords to virtual
+Subject: [PATCH 12/22] win32u: Align absolute mouse event coords to virtual
  resolution pixels.
 
 CW-Bug-Id: #26559
@@ -429,7 +429,7 @@ index eea29ed05a9..16850ee0410 100644
 From 91577253faa2ae2dda61fb61022c6960100d6f12 Mon Sep 17 00:00:00 2001
 From: Daniel Lehman <dlehman25@gmail.com>
 Date: Tue, 24 Feb 2026 16:09:09 -0800
-Subject: [PATCH 13/18] dwrite: Add locales to locale list.
+Subject: [PATCH 13/22] dwrite: Add locales to locale list.
 
 Existing helper font_fallback_get_locale returns neutral locale
 if the exact name is not found.  This is ok when searching for
@@ -497,7 +497,7 @@ index 4b9c19618f7..3d2e30417fc 100644
 From 84fb7278766a885cb4477e8f6770ea0c7ac125a0 Mon Sep 17 00:00:00 2001
 From: Paul Gofman <pgofman@codeweavers.com>
 Date: Wed, 18 Mar 2026 20:06:03 -0600
-Subject: [PATCH 14/18] dwrite: Fail loading unsupported COLRv1 fonts.
+Subject: [PATCH 14/22] dwrite: Fail loading unsupported COLRv1 fonts.
 
 CW-Bug-Id: #26705
 ---
@@ -575,7 +575,7 @@ index 98d28d86f9a..1ceac6dcf9a 100644
 From ef34405283c4f44361bb5895b6968cee03efe8bc Mon Sep 17 00:00:00 2001
 From: Paul Gofman <pgofman@codeweavers.com>
 Date: Thu, 19 Mar 2026 16:36:40 -0600
-Subject: [PATCH 15/18] dwrite: Fix second chance fonts handling in
+Subject: [PATCH 15/22] dwrite: Fix second chance fonts handling in
  fallback_map_characters().
 
 CW-Bug-Id: #26705
@@ -610,7 +610,7 @@ index 3d2e30417fc..a06e816bd85 100644
 From 195197a116d74787e95abc83201bfc4d891694a6 Mon Sep 17 00:00:00 2001
 From: Paul Gofman <pgofman@codeweavers.com>
 Date: Thu, 19 Mar 2026 16:59:17 -0600
-Subject: [PATCH 16/18] dwrite: Extend emoji fallback range and add Noto Emoji
+Subject: [PATCH 16/22] dwrite: Extend emoji fallback range and add Noto Emoji
  as a fallback font.
 
 CW-Bug-Id: #26705
@@ -638,7 +638,7 @@ index a06e816bd85..bf46799f75f 100644
 From 82329ec8c12df79f7c9220a92eb8bc33ab417f6f Mon Sep 17 00:00:00 2001
 From: Paul Gofman <pgofman@codeweavers.com>
 Date: Thu, 19 Mar 2026 17:11:36 -0600
-Subject: [PATCH 17/18] Revert "dwrite: Add locales to locale list."
+Subject: [PATCH 17/22] Revert "dwrite: Add locales to locale list."
 
 This reverts commit 91577253faa2ae2dda61fb61022c6960100d6f12.
 ---
@@ -700,7 +700,7 @@ index bf46799f75f..216ac5dca88 100644
 From a7df5e7785ec61186c5f93aa6997af660d007a44 Mon Sep 17 00:00:00 2001
 From: Paul Gofman <pgofman@codeweavers.com>
 Date: Thu, 19 Mar 2026 18:37:49 -0600
-Subject: [PATCH 18/18] comctl32/static: Set HALFTONE StretchBlt mode in
+Subject: [PATCH 18/22] comctl32/static: Set HALFTONE StretchBlt mode in
  STATIC_PaintBitmapfn().
 
 CW-Bug-Id: #26800
@@ -736,6 +736,190 @@ index 29a0498ba09..10152f7c9e6 100644
          SelectObject(hMemDC, oldbitmap);
          DeleteDC(hMemDC);
      }
+-- 
+2.53.0
+
+
+From f9269ea4026ca7731ad7c036da87164fb38c9c6b Mon Sep 17 00:00:00 2001
+From: Paul Gofman <pgofman@codeweavers.com>
+Date: Fri, 20 Mar 2026 11:31:54 -0600
+Subject: [PATCH 19/22] user32: Add stub for GetPointerDevice().
+
+CW-Bug-Id: #26805
+---
+ dlls/user32/input.c     | 7 +++++++
+ dlls/user32/user32.spec | 2 +-
+ 2 files changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/dlls/user32/input.c b/dlls/user32/input.c
+index 8d079a0794d..3546c07e9a1 100644
+--- a/dlls/user32/input.c
++++ b/dlls/user32/input.c
+@@ -830,6 +830,13 @@ BOOL WINAPI SetGestureConfig( HWND hwnd, DWORD reserved, UINT count,
+     return FALSE;
+ }
+ 
++BOOL WINAPI GetPointerDevice( HANDLE device, POINTER_DEVICE_INFO *info )
++{
++    FIXME( "device %p, info %p stub.\n", device, info );
++    SetLastError( ERROR_CALL_NOT_IMPLEMENTED );
++    return FALSE;
++}
++
+ BOOL WINAPI GetPointerTouchInfo( UINT32 id, POINTER_TOUCH_INFO *info )
+ {
+     FIXME( "id %u, info %p stub!\n", id, info );
+diff --git a/dlls/user32/user32.spec b/dlls/user32/user32.spec
+index 452761d8277..2cf1c92f5a3 100644
+--- a/dlls/user32/user32.spec
++++ b/dlls/user32/user32.spec
+@@ -625,7 +625,7 @@
+ @ stdcall GetParent(long)
+ @ stdcall GetPhysicalCursorPos(ptr)
+ # @ stub GetPointerCursorId
+-# @ stub GetPointerDevice
++@ stdcall GetPointerDevice(ptr ptr)
+ # @ stub GetPointerDeviceCursors
+ # @ stub GetPointerDeviceInputSpace
+ # @ stub GetPointerDeviceOrientation
+-- 
+2.53.0
+
+
+From a7457f7cf37064bcc9ab2dfcc0c13204e148abee Mon Sep 17 00:00:00 2001
+From: Paul Gofman <pgofman@codeweavers.com>
+Date: Fri, 20 Mar 2026 11:34:13 -0600
+Subject: [PATCH 20/22] user32: Add a stub for GetPointerInfoHistory().
+
+CW-Bug-Id: #26805
+---
+ dlls/user32/input.c     | 6 ++++++
+ dlls/user32/user32.spec | 2 +-
+ 2 files changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/dlls/user32/input.c b/dlls/user32/input.c
+index 3546c07e9a1..f457518468a 100644
+--- a/dlls/user32/input.c
++++ b/dlls/user32/input.c
+@@ -851,6 +851,12 @@ BOOL WINAPI GetPointerTouchInfoHistory( UINT32 id, UINT32 *count, POINTER_TOUCH_
+     return FALSE;
+ }
+ 
++BOOL WINAPI GetPointerInfoHistory( UINT32 id, UINT32 *count, POINTER_INFO *info )
++{
++    FIXME( "id %u, count %p, info %p stub.\n", id, count, info );
++    SetLastError( ERROR_CALL_NOT_IMPLEMENTED );
++    return FALSE;
++}
+ 
+ /*******************************************************************
+  *           SetForegroundWindow  (USER32.@)
+diff --git a/dlls/user32/user32.spec b/dlls/user32/user32.spec
+index 2cf1c92f5a3..4fc87b59bc7 100644
+--- a/dlls/user32/user32.spec
++++ b/dlls/user32/user32.spec
+@@ -640,7 +640,7 @@
+ # @ stub GetPointerFrameTouchInfo
+ # @ stub GetPointerFrameTouchInfoHistory
+ @ stdcall GetPointerInfo(long ptr)
+-# @ stub GetPointerInfoHistory
++@ stub GetPointerInfoHistory(long ptr ptr)
+ # @ stub GetPointerInputTransform
+ # @ stub GetPointerPenInfo
+ # @ stub GetPointerPenInfoHistory
+-- 
+2.53.0
+
+
+From 6eb714fb10b7a657097eff120d3af3840aff2e52 Mon Sep 17 00:00:00 2001
+From: Paul Gofman <pgofman@codeweavers.com>
+Date: Fri, 20 Mar 2026 11:34:38 -0600
+Subject: [PATCH 21/22] user32: Add a stub for SkipPointerFrameMessages().
+
+CW-Bug-Id: #26805
+---
+ dlls/user32/input.c     | 6 ++++++
+ dlls/user32/user32.spec | 2 +-
+ 2 files changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/dlls/user32/input.c b/dlls/user32/input.c
+index f457518468a..5e6b10effd2 100644
+--- a/dlls/user32/input.c
++++ b/dlls/user32/input.c
+@@ -858,6 +858,12 @@ BOOL WINAPI GetPointerInfoHistory( UINT32 id, UINT32 *count, POINTER_INFO *info
+     return FALSE;
+ }
+ 
++BOOL WINAPI SkipPointerFrameMessages( UINT32 id )
++{
++    FIXME( "id %u stub.\n", id );
++    return TRUE;
++}
++
+ /*******************************************************************
+  *           SetForegroundWindow  (USER32.@)
+  */
+diff --git a/dlls/user32/user32.spec b/dlls/user32/user32.spec
+index 4fc87b59bc7..7b3e3a2bc9a 100644
+--- a/dlls/user32/user32.spec
++++ b/dlls/user32/user32.spec
+@@ -1139,7 +1139,7 @@
+ @ stdcall ShutdownBlockReasonDestroy(long)
+ # @ stub ShutdownBlockReasonQuery
+ # @ stub SignalRedirectionStartComplete
+-# @ stub SkipPointerFrameMessages
++@ stdcall SkipPointerFrameMessages(long)
+ # @ stub SoftModalMessageBox
+ # @ stub SoundSentry
+ @ stdcall SubtractRect(ptr ptr ptr)
+-- 
+2.53.0
+
+
+From 1729f00e17e879f98f9df1f2bca86bc5d21a65df Mon Sep 17 00:00:00 2001
+From: Paul Gofman <pgofman@codeweavers.com>
+Date: Fri, 20 Mar 2026 18:12:12 -0600
+Subject: [PATCH 22/22] netprofm: HACK: Throttle list_manager_GetConnectivity()
+ for Death Stranding 2.
+
+CW-Bug-Id: #28612
+---
+ dlls/netprofm/list.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/dlls/netprofm/list.c b/dlls/netprofm/list.c
+index af40dc0ac91..eb39ce1fe92 100644
+--- a/dlls/netprofm/list.c
++++ b/dlls/netprofm/list.c
+@@ -1354,6 +1354,19 @@ static HRESULT WINAPI list_manager_IsConnected(
+     return S_OK;
+ }
+ 
++static void throttle(void)
++{
++    const char *sgi;
++    static int cached = -1;
++
++    if (cached == -1)
++    {
++        cached = (sgi = getenv("SteamGameId")) && !strcmp( sgi, "3280350" );
++        if (cached) ERR( "GetConnectivity() throttle hack.\n" );
++    }
++    if (cached) Sleep(1);
++}
++
+ static HRESULT WINAPI list_manager_GetConnectivity(
+     INetworkListManager *iface,
+     NLM_CONNECTIVITY *pConnectivity )
+@@ -1373,6 +1386,8 @@ static HRESULT WINAPI list_manager_GetConnectivity(
+             *pConnectivity |= NLM_CONNECTIVITY_IPV4_LOCALNETWORK;
+     }
+ 
++    throttle();
++
+     return S_OK;
+ }
+ 
 -- 
 2.53.0
 
