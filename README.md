@@ -357,7 +357,7 @@ Proton-CachyOS Config Options
 | `nvidialibsno32`     | `PROTON_NVIDIA_LIBS_NO_32BIT`  | Use with the previous option, to enable only the 64bit nvidia libraries. Useful if you are using RTX series 4000 or 5000 GPUs and you had bad performance or crashes when enabling these with 32bit games.                                                                                                                                                                                                                                                                         |
 | `nvcuda`             | `PROTON_NVIDIA_NVCUDA`         | Enable alternative `nvcuda.dll` [from nvidial-libs](https://github.com/SveSop/nvcuda) only.                                                                                                                                                                                                                                                                                                                                                                                        |
 | `nvenc`              | `PROTON_NVIDIA_NVENC`          | Enable alternative `nvcencodeapi(64).dll` [from nvidial-libs](https://github.com/SveSop/nvenc) only.                                                                                                                                                                                                                                                                                                                                                                               |
-| `nvml`               | `PROTON_NVIDIA_NVML`           | Enable alternative `nvml.dll` [from nvidial-libs](https://github.com/Saancreed/wine-nvml) only.                                                                                                                                                                                                                                                                                                                                                                                    |
+| `nvml`               | `PROTON_NVIDIA_NVML`           | Enable alternative `nvml.dll` [from nvidial-libs](https://github.com/Saancreed/wine-nvml) only. This option is enabled by default.                                                                                                                                                                                                                                                                                                                                                 |
 | `nvoptix`            | `PROTON_NVIDIA_NVOPTIX`        | Enable alternative `nvoptix.dll` [from nvidial-libs](https://github.com/SveSop/wine-nvoptix) only.                                                                                                                                                                                                                                                                                                                                                                                 |
 | `vkreflex`           | `PROTON_VKREFLEX`              | Enables [DXVK-NVAPI's Vulkan Reflex layer](https://github.com/jp7677/dxvk-nvapi?tab=readme-ov-file#vulkan-reflex-layer) to support [Reflex in Vulkan](https://docs.nvidia.com/datacenter/tesla/driver-installation-guide/gaming.html#reflex-for-vulkan-steam-play-proton) games. It's meant to enable Reflex in games such as Portal RTX, Path of Exile 1 and 2 and Doom TDA, etc.                                                                                                 |
 | `mediaconv`          | `PROTON_ENABLE_MEDIACONV`      | For debugging purposes, do not use.                                                                                                                                                                                                                                                                                                                                                                                                                                                |
@@ -372,18 +372,17 @@ Proton-CachyOS Config Options
 
 ### Manually providing `amdxcffx64.dll`
 In case you want to manually provide the `amdxcffx64.dll` DLL, there are two ways to achieve it.
-* Copy the DLL you want to use in `<compatdata>/pfx/drive_c/windows/system32/` after you already have run of the game using `PROTON_FSR4_UPGRADE` at least once. The downloader will not replace it in subsequent runs unless another version is passed through `PROTON_FSR4_UPGRADE` or an newer version becomes available again.
-* Copy the DLL you want to use into `~/.cache/protonfixes/upscalers/` with the filename `amdxcffx64_v4.0.0_67A4D2BC10ad000.dll` (needs to be exactly like this, it's case-sensitive), and the use `PROTON_FSR4_UPGRADE=4.0.0` or `PROTON_FSR4_RDNA3_UPGRADE=4.0.0` and the downloader will use the cached DLL. This will only work for new prefixes or if the previous version was a different version, it will not work if the DLL is already present in the prefix.
+* **The manual way:** Copy the DLL you want to use in `<compatdata>/pfx/drive_c/windows/system32/amdxcffx64.dll` and set `FSR4_UPGRADE=1`, `MFLG_UPGRADE=1` and `DXIL_SPIRV_CONFIG="wmma_rdna3_workaround"` (**ONLY** for RDNA3). Make sure to remove `PROTON_FSR4_UPGRADE` and `PROTON_FSR4_RDNA3_UPGRADE` from your environemnt.
+* **The re-usable way:** Copy the DLL you want to use into `~/.cache/protonfixes/upscalers/` with the filename `amdxcffx64_v4.0.0_67A4D2BC10ad000.dll` (needs to be exactly like this, it's case-sensitive), and the use `PROTON_FSR4_UPGRADE=4.0.0` or `PROTON_FSR4_RDNA3_UPGRADE=4.0.0` and the downloader will use the cached DLL. This will only work for new prefixes or if the previous version was a different version, it will not work if the DLL is already present in the prefix.
+* **The re-usable way++:** You can also do the same thing for all other DLLs. After you source your own dlls you can copy them into `~/.cache/protonfixes/upscalers` with one of the follwing names
 
-You can also source your own dlls and copy them into `~/.cache/protonfixes/upscalers` with one of the follwing names
+    - `amdxcffx64_v4.0.0_67A4D2BC10ad000.dll`
+    - `amdxcffx64_v4.0.1_67D435F7d97000.dll`
+    - `amdxcffx64_v4.0.2_68840348eb8000.dll`
+    - `amdxcffx64_v4.0.3_6930960536b9000.dll`
+    - `amdxcffx64_v4.1.0_69A0952A304a000.dll`
 
-- `amdxcffx64_v4.0.0_67A4D2BC10ad000.dll`
-- `amdxcffx64_v4.0.1_67D435F7d97000.dll`
-- `amdxcffx64_v4.0.2_68840348eb8000.dll`
-- `amdxcffx64_v4.0.3_6930960536b9000.dll`
-- `amdxcffx64_v4.1.0_69A0952A304a000.dll`
-
-each one representing their respective version. The can use the version the want through `PROTON_FSR4_[_RDNA3]UPGRADE=<version>` where version one of `4.0.0`, `4.0.1`, `4.0.2`, `4.0.3` or `4.1.0`.
+  each one representing their respective version. You can use the version you want through `PROTON_FSR4_[_RDNA3]UPGRADE=<version>` where version one of `4.0.0`, `4.0.1`, `4.0.2`, `4.0.3` or `4.1.0`.
 
 Other Useful Config Options
 ----------------------

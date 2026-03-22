@@ -1,7 +1,7 @@
 ### Version 10.0-20260320
 * Proton (SLR and Native)
    - Update release of the previous one, based on [`10.0-20260312`](https://github.com/ValveSoftware/Proton/tree/experimental-10.0-20260312)
-   - Updated [DXVK](https://github.com/doitsujin/dxvk/commit/973433f3) and [vkd3d-proton](https://github.com/HansKristian-Work/vkd3d-proton/commit/bd3f5e3d) to latest.
+   - Updated [`dxvk`](https://github.com/doitsujin/dxvk/commit/973433f3) and [`vkd3d-proton`](https://github.com/HansKristian-Work/vkd3d-proton/commit/bd3f5e3d) to latest.
    - Imported the high CPU usage fix for Death Stranding 2 from upstream Proton Experimental Bleeding Edge.
    - Imported a commit from Proton-EM to stub `StorageDeviceTrimProperty`. Should fix SSDs being detected as HDDs by the Where Winds Meet standalone launcher.
    - Added patch to `protonfixes` to also check the protonfixes cache for the FSR4 DLLs before falling back to a previous version. If you happen to have versions newer than `4.0.0` in the cache, they will be used even if the remote files do not exist any more.
