@@ -114,7 +114,7 @@ body:
     validations:
       required: true
 
-  - type: textarea
+  - type: upload
     id: log_slr
     attributes:
       label: Log from Proton-CachyOS-SLR
@@ -122,25 +122,26 @@ body:
         Add `PROTON_LOG=1 %command%` to the game's launch options and attach the generated `$HOME/steam-$APPID.log` file.
         For video/audio issues use `PROTON_LOG="+mfplat,+quartz,+wmvcore,+wmadec,+dmo" %command%` instead.
         Logs compress well if needed.
-      render: shell
+    validations:
+      required: true
 
-  - type: textarea
+  - type: upload
+    id: log_proton_exp
+    attributes:
+      label: Log from recent Proton Experimental
+      description: |
+        Helps identify whether the issue is specific to Proton-CachyOS or upstream.
+        Add `PROTON_LOG=1 %command%` to the game's launch options and attach the generated log.
+    validations:
+      required: true
+
+  - type: upload
     id: log_native
     attributes:
       label: Log from Proton-CachyOS Native (if relevant)
       description: |
         Only include if the issue was first noticed in the native (non-SLR) version.
         Add `PROTON_LOG=1 %command%` to the game's launch options and attach the generated log.
-      render: shell
-
-  - type: textarea
-    id: log_proton_exp
-    attributes:
-      label: Log from recent Proton Experimental (if relevant)
-      description: |
-        Helps identify whether the issue is specific to Proton-CachyOS or upstream.
-        Add `PROTON_LOG=1 %command%` to the game's launch options and attach the generated log.
-      render: shell
 
   - type: textarea
     id: additional
