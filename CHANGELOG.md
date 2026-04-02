@@ -1,3 +1,43 @@
+### Version 10.0-20260330
+* Proton (SLR and Native)
+   - Minor updated release based on the previous [`10.0-20260324`](https://github.com/ValveSoftware/Proton/tree/experimental-10.0-20260324)
+   - Backported syscall-related commits from upstream Wine to fix crashes in Where Winds Meet and Ubisoft Connect. Due to the nature of these changes, consider this release as potentially unstable. Thanks to @MarshNello and @Etaash-Mathamsetty for providing a large number of these changes and testing.
+* Proton (SLR specific)
+  - None
+* Proton (Native specific)
+  - None
+* Wine (Standalone)
+  - None
+
+> [!NOTE]
+> We have been building `arm64` packages of Proton-CachyOS for the past few versions. They are now part of the release but they are untested and possibly
+> broken. To use this build you will need to get and build a development version of `umu-launcher` from https://github.com/Open-Wine-Components/umu-launcher.
+> From the CLI interface it should work normally by pointing `PROTONPATH` to this proton build. If you want to enter the `steamrt4` container to inspect it
+> without running proton, you can do so by running `PROTONPATH=umu-steamrt4-arm64 umu-run xterm`.
+> 
+> I also provide unpatched builds of Proton Experimental with support for `umu-launcher` in my personal repository
+> https://github.com/loathingKernel/Proton/releases which can be used for testing `arm64`
+> 
+> We are looking for testers, if you are interested, feel free to contact me (`@loathingKernel`) in the [CachyOS Discord server](https://discord.gg/r2C4gAdh).
+
+> [!IMPORTANT]
+> This release includes a `x86_64_v4` package. This package is largely untested and experimental.
+> It may exhibit issues or completely refuse to work. Use at your own discretion and report issues [here](https://github.com/CachyOS/proton-cachyos/issues/51) only.
+> 
+> I know that we have a lot of different packages that might cause confusion. My suggestion is to be conservative and use `x86_64`. The `x86_64_v2`
+> and `x86_64_v3` should be absolutely identical between them and with `x86_64` across the board, and `x86_64_v4` can be worse in some cases.
+> Feel free to experiment and see which fits better for your system, of course.
+
+> [!NOTE]
+> * For Wayland specific flags and options, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/EM-ADDITIONS.md
+> * For FSR4 related documentation, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/FSR4.md
+> * For `dxvk-sarek` specific options to tune its behavior refer to: https://github.com/pythonlover02/DXVK-Sarek?tab=readme-ov-file#shader-compilation
+> * For `dxvk-low-latency` related options to tune its behavior refer to: https://github.com/netborg-afps/dxvk-low-latency?tab=readme-ov-file#dxvk-low-latency
+
+**Base:** https://github.com/ValveSoftware/Proton/tree/experimental-10.0-20260324
+
+---
+
 ### Version 10.0-20260324
 * Proton (SLR and Native)
    - Updated to the most recent Proton Experimental release [`10.0-20260324`](https://github.com/ValveSoftware/Proton/tree/experimental-10.0-20260324).
