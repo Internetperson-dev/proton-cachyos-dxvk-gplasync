@@ -1,0 +1,29 @@
+From 33c3f1686bb469ef792958f14c426e117e33b977 Mon Sep 17 00:00:00 2001
+From: Etaash Mathamsetty
+ <45927311+Etaash-mathamsetty@users.noreply.github.com>
+Date: Sat, 11 Apr 2026 00:32:05 -0500
+Subject: [PATCH 6/6] Revert "winewayland: Fix window decorations on some CEF
+ apps."
+
+This reverts commit ad1afd0c773778ef681471b96a480ceb4ed9961f.
+
+This causes a regression with handling restore from fullscreen :(
+---
+ dlls/winewayland.drv/window.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/dlls/winewayland.drv/window.c b/dlls/winewayland.drv/window.c
+index 015a53361a6..a14307918ea 100644
+--- a/dlls/winewayland.drv/window.c
++++ b/dlls/winewayland.drv/window.c
+@@ -241,7 +241,6 @@ static BOOL wayland_win_data_create_wayland_surface(struct wayland_win_data *dat
+     if (input_region) wl_region_destroy(input_region);
+ 
+     if (!EqualRect(&data->rects.visible, &data->rects.window)
+-        && EqualRect(&data->rects.client, &data->rects.visible)
+         && is_decoration_enabled(style, exstyle))
+     {
+         server_decor = TRUE;
+-- 
+2.53.0
+

@@ -1,0 +1,94 @@
+From 15f92ba3661e9d88ea2a583ad0e8f3a16072a962 Mon Sep 17 00:00:00 2001
+From: Stelios Tsampas <loathingkernel@gmail.com>
+Date: Sat, 11 Apr 2026 18:33:33 +0300
+Subject: [PATCH 1/6] Revert "winewayland: Implement app triggered window
+ restore."
+
+This reverts commit 411dffb8d46974fc908ceb85b27efbc98ede7d59.
+---
+ dlls/winewayland.drv/wayland_surface.c |  4 ++--
+ dlls/winewayland.drv/waylanddrv.h      |  2 +-
+ dlls/winewayland.drv/window.c          | 17 ++---------------
+ 3 files changed, 5 insertions(+), 18 deletions(-)
+
+diff --git a/dlls/winewayland.drv/wayland_surface.c b/dlls/winewayland.drv/wayland_surface.c
+index c468782a188..b8f7914eb0a 100644
+--- a/dlls/winewayland.drv/wayland_surface.c
++++ b/dlls/winewayland.drv/wayland_surface.c
+@@ -312,14 +312,14 @@ void wayland_surface_destroy(struct wayland_surface *surface)
+  *
+  * Gives the toplevel role to a plain wayland surface.
+  */
+-void wayland_surface_make_toplevel(struct wayland_surface *surface, BOOL server_decor, BOOL force)
++void wayland_surface_make_toplevel(struct wayland_surface *surface, BOOL server_decor)
+ {
+     WCHAR text[1024];
+ 
+     TRACE("surface=%p\n", surface);
+ 
+     assert(!surface->role || surface->role == WAYLAND_SURFACE_ROLE_TOPLEVEL);
+-    if (surface->xdg_surface && surface->xdg_toplevel && !force) return;
++    if (surface->xdg_surface && surface->xdg_toplevel) return;
+ 
+     wayland_surface_clear_role(surface);
+     surface->role = WAYLAND_SURFACE_ROLE_TOPLEVEL;
+diff --git a/dlls/winewayland.drv/waylanddrv.h b/dlls/winewayland.drv/waylanddrv.h
+index 7c7432e2364..34d4283717a 100644
+--- a/dlls/winewayland.drv/waylanddrv.h
++++ b/dlls/winewayland.drv/waylanddrv.h
+@@ -414,7 +414,7 @@ struct wl_output *wayland_get_best_output_for_rect(const RECT *window_rect);
+ 
+ struct wayland_surface *wayland_surface_create(HWND hwnd);
+ void wayland_surface_destroy(struct wayland_surface *surface);
+-void wayland_surface_make_toplevel(struct wayland_surface *surface, BOOL server_decor, BOOL force);
++void wayland_surface_make_toplevel(struct wayland_surface *surface, BOOL server_decor);
+ void wayland_surface_make_subsurface(struct wayland_surface *surface,
+                                      struct wayland_surface *parent);
+ void wayland_surface_clear_role(struct wayland_surface *surface);
+diff --git a/dlls/winewayland.drv/window.c b/dlls/winewayland.drv/window.c
+index c3a4b028f6f..252844b9572 100644
+--- a/dlls/winewayland.drv/window.c
++++ b/dlls/winewayland.drv/window.c
+@@ -207,7 +207,7 @@ static BOOL wayland_win_data_create_wayland_surface(struct wayland_win_data *dat
+     struct wayland_client_surface *client = data->client_surface;
+     struct wayland_surface *surface;
+     enum wayland_surface_role role;
+-    BOOL visible, server_decor = FALSE, force = FALSE;
++    BOOL visible, server_decor = FALSE;
+     DWORD exstyle = NtUserGetWindowLongW(data->hwnd, GWL_EXSTYLE);
+     DWORD style = NtUserGetWindowLongW(data->hwnd, GWL_STYLE);
+     struct wl_region *input_region;
+@@ -246,29 +246,16 @@ static BOOL wayland_win_data_create_wayland_surface(struct wayland_win_data *dat
+         server_decor = TRUE;
+     }
+ 
+-    /* Force recreate the toplevel if it is now unminimized.
+-     * This resets the toplevel state, effectively making it unminimized.
+-     * Ensure that this restoration is not user driven,
+-     * as this case is already handled by the compositor */
+-    pthread_mutex_lock(&process_wayland.keyboard.mutex);
+-    if (surface->window.minimized
+-        && !(style & WS_MINIMIZE) && !data->force_below_hack
+-        && process_wayland.keyboard.focused_hwnd != data->hwnd)
+-    {
+-        force = TRUE;
+-    }
+-    pthread_mutex_unlock(&process_wayland.keyboard.mutex);
+-
+     /* If the window is a visible toplevel make it a wayland
+      * xdg_toplevel. Otherwise keep it role-less to avoid polluting the
+      * compositor with empty xdg_toplevels. */
+     switch (role)
+     {
+     case WAYLAND_SURFACE_ROLE_NONE:
+         wayland_surface_clear_role(surface);
+         break;
+     case WAYLAND_SURFACE_ROLE_TOPLEVEL:
+-        wayland_surface_make_toplevel(surface, server_decor, force);
++        wayland_surface_make_toplevel(surface, server_decor);
+         break;
+     case WAYLAND_SURFACE_ROLE_SUBSURFACE:
+         wayland_surface_make_subsurface(surface, toplevel_surface);
+-- 
+2.53.0
+

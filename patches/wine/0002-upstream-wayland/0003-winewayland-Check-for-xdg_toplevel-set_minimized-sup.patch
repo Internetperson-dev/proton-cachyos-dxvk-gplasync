@@ -1,0 +1,180 @@
+From 340cac8dbb2ec9974a67f6f5060584b0289c5aed Mon Sep 17 00:00:00 2001
+From: Etaash Mathamsetty
+ <45927311+Etaash-mathamsetty@users.noreply.github.com>
+Date: Fri, 10 Apr 2026 21:25:37 -0500
+Subject: [PATCH 3/6] winewayland: Check for xdg_toplevel::set_minimized
+ support
+
+---
+ dlls/winewayland.drv/wayland.c          |  2 +-
+ dlls/winewayland.drv/wayland_keyboard.c |  3 +-
+ dlls/winewayland.drv/wayland_surface.c  | 62 ++++++++++++++++++++++++-
+ dlls/winewayland.drv/waylanddrv.h       |  9 ++++
+ dlls/winewayland.drv/window.c           |  1 +
+ 5 files changed, 74 insertions(+), 3 deletions(-)
+
+diff --git a/dlls/winewayland.drv/wayland.c b/dlls/winewayland.drv/wayland.c
+index bff961030d7..07d4041e4de 100644
+--- a/dlls/winewayland.drv/wayland.c
++++ b/dlls/winewayland.drv/wayland.c
+@@ -138,7 +138,7 @@ static void registry_handle_global(void *data, struct wl_registry *registry,
+          * states, instead of falling back to (ab)using the maximized state. */
+         process_wayland.xdg_wm_base =
+             wl_registry_bind(registry, id, &xdg_wm_base_interface,
+-                             version < 2 ? version : 2);
++                             version < 5 ? version : 5);
+         xdg_wm_base_add_listener(process_wayland.xdg_wm_base, &xdg_wm_base_listener, NULL);
+     }
+     else if (strcmp(interface, "wl_shm") == 0)
+diff --git a/dlls/winewayland.drv/wayland_keyboard.c b/dlls/winewayland.drv/wayland_keyboard.c
+index 7da37ab3e01..c7571251e27 100644
+--- a/dlls/winewayland.drv/wayland_keyboard.c
++++ b/dlls/winewayland.drv/wayland_keyboard.c
+@@ -1018,7 +1018,8 @@ static void keyboard_handle_leave(void *private, struct wl_keyboard *wl_keyboard
+              * directly once it's updated to not explicitly deactivate the old
+              * foreground window when both the old and new foreground windows
+              * are in the same non-current thread. */
+-            if (surface->window.managed)
++            if (surface->window.managed &&
++                (surface->current.caps & WAYLAND_SURFACE_WM_CAPS_MINIMIZE))
+                 NtUserPostMessage(hwnd, WM_WAYLAND_SET_FOREGROUND, 1, 0);
+         }
+ 
+diff --git a/dlls/winewayland.drv/wayland_surface.c b/dlls/winewayland.drv/wayland_surface.c
+index b8f7914eb0a..bd4f85aa12a 100644
+--- a/dlls/winewayland.drv/wayland_surface.c
++++ b/dlls/winewayland.drv/wayland_surface.c
+@@ -39,6 +39,7 @@ static void xdg_surface_handle_configure(void *private, struct xdg_surface *xdg_
+ {
+     struct wayland_surface *surface;
+     enum zxdg_toplevel_decoration_v1_mode decor;
++    enum wayland_surface_wm_caps caps;
+     BOOL should_post = FALSE, initial_configure = FALSE;
+     struct wayland_win_data *data;
+     HWND hwnd = private;
+@@ -59,12 +60,14 @@ static void xdg_surface_handle_configure(void *private, struct xdg_surface *xdg_
+         initial_configure = surface->current.serial == 0;
+         surface->pending.serial = serial;
+         decor = surface->pending.decor;
++        caps = surface->pending.caps;
+         surface->requested = surface->pending;
+         memset(&surface->pending, 0, sizeof(surface->pending));
+ 
+         /* This is not always updated with the other configuration events,
+          * so we must assume it remains unchanged */
+         surface->pending.decor = decor;
++        surface->pending.caps = caps;
+     }
+ 
+     wayland_win_data_release(data);
+@@ -138,10 +141,67 @@ static void xdg_toplevel_handle_close(void *data, struct xdg_toplevel *xdg_tople
+     NtUserPostMessage((HWND)data, WM_SYSCOMMAND, SC_CLOSE, 0);
+ }
+ 
++static void xdg_toplevel_handle_configure_bounds(void *private, struct xdg_toplevel *xdg_toplevel, int width, int height)
++{
++    HWND hwnd = private;
++
++    /* FIXME: we don't respect these yet */
++    TRACE("hwnd %p, (%d, %d)\n", hwnd, width, height);
++}
++
++static void xdg_toplevel_handle_wm_caps(void *private, struct xdg_toplevel *xdg_toplevel, struct wl_array *caps)
++{
++    int *state;
++    HWND hwnd = private;
++    struct wayland_surface *surface;
++    struct wayland_win_data *data;
++    enum wayland_surface_wm_caps cap = 0;
++
++    wl_array_for_each(state, caps)
++    {
++        switch (*state)
++        {
++            case XDG_TOPLEVEL_WM_CAPABILITIES_FULLSCREEN:
++                cap |= WAYLAND_SURFACE_WM_CAPS_FULLSCREEN;
++                break;
++            case XDG_TOPLEVEL_WM_CAPABILITIES_MINIMIZE:
++                cap |= WAYLAND_SURFACE_WM_CAPS_MINIMIZE;
++                break;
++            case XDG_TOPLEVEL_WM_CAPABILITIES_MAXIMIZE:
++                cap |= WAYLAND_SURFACE_WM_CAPS_MAXIMIZE;
++                break;
++            case XDG_TOPLEVEL_WM_CAPABILITIES_WINDOW_MENU:
++                cap |= WAYLAND_SURFACE_WM_CAPS_SHOW_WINDOW;
++                break;
++            default: break;
++        }
++    }
++
++    TRACE("hwnd %p caps %x\n", hwnd, cap);
++
++    if (!(cap & WAYLAND_SURFACE_WM_CAPS_FULLSCREEN))
++        WARN("Compositor does not support fullscreen!\n");
++    if (!(cap & WAYLAND_SURFACE_WM_CAPS_MAXIMIZE))
++        WARN("Compositor does not support maximize!\n");
++    if (!(cap & WAYLAND_SURFACE_WM_CAPS_MINIMIZE))
++        WARN("Compositor does not support minimize, cannot implement window focus loss!\n");
++
++    if (!(data = wayland_win_data_get(hwnd))) return;
++
++    if ((surface = data->wayland_surface) && wayland_surface_is_toplevel(surface))
++    {
++        surface->pending.caps = cap;
++    }
++
++    wayland_win_data_release(data);
++}
++
+ static const struct xdg_toplevel_listener xdg_toplevel_listener =
+ {
+     xdg_toplevel_handle_configure,
+-    xdg_toplevel_handle_close
++    xdg_toplevel_handle_close,
++    xdg_toplevel_handle_configure_bounds,
++    xdg_toplevel_handle_wm_caps
+ };
+ 
+ void wp_fractional_scale_handle_scale(void* user_data,
+diff --git a/dlls/winewayland.drv/waylanddrv.h b/dlls/winewayland.drv/waylanddrv.h
+index 34d4283717a..f6692ac41dc 100644
+--- a/dlls/winewayland.drv/waylanddrv.h
++++ b/dlls/winewayland.drv/waylanddrv.h
+@@ -115,6 +115,14 @@ enum wayland_pointer_axis_stop_flags
+     WAYLAND_POINTER_AXIS_STOP_HORIZONTAL = (1 << 1)
+ };
+ 
++enum wayland_surface_wm_caps
++{
++    WAYLAND_SURFACE_WM_CAPS_SHOW_WINDOW = (1 << 0),
++    WAYLAND_SURFACE_WM_CAPS_MAXIMIZE = (1 << 1),
++    WAYLAND_SURFACE_WM_CAPS_FULLSCREEN = (1 << 2),
++    WAYLAND_SURFACE_WM_CAPS_MINIMIZE = (1 << 3)
++};
++
+ struct wayland_keyboard
+ {
+     struct wl_keyboard *wl_keyboard;
+@@ -312,6 +320,7 @@ struct wayland_surface_config
+     int32_t width, height;
+     enum wayland_surface_config_state state;
+     enum zxdg_toplevel_decoration_v1_mode decor;
++    enum wayland_surface_wm_caps caps;
+     uint32_t serial;
+     BOOL processed;
+ };
+diff --git a/dlls/winewayland.drv/window.c b/dlls/winewayland.drv/window.c
+index add79bf953f..015a53361a6 100644
+--- a/dlls/winewayland.drv/window.c
++++ b/dlls/winewayland.drv/window.c
+@@ -256,6 +256,7 @@ static BOOL wayland_win_data_create_wayland_surface(struct wayland_win_data *dat
+      * Ensure that this restoration is not user driven,
+      * as this case is already handled by the compositor */
+     if (surface->window.minimized && focused != data->hwnd
++        && (surface->current.caps & WAYLAND_SURFACE_WM_CAPS_MINIMIZE)
+         && !(style & WS_MINIMIZE) && !data->force_below_hack)
+     {
+         wayland_surface_clear_role(surface);
+-- 
+2.53.0
+

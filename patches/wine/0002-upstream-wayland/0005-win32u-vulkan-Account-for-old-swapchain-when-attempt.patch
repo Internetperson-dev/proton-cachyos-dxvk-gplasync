@@ -1,0 +1,27 @@
+From 18eae80d5a94bcb93d15129d4dd3cbce63034427 Mon Sep 17 00:00:00 2001
+From: Etaash Mathamsetty
+ <45927311+Etaash-mathamsetty@users.noreply.github.com>
+Date: Sat, 11 Apr 2026 00:26:03 -0500
+Subject: [PATCH 5/6] win32u/vulkan: Account for old swapchain when attempting
+ reuse.
+
+---
+ dlls/win32u/vulkan.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/dlls/win32u/vulkan.c b/dlls/win32u/vulkan.c
+index 23c0319436d..d3e4b5fb8a5 100644
+--- a/dlls/win32u/vulkan.c
++++ b/dlls/win32u/vulkan.c
+@@ -885,6 +885,8 @@ static VkResult win32u_vkCreateSwapchainKHR( VkDevice client_device, const VkSwa
+         pthread_mutex_lock( &surface_list_lock );
+         LIST_FOR_EACH_ENTRY( temp, &win->vulkan_surfaces, struct surface, entry )
+         {
++            /* avoid using the old swapchain's surface since this will cause native window in use */
++            if (old_swapchain && old_swapchain->surface == temp) continue;
+             if (!temp->refcnt && temp != surface)
+             {
+                 surface = temp;
+-- 
+2.53.0
+
