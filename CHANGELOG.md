@@ -1,3 +1,39 @@
+### Version 10.0-20260407
+* Proton (SLR and Native)
+   - Updated to the most recent Proton Experimental release [`10.0-20260407`](https://github.com/ValveSoftware/Proton/tree/experimental-10.0-20260407)
+   - Added a patch to allow Denuvo to work on Android. Thanks to @pipetto-crypto, @NelloKudo and @klark231.
+   - Updated `winewayland.drv` with latest changes from Proton-EM. Previously problematic Vulkan games, such as Doom Eternal, should work properly now. Other fixed issues include window decorations for some CEF applications and window minimize and restore. Thanks to @Etaash-Mathamsetty.
+   - Updated `dxvk-low-latency` to the current [low-latency-framepacing-2.7.1-3-521](https://github.com/netborg-afps/dxvk-low-latency/releases/tag/low-latency-framepacing-2.7.1-3-521) release.
+   - Updated `d7vk` to [v1.7](https://github.com/WinterSnowfall/d7vk/releases/tag/v1.7)
+   - Updated `dxvk-sarek` to [fcafb96](https://github.com/pythonlover02/DXVK-Sarek/commit/fcafb96). This update includes a backported version of `d7vk`, to use it combine the `PROTON_DXVK_SAREK=1` and `PROTON_D7VK_DDRAW=1` options.
+   - Split `nvidia-libs/nvcuda` and `nvidia-libs/nvenc` modules to separate sources for 64bit and 32bit libraries and updated the 64bit modules. This was necessary because newer versions of SveSop's nvcuda and nvenc removed 32bit support, see [here](https://github.com/SveSop/nvidia-libs/issues/42) for more information
+   - Added `PROTON_USE_WAYLAND` and `PROTON_USE_SDL` aliases for `PROTON_ENABLE_WAYLAND` and `PROTON_PREFER_SDL` respectively.
+* Proton (SLR specific)
+  - None
+* Proton (Native specific)
+  - None
+* Wine (Standalone)
+  - `wine-cachyos` packages on CachyOS repos will be built as `wow64` due to a lot of multilib dependencies being removed from the Arch repos.
+
+> [!IMPORTANT]
+> I know that we have a lot of different packages that might cause confusion. My suggestion is to be conservative and use `x86_64`. The `x86_64_v2`
+> and `x86_64_v3` should be absolutely identical between them and with `x86_64` across the board, and `x86_64_v4` can be worse in some cases.
+> Feel free to experiment and see which fits better for your system, of course.
+>
+> The `x86_64_v4` package is largely untested and experimental. It may exhibit issues or completely refuse to work.
+> Use at your own discretion and report issues [here](https://github.com/CachyOS/proton-cachyos/issues/51) only.
+
+
+> [!NOTE]
+> * For Wayland specific flags and options, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/EM-ADDITIONS.md
+> * For FSR4 related documentation, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/FSR4.md
+> * For `dxvk-sarek` specific options to tune its behavior refer to: https://github.com/pythonlover02/DXVK-Sarek?tab=readme-ov-file#shader-compilation
+> * For `dxvk-low-latency` related options to tune its behavior refer to: https://github.com/netborg-afps/dxvk-low-latency?tab=readme-ov-file#dxvk-low-latency
+
+**Base:** https://github.com/ValveSoftware/Proton/tree/experimental-10.0-20260407
+
+---
+
 ### Version 10.0-20260330
 * Proton (SLR and Native)
    - Minor updated release based on the previous [`10.0-20260324`](https://github.com/ValveSoftware/Proton/tree/experimental-10.0-20260324)
