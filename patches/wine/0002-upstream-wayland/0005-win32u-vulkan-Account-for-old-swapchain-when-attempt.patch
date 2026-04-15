@@ -2,7 +2,7 @@ From 18eae80d5a94bcb93d15129d4dd3cbce63034427 Mon Sep 17 00:00:00 2001
 From: Etaash Mathamsetty
  <45927311+Etaash-mathamsetty@users.noreply.github.com>
 Date: Sat, 11 Apr 2026 00:26:03 -0500
-Subject: [PATCH 5/6] win32u/vulkan: Account for old swapchain when attempting
+Subject: [PATCH 5/8] win32u/vulkan: Account for old swapchain when attempting
  reuse.
 
 ---

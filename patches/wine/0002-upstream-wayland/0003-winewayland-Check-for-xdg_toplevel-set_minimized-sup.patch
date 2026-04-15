@@ -2,7 +2,7 @@ From 340cac8dbb2ec9974a67f6f5060584b0289c5aed Mon Sep 17 00:00:00 2001
 From: Etaash Mathamsetty
  <45927311+Etaash-mathamsetty@users.noreply.github.com>
 Date: Fri, 10 Apr 2026 21:25:37 -0500
-Subject: [PATCH 3/6] winewayland: Check for xdg_toplevel::set_minimized
+Subject: [PATCH 3/8] winewayland: Check for xdg_toplevel::set_minimized
  support
 
 ---
