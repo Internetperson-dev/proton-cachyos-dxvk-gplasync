@@ -2,7 +2,7 @@ From 33c3f1686bb469ef792958f14c426e117e33b977 Mon Sep 17 00:00:00 2001
 From: Etaash Mathamsetty
  <45927311+Etaash-mathamsetty@users.noreply.github.com>
 Date: Sat, 11 Apr 2026 00:32:05 -0500
-Subject: [PATCH 6/6] Revert "winewayland: Fix window decorations on some CEF
+Subject: [PATCH 6/8] Revert "winewayland: Fix window decorations on some CEF
  apps."
 
 This reverts commit ad1afd0c773778ef681471b96a480ceb4ed9961f.

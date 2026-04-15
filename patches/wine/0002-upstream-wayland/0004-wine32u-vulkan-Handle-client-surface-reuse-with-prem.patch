@@ -2,7 +2,7 @@ From 9cd3f59770f573e3d62f273fd891cb3eee18d94f Mon Sep 17 00:00:00 2001
 From: Etaash Mathamsetty
  <45927311+Etaash-mathamsetty@users.noreply.github.com>
 Date: Fri, 10 Apr 2026 23:52:38 -0500
-Subject: [PATCH 4/6] wine32u/vulkan: Handle client surface reuse with
+Subject: [PATCH 4/8] wine32u/vulkan: Handle client surface reuse with
  premature VkSurface destruction.
 
 ---
