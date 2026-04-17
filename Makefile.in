@@ -1018,6 +1018,7 @@ WINE_AUTOCONF_ARGS = \
 
 WINE_AUTOCONF_ARGS += \
   --with-x \
+  --with-wayland \
   --with-gstreamer \
   --with-ffmpeg \
   --without-oss \
