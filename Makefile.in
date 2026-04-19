@@ -116,9 +116,9 @@ ifeq ($(shell cc --version|grep 'clang'),)
 	TOOLCHAIN_PREFIX :=
 	OBJCOPY_FLAGS  := -p
 	MINGW_TYPE := gcc
-	i386_CFLAGS += -s -mprefer-avx128
+	i386_CFLAGS += -s -mno-avx -mno-avx2
 	i386_CFLAGS += -fvect-cost-model=cheap -fno-semantic-interposition -fipa-pta
-	x86_64_CFLAGS += -s -mprefer-avx128
+	x86_64_CFLAGS += -s -mno-avx -mno-avx2
 	x86_64_CFLAGS += -fvect-cost-model=cheap -fno-semantic-interposition -fipa-pta
 	i386_SANITY_FLAGS := -mpreferred-stack-boundary=2
 else
