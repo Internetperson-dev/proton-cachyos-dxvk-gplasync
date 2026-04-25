@@ -1,3 +1,30 @@
+### Version 10.0-20260424
+* Proton (SLR and Native)
+   - Update release based on [`cachyos-10.0-20260420-slr`](https://github.com/CachyOS/proton-cachyos/releases/tag/cachyos-10.0-20260420-slr)
+   - Backported the required `wine` and `vkd3d-proton` updates from Proton Experimental Bleeding Edge to fix **Crimson Desert**. Do not use `PROTON_VKD3D_HEAP=1` with the game, the alternative `vkd3d-proton` doesn't have any of the required updates.
+* Proton (SLR specific)
+  - None
+* Proton (Native specific)
+  - None
+* Wine (Standalone)
+  - None
+
+> [!IMPORTANT]
+> I know that we have a lot of different packages that might cause confusion. My suggestion is to be conservative and use `x86_64`.
+> Feel free to experiment and see which fits better for your system, of course.
+>
+> The `x86_64_v4` package is largely untested and experimental. It may exhibit issues or completely refuse to work.
+> Use at your own discretion and report issues [here](https://github.com/CachyOS/proton-cachyos/issues/51) only.
+
+
+> [!NOTE]
+> * For Wayland specific flags and options, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/EM-ADDITIONS.md
+> * For FSR4 related documentation, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/FSR4.md
+> * For `dxvk-sarek` specific options to tune its behavior refer to: https://github.com/pythonlover02/DXVK-Sarek?tab=readme-ov-file#shader-compilation
+> * For `dxvk-low-latency` related options to tune its behavior refer to: https://github.com/netborg-afps/dxvk-low-latency?tab=readme-ov-file#dxvk-low-latency
+
+**Base:** https://github.com/ValveSoftware/Proton/tree/experimental-10.0-20260407
+
 ### Version 10.0-20260420
 * Proton (SLR and Native)
    - Update release based on [`cachyos-10.0-20260410-slr`](https://github.com/CachyOS/proton-cachyos/releases/tag/cachyos-10.0-20260410-slr)
