@@ -900,6 +900,8 @@ $(eval $(call rules-makedep,umuexe,i386))
 $(eval $(call rules-makedep,umuexe,x86_64))
 $(eval $(call rules-makedep,umuexe,aarch64))
 
+default_pfx: umuexe
+
 
 ##
 ## steam.exe
