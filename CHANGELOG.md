@@ -1,3 +1,61 @@
+### Version 11.0-20260428
+* Proton (SLR and Native)
+   - Updated to the most recent Proton Experimental release [`11.0-20260428`](https://github.com/ValveSoftware/Proton/tree/experimental-11.0-20260428)
+   - First of I would like to thank @Etaash-mathamsetty of [Proton-EM](https://github.com/Etaash-mathamsetty/Proton) and @NelloKudo of [DWProton](https://dawn.wine/dawn-winery/dwproton) for their immense contribution to the project in general and for helping with the rebase on top of Proton 11 in particular.
+   - The `PROTON_USE_NTSYNC` environment variable and related configuration has been removed. This is the default now even in Valve's Proton 11, nevertheless `ntsync` can still be disabled by using `PROTON_NO_NTSYNC` provided by Proton 11.
+   - Imported `winewayland.drv` updates from Proton-EM 11. One important difference is that Proton-CachyOS doesn't enable HDR by default, you still need `PROTON_ENABLE_HDR=1` for it. The automatic enablement depends on Nvidia `595` drivers, and I didn't want to enforce that requirement.
+   - Proton 11 is using SteamRT4, which is missing a few of the libraries that were present in SteamRT3. This led us to disable a few media plugins in `gstreamer` and `ffmpeg`. If you notice lacking media in games when using Proton-CachyOS 11 compared to Proton-CachyOS 10, we would like to know.
+   - Almost all of the `wine-staging` patches from Proton-CachyOS 10 have been removed. Only a handful have been added for things that we were certain they were required. We want to keep them at a minimum and add them selectively if they are required to fix an issue.
+   - The DualSense patches have been removed, pending a rebase onto Proton 11. If they are still needed, they will be added back in a later version.
+   - Removed the Asseto Corsa patch, as the game's HUD seems to work fine using **CSP 0.3** and I did not like what the patch was doing to fix the issue. We also fixed an issue with `PROTON_GST_VIDEO_ORIENTATION` messing up audio playback.
+   - The `x86_64_v4` package has been removed. I felt like it wasn't offering anything substantial presently and I needed to free up jobs in the workflows for other builds. You can use either the `x86_64_v3` or `x86_64` instead.
+* Proton (SLR specific)
+  - None
+* Proton (Native specific)
+  - The native Arch package is going to be pure wow64 from now on. Arch has been removing `lib32-*` packages in lately and I don't want to deal with build failures. Using the Steam Linux Runtime (`-slr`) package has been our recommendation for a long time now, for maximum compatibility.
+* Wine (Standalone)
+  - None
+
+
+> [!IMPORTANT]
+> I know that we have a lot of different packages that might cause confusion. My suggestion is to be conservative and use `x86_64`.
+> Feel free to experiment and see which fits better for your system, of course.
+
+> [!NOTE]
+> * For Wayland specific flags and options, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/EM-ADDITIONS.md
+> * For FSR4 related documentation, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/FSR4.md
+> * For `dxvk-sarek` specific options to tune its behavior refer to: https://github.com/pythonlover02/DXVK-Sarek?tab=readme-ov-file#shader-compilation
+> * For `dxvk-low-latency` related options to tune its behavior refer to: https://github.com/netborg-afps/dxvk-low-latency?tab=readme-ov-file#dxvk-low-latency
+
+**Base:** https://github.com/ValveSoftware/Proton/tree/experimental-11.0-20260428
+
+### Version 10.0-20260425
+* Proton (SLR and Native)
+   - Final release for the Proton 10 branch based on [`10.0-20260407`](https://github.com/ValveSoftware/Proton/tree/experimental-10.0-20260407)
+required updates.
+* Proton (SLR specific)
+  - None
+* Proton (Native specific)
+  - None
+* Wine (Standalone)
+  - None
+
+> [!IMPORTANT]
+> I know that we have a lot of different packages that might cause confusion. My suggestion is to be conservative and use `x86_64`.
+> Feel free to experiment and see which fits better for your system, of course.
+>
+> The `x86_64_v4` package is largely untested and experimental. It may exhibit issues or completely refuse to work.
+> Use at your own discretion and report issues [here](https://github.com/CachyOS/proton-cachyos/issues/51) only.
+
+
+> [!NOTE]
+> * For Wayland specific flags and options, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/EM-ADDITIONS.md
+> * For FSR4 related documentation, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/FSR4.md
+> * For `dxvk-sarek` specific options to tune its behavior refer to: https://github.com/pythonlover02/DXVK-Sarek?tab=readme-ov-file#shader-compilation
+> * For `dxvk-low-latency` related options to tune its behavior refer to: https://github.com/netborg-afps/dxvk-low-latency?tab=readme-ov-file#dxvk-low-latency
+
+**Base:** https://github.com/ValveSoftware/Proton/tree/experimental-10.0-20260407
+
 ### Version 10.0-20260424
 * Proton (SLR and Native)
    - Update release based on [`cachyos-10.0-20260420-slr`](https://github.com/CachyOS/proton-cachyos/releases/tag/cachyos-10.0-20260420-slr)
