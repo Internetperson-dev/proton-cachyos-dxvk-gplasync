@@ -1657,6 +1657,8 @@ $(OBJ)/.vkd3d-i386-post-build: $(OBJ)/.wine-$(HOST_ARCH)-tools
 	cp $(VKD3D_i386_DST)/bin/libvkd3d-utils-1.dll $(VKD3D_i386_LIBDIR)/vkd3d/i386-windows
 	touch $@
 
+default_pfx: vkd3d
+
 
 ##
 ## vkd3d-proton
@@ -2269,8 +2271,6 @@ endif
 ##
 ## default_pfx
 ##
-
-default_pfx: vkd3d
 
 default_pfx: wine gst_good gst_bad gst_libav gst_plugins_rs lsteamclient steamexe vrclient wineopenxr $(WINEOPENXR64_JSON) dxvk dxvk-nvapi vkd3d-proton
 	find $(DST_LIBDIR)/wine -type f -execdir chmod go-w '{}' '+'
