@@ -1,0 +1,105 @@
+From 0c897f5373aa8b4112325ce1b2664bea9dac73f1 Mon Sep 17 00:00:00 2001
+From: Etaash Mathamsetty
+ <45927311+Etaash-mathamsetty@users.noreply.github.com>
+Date: Wed, 29 Apr 2026 22:12:11 -0500
+Subject: [PATCH 2/3] winewayland: Use passthrough for windows SCRGB
+ colorspace.
+
+---
+ dlls/winewayland.drv/vulkan.c          | 52 ++++++++++++++++++++++++++
+ dlls/winewayland.drv/wayland_surface.c |  2 +
+ dlls/winewayland.drv/waylanddrv.h      |  1 +
+ 3 files changed, 55 insertions(+)
+
+diff --git a/dlls/winewayland.drv/vulkan.c b/dlls/winewayland.drv/vulkan.c
+index a149a9f167f..d0d623a0351 100644
+--- a/dlls/winewayland.drv/vulkan.c
++++ b/dlls/winewayland.drv/vulkan.c
+@@ -147,7 +147,59 @@ static void wayland_map_device_extensions(struct vulkan_device_extensions *exten
+ 
+ static VkResult wayland_vulkan_colorspace_configure(VkColorSpaceKHR *colorspace, struct client_surface *client)
+ {
++    struct wp_image_description_v1 *wp_image_description_v1;
++    struct wayland_client_surface *surface =
++        CONTAINING_RECORD(client, struct wayland_client_surface, client);
++    VkColorSpaceKHR old = *colorspace;
++
++    if (process_wayland.supports_scrgb &&
++        old == VK_COLOR_SPACE_EXTENDED_SRGB_LINEAR_EXT)
++    {
++        *colorspace = VK_COLOR_SPACE_PASS_THROUGH_EXT;
++    }
++
++    /* TODO: Future protocol revision will enable us to use passthrough for
++     * PQ colorspace with windows_pq image description */
++
++    TRACE("mapping colorspace %u => %u\n", old, *colorspace);
++
++    if (old == VK_COLOR_SPACE_EXTENDED_SRGB_LINEAR_EXT &&
++        *colorspace == VK_COLOR_SPACE_PASS_THROUGH_EXT)
++    {
++        wp_image_description_v1 =
++            wp_color_manager_v1_create_windows_scrgb(process_wayland.wp_color_manager_v1);
++        if (!wp_image_description_v1) goto err;
++    }
++    else
++    {
++        if (surface->wp_color_management_surface_v1)
++        {
++            wp_color_management_surface_v1_destroy(surface->wp_color_management_surface_v1);
++            surface->wp_color_management_surface_v1 = NULL;
++        }
++        return VK_SUCCESS;
++    }
++
++    if (!surface->wp_color_management_surface_v1)
++    {
++        surface->wp_color_management_surface_v1 =
++            wp_color_manager_v1_get_surface(process_wayland.wp_color_manager_v1,
++                                            surface->wl_surface);
++        if (!surface->wp_color_management_surface_v1) goto err;
++    }
++    wp_color_management_surface_v1_set_image_description(
++        surface->wp_color_management_surface_v1,
++        wp_image_description_v1,
++        WP_COLOR_MANAGER_V1_RENDER_INTENT_PERCEPTUAL);
++    /* can be destroyed due to copy semantics */
++    wp_image_description_v1_destroy(wp_image_description_v1);
++
+     return VK_SUCCESS;
++err:
++    if (wp_image_description_v1)
++        wp_image_description_v1_destroy(wp_image_description_v1);
++    ERR("Failed to configure color management surface on client surface!\n");
++    return VK_ERROR_OUT_OF_HOST_MEMORY;
+ }
+ 
+ static const struct vulkan_driver_funcs wayland_vulkan_driver_funcs =
+diff --git a/dlls/winewayland.drv/wayland_surface.c b/dlls/winewayland.drv/wayland_surface.c
+index 46b50352b30..75e24c4fc5a 100644
+--- a/dlls/winewayland.drv/wayland_surface.c
++++ b/dlls/winewayland.drv/wayland_surface.c
+@@ -1327,6 +1327,8 @@ static void wayland_client_surface_destroy(struct client_surface *client)
+ 
+     if (!keep_alive)
+     {
++        if (surface->wp_color_management_surface_v1)
++            wp_color_management_surface_v1_destroy(surface->wp_color_management_surface_v1);
+         if (surface->wl_subsurface)
+             wl_subsurface_destroy(surface->wl_subsurface);
+         if (surface->wp_content_type_v1)
+diff --git a/dlls/winewayland.drv/waylanddrv.h b/dlls/winewayland.drv/waylanddrv.h
+index 1ea56c3fd43..0525db37837 100644
+--- a/dlls/winewayland.drv/waylanddrv.h
++++ b/dlls/winewayland.drv/waylanddrv.h
+@@ -340,6 +340,7 @@ struct wayland_client_surface
+     HWND toplevel;
+     struct wl_surface *wl_surface;
+     struct wl_subsurface *wl_subsurface;
++    struct wp_color_management_surface_v1 *wp_color_management_surface_v1;
+     struct wp_viewport *wp_viewport;
+     struct wp_content_type_v1 *wp_content_type_v1;
+ };
+-- 
+2.54.0
+
