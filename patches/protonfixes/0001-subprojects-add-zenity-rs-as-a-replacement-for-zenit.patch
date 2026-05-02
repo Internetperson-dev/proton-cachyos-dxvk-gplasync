@@ -1,0 +1,175 @@
+From a1243d4cedfe68b6a4ad14bd4930b8d32a8eb0db Mon Sep 17 00:00:00 2001
+From: Stelios Tsampas <loathingkernel@gmail.com>
+Date: Sat, 2 May 2026 17:47:17 +0300
+Subject: [PATCH] subprojects: add zenity-rs as a replacement for zenity
+ (missing from steamrt4)
+
+---
+ .github/workflows/build.yml | 33 ++++++++++++++++++++++----
+ Makefile                    | 47 +++++++++++++++++++++++++++++++++----
+ upscalers.py                | 12 ++++------
+ 3 files changed, 76 insertions(+), 16 deletions(-)
+
+diff --git a/.github/workflows/build.yml b/.github/workflows/build.yml
+index 644afd5..f31c2f8 100644
+--- a/.github/workflows/build.yml
++++ b/.github/workflows/build.yml
+@@ -19,18 +19,40 @@ jobs:
+           submodules: recursive
+       - name: Build umu-protonfixes
+         run: |
+-          make
++          make install
++      - name: List dist files
++        run: |
++          find dist/
+ 
+   steamrt4:
+     runs-on: ubuntu-latest
+-    container: registry.gitlab.steamos.cloud/steamrt/steamrt4/sdk:beta
++    container: registry.gitlab.steamos.cloud/proton/steamrt4/sdk/x86_64:4.0.20260331.220802-0
+     steps:
+       - uses: actions/checkout@v6
+         with:
+           submodules: recursive
+       - name: Build umu-protonfixes
+         run: |
+-          make
++          make install
++      - name: List dist files
++        run: |
++          find dist/
++
++  steamrt4-arm64:
++    runs-on: ubuntu-24.04-arm
++    container: registry.gitlab.steamos.cloud/proton/steamrt4/sdk/arm64-llvm:4.0.20260331.220802-0
++    steps:
++      - uses: actions/checkout@v6
++        with:
++          submodules: recursive
++      - name: Build umu-protonfixes
++        env:
++          TARGET_ARCH: arm64
++        run: |
++           make install
++      - name: List dist files
++        run: |
++          find dist/
+ 
+   umu:
+     runs-on: ubuntu-latest
+@@ -41,4 +63,7 @@ jobs:
+           submodules: recursive
+       - name: Build umu-protonfixes
+         run: |
+-          make
++          make install
++      - name: List dist files
++        run: |
++          find dist/
+diff --git a/Makefile b/Makefile
+index 3e074d7..3137846 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,4 +1,6 @@
+ 
++SHELL := /bin/bash
++
+ BUILD ?= build
+ DIST  ?= dist
+ 
+@@ -10,15 +12,18 @@ BASEDIR       := /files
+ 
+ # Default flags are from Proton, CFLAGS/LDFLAGS are expected to tbe overriden by Proton's makefile
+ TARGET_ARCH ?= x86_64
+-LIBDIR := $(BASEDIR)/lib/x86_64-linux-gnu
+-CFLAGS ?= -O2 -march=nocona -mtune=core-avx2
+-LDFLAGS ?= -Wl,-O1,--sort-common,--as-needed
++
+ ifeq ($(TARGET_ARCH),arm64)
++	TARGET_ARCH_unix := aarch64
+ 	CFLAGS ?= -march=armv8.2-a -mtune=cortex-x3
+-	LDFLAGS ?= -Wl,-O1,--sort-common,--as-needed
+-	LIBDIR := $(BASEDIR)/lib/aarch64-linux-gnu
++else
++	TARGET_ARCH_unix := x86_64
++	CFLAGS ?= -O2 -march=nocona -mtune=core-avx2
+ endif
+ 
++LDFLAGS ?= -Wl,-O1,--sort-common,--as-needed
++LIBDIR := $(BASEDIR)/lib/$(TARGET_ARCH_unix)-linux-gnu
++
+ .PHONY: all
+ 
+ all: winetricks-dist cabextract-dist libmspack-dist unzip-dist procps-ng-dist
+@@ -28,6 +33,13 @@ all: winetricks-dist cabextract-dist libmspack-dist unzip-dist procps-ng-dist
+ # Note: `export DEB_BUILD_MAINT_OPTIONS=hardening=-format` is required for the unzip target
+ install: protonfixes-install winetricks-install cabextract-install libmspack-install unzip-install procps-ng-install
+ 
++TARGET_STEAMRT := $(shell source /etc/os-release && echo -n $$VERSION_CODENAME)
++
++ifeq ($(TARGET_STEAMRT),steamrt4)
++all: zenity-rs-dist
++install: zenity-rs-install
++endif
++
+ #
+ # protonfixes
+ #
+@@ -178,5 +190,30 @@ procps-ng-install: procps-ng-dist
+ 	install -d $(TARGET_DIR)$(LIBDIR)
+ 	install -m755 $(OBJDIR)/procps-ng/library/.libs/libproc2.so.* $(TARGET_DIR)$(LIBDIR)/
+ 
++#
++# zenity-rs
++#
++
++ZENITY_RS_VER := 0.2.6
++
++$(OBJDIR)/zenity-rs: | $(OBJDIR)
++	mkdir -p $(@)
++
++$(OBJDIR)/.build-zenity-rs-dist: | $(OBJDIR)/zenity-rs
++	$(info :: Downloading zenity-rs )
++	cd $(OBJDIR)/zenity-rs && \
++	curl -L "https://github.com/QaidVoid/zenity-rs/releases/download/v$(ZENITY_RS_VER)/zenity-rs-$(TARGET_ARCH_unix)-linux" --output zenity-rs
++	touch $(@)
++
++.PHONY: zenity-rs-dist
++
++zenity-rs-dist: $(OBJDIR)/.build-zenity-rs-dist
++
++zenity-rs-install: zenity-rs-dist
++	$(info :: Installing zenity-rs )
++	install -d $(TARGET_DIR)$(BASEDIR)/bin
++	install -m755 $(OBJDIR)/zenity-rs/zenity-rs $(TARGET_DIR)$(BASEDIR)/bin/zenity
++
++
+ $(OBJDIR):
+ 	@mkdir -p $(@)
+diff --git a/upscalers.py b/upscalers.py
+index 8d14d1d..572bf98 100644
+--- a/upscalers.py
++++ b/upscalers.py
+@@ -479,13 +479,11 @@ def setup_upscalers(
+     if 'dlss' in loaddll_replace:
+         env.setdefault(
+             'DXVK_NVAPI_DRS_SETTINGS',
+-            str(
+-                'ngx_dlss_sr_override=on,'
+-                'ngx_dlss_rr_override=on,'
+-                'ngx_dlss_fg_override=on,'
+-                'ngx_dlss_sr_override_render_preset_selection=default,'
+-                'ngx_dlss_rr_override_render_preset_selection=default,'
+-            ),
++            'ngx_dlss_sr_override=on,'
++            'ngx_dlss_rr_override=on,'
++            'ngx_dlss_fg_override=on,'
++            'ngx_dlss_sr_override_render_preset_selection=default,'
++            'ngx_dlss_rr_override_render_preset_selection=default,',
+         )
+ 
+     if 'xess' in loaddll_replace:
+-- 
+2.54.0
+
