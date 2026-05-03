@@ -1,7 +1,7 @@
 From a1243d4cedfe68b6a4ad14bd4930b8d32a8eb0db Mon Sep 17 00:00:00 2001
 From: Stelios Tsampas <loathingkernel@gmail.com>
 Date: Sat, 2 May 2026 17:47:17 +0300
-Subject: [PATCH] subprojects: add zenity-rs as a replacement for zenity
+Subject: [PATCH 1/2] subprojects: add zenity-rs as a replacement for zenity
  (missing from steamrt4)
 
 ---
