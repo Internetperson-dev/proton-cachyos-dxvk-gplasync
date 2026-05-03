@@ -1,3 +1,28 @@
+### Version 11.0-20260429
+* Proton (SLR and Native)
+   - Bugfix release based on [`cachyos-10.0-20260428-slr`](https://github.com/CachyOS/proton-cachyos/releases/tag/cachyos-10.0-20260428-slr)
+   - Added [`zenity-rs`](https://github.com/QaidVoid/zenity-rs) to `umu-protonfixes` as a replacement for `zenity`. SteamRT4 removed `zenity` from the runtime, and that made Winetricks GUI not function. Also fixed Winetricks GUI not working when enabling Wayland in Proton.
+   - Imported a couple of updates from Bleeding Edge to fix EAC and Assassin's Creed Shadows (unrelated to each other).
+   - Updated [`dxvk`](https://github.com/doitsujin/dxvk/commit/d1b0151cb40288de31d5af4a2e84173c3889afa2), [`dxvk-nvapi`](https://github.com/jp7677/dxvk-nvapi/commit/42ed4947825ff0f4f5f64fe11ebfbb0fc6cb4a3e) and [`vkd3d-proton`](https://github.com/HansKristian-Work/vkd3d-proton/commit/497357c0f03796d1a87696937c8b503106fdca6a)
+* Proton (SLR specific)
+  - None
+* Proton (Native specific)
+  - None
+* Wine (Standalone)
+  - None
+
+> [!IMPORTANT]
+> I know that we have a lot of different packages that might cause confusion. My suggestion is to be conservative and use `x86_64`.
+> Feel free to experiment and see which fits better for your system, of course.
+
+> [!NOTE]
+> * For Wayland specific flags and options, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/EM-ADDITIONS.md
+> * For FSR4 related documentation, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/FSR4.md
+> * For `dxvk-sarek` specific options to tune its behavior refer to: https://github.com/pythonlover02/DXVK-Sarek?tab=readme-ov-file#shader-compilation
+> * For `dxvk-low-latency` related options to tune its behavior refer to: https://github.com/netborg-afps/dxvk-low-latency?tab=readme-ov-file#dxvk-low-latency
+
+**Base:** https://github.com/ValveSoftware/Proton/tree/experimental-11.0-20260428
+
 ### Version 11.0-20260428
 * Proton (SLR and Native)
    - Updated to the most recent Proton Experimental release [`11.0-20260428`](https://github.com/ValveSoftware/Proton/tree/experimental-11.0-20260428)
@@ -15,7 +40,6 @@
   - The native Arch package is going to be pure wow64 from now on. Arch has been removing `lib32-*` packages in lately and I don't want to deal with build failures. Using the Steam Linux Runtime (`-slr`) package has been our recommendation for a long time now, for maximum compatibility.
 * Wine (Standalone)
   - None
-
 
 > [!IMPORTANT]
 > I know that we have a lot of different packages that might cause confusion. My suggestion is to be conservative and use `x86_64`.
@@ -47,7 +71,6 @@ required updates.
 > The `x86_64_v4` package is largely untested and experimental. It may exhibit issues or completely refuse to work.
 > Use at your own discretion and report issues [here](https://github.com/CachyOS/proton-cachyos/issues/51) only.
 
-
 > [!NOTE]
 > * For Wayland specific flags and options, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/EM-ADDITIONS.md
 > * For FSR4 related documentation, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/FSR4.md
@@ -74,7 +97,6 @@ required updates.
 > The `x86_64_v4` package is largely untested and experimental. It may exhibit issues or completely refuse to work.
 > Use at your own discretion and report issues [here](https://github.com/CachyOS/proton-cachyos/issues/51) only.
 
-
 > [!NOTE]
 > * For Wayland specific flags and options, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/EM-ADDITIONS.md
 > * For FSR4 related documentation, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/FSR4.md
@@ -100,7 +122,6 @@ required updates.
 >
 > The `x86_64_v4` package is largely untested and experimental. It may exhibit issues or completely refuse to work.
 > Use at your own discretion and report issues [here](https://github.com/CachyOS/proton-cachyos/issues/51) only.
-
 
 > [!NOTE]
 > * For Wayland specific flags and options, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/EM-ADDITIONS.md
@@ -131,7 +152,6 @@ required updates.
 > The `x86_64_v4` package is largely untested and experimental. It may exhibit issues or completely refuse to work.
 > Use at your own discretion and report issues [here](https://github.com/CachyOS/proton-cachyos/issues/51) only.
 
-
 > [!NOTE]
 > * For Wayland specific flags and options, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/EM-ADDITIONS.md
 > * For FSR4 related documentation, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/FSR4.md
@@ -161,7 +181,6 @@ required updates.
 > The `x86_64_v4` package is largely untested and experimental. It may exhibit issues or completely refuse to work.
 > Use at your own discretion and report issues [here](https://github.com/CachyOS/proton-cachyos/issues/51) only.
 
-
 > [!NOTE]
 > * For Wayland specific flags and options, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/EM-ADDITIONS.md
 > * For FSR4 related documentation, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/FSR4.md
@@ -190,7 +209,6 @@ required updates.
 >
 > The `x86_64_v4` package is largely untested and experimental. It may exhibit issues or completely refuse to work.
 > Use at your own discretion and report issues [here](https://github.com/CachyOS/proton-cachyos/issues/51) only.
-
 
 > [!NOTE]
 > * For Wayland specific flags and options, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/EM-ADDITIONS.md
@@ -226,7 +244,6 @@ required updates.
 >
 > The `x86_64_v4` package is largely untested and experimental. It may exhibit issues or completely refuse to work.
 > Use at your own discretion and report issues [here](https://github.com/CachyOS/proton-cachyos/issues/51) only.
-
 
 > [!NOTE]
 > * For Wayland specific flags and options, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/EM-ADDITIONS.md
