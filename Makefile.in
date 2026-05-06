@@ -52,7 +52,7 @@ DEPLOY_DIR := ./deploy
 REDIST_DIR := ./redist
 
 HOST_CFLAGS    ?= -O2 -march=nocona -mtune=core-avx2
-CCOS_CFLAGS    := $(HOST_CFLAGS) -pipe -mno-avx512f
+CCOS_CFLAGS    := $(HOST_CFLAGS) -pipe
 i386_CFLAGS    := -mstackrealign $(CCOS_CFLAGS) -mfpmath=sse
 x86_64_CFLAGS  := -mcmodel=small $(CCOS_CFLAGS) -mfpmath=sse
 HOST_RUSTFLAGS   ?= -Copt-level=3 -Ctarget-cpu=nocona
@@ -116,9 +116,9 @@ ifeq ($(shell cc --version|grep 'clang'),)
 	TOOLCHAIN_PREFIX :=
 	OBJCOPY_FLAGS  := -p
 	MINGW_TYPE := gcc
-	i386_CFLAGS += -s -mno-avx -mno-avx2
+	i386_CFLAGS += -s -mno-avx -mno-avx2 -mno-avx512f
 	i386_CFLAGS += -fvect-cost-model=cheap -fno-semantic-interposition -fipa-pta
-	x86_64_CFLAGS += -s -mno-avx -mno-avx2
+	x86_64_CFLAGS += -s -mno-avx -mno-avx2 -mno-avx512f
 	x86_64_CFLAGS += -fvect-cost-model=cheap -fno-semantic-interposition -fipa-pta
 	i386_SANITY_FLAGS := -mpreferred-stack-boundary=2
 else
