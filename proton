@@ -2103,7 +2103,6 @@ class Session:
             self.env["WINE_DISABLE_FULLSCREEN_HACK"] = "1"
             if "WINE_MOVE_HACK" not in self.env:
                 self.env["WINE_MOVE_HACK"] = "1"
-            self.env.setdefault("WINE_WAYLAND_HACKS", "1")
             self.env["PROTON_USE_XALIA"] = "0"
             if "PROTON_NO_STEAMINPUT" not in self.env:
                 self.env["PROTON_NO_STEAMINPUT"] = "1"
