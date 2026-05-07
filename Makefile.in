@@ -968,7 +968,6 @@ WINE_CFLAGS += \
   -Wno-incompatible-pointer-types \
 
 WINE_AUTOCONF_ARGS = \
-  --enable-werror \
   --with-mingw=$(MINGW_TYPE) \
   --disable-tests \
   --enable-build-id
