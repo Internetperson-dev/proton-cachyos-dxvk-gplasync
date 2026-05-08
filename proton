@@ -2123,7 +2123,6 @@ class Session:
                 del self.env["DISPLAY"]
             if "hdr" in self.compat_config:
                 self.env["DXVK_HDR"] = "1"
-                self.env.setdefault("ENABLE_HDR_WSI", str(int(is_driver_loaded({'nvidia'}))))
         else:
             if "GL_GST_WINDOW" not in self.env:
                 self.env["GST_GL_WINDOW"] = "x11"
