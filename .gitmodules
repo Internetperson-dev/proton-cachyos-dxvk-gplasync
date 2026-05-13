@@ -135,3 +135,6 @@
 [submodule "pyroveil"]
 	path = pyroveil
 	url = https://github.com/HansKristian-Work/pyroveil.git
+[submodule "libwebp"]
+	path = libwebp
+	url = https://github.com/webmproject/libwebp.git
