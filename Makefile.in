@@ -1752,7 +1752,7 @@ $(OBJ)/.pyroveil-aarch64-post-build:
 	rsync --delete -arx $(PYROVEIL_SRC)/hacks $(DST_DIR)/share/pyroveil/
 	touch $@
 
-default: pyroveil
+default_pfx: pyroveil
 
 
 ifneq ($(WITHOUT_BRATAN),1)
