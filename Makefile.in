@@ -638,6 +638,8 @@ $(eval $(call rules-meson,gst_ugly,i386,unix))
 $(eval $(call rules-meson,gst_ugly,x86_64,unix))
 $(eval $(call rules-meson,gst_ugly,aarch64,unix))
 
+default_pfx: gst_ugly
+
 ##
 ## FFmpeg
 ##
