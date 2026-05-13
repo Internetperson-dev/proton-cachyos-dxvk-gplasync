@@ -622,6 +622,7 @@ GST_BAD_MESON_ARGS += \
 	-Dttml=disabled
 
 GST_BAD_DEPENDS = gst_orc gstreamer gst_base
+GST_BAD_DEPENDS += libwebp
 GST_BAD_DEPENDS += libxml2
 ifneq ($(WITHOUT_WAYLAND_LIBS),1)
 GST_BAD_DEPENDS += wayland-protocols
@@ -778,6 +779,8 @@ FFMPEG_aarch64-unix_CONFIGURE_ARGS := \
 	--cross-prefix=aarch64-linux-gnu- \
 	--arch=aarch64 \
 	--target-os=linux
+
+FFMPEG_DEPENDS += libwebp
 
 $(eval $(call rules-source,ffmpeg,$(SRCDIR)/ffmpeg))
 $(eval $(call rules-configure,ffmpeg,i386,unix))
