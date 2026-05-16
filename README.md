@@ -380,7 +380,9 @@ Proton-CachyOS Config Options
 | `localshadercache`   | `PROTON_LOCAL_SHADER_CACHE`    | Enable per-game shader cache even if "Shader Pre-caching" is disabled. Any configuration set by this option can be overriden, i.e. if one of the environment variables is already set, the user-set value will be used. The default configuration is set up to mimic Steam's "Shader Pre-Caching", with shaders being cached under `<steamlibrary>/shadercache/<appid>` for each game.                                                                                             |
 
 ### Proton wayland quirks
-If something that uses Electron/CEF (launchers like Battle.net, Ubisoft Connect, EA App, Rockstar Launcher) doesn't work after enabling native Wayland support, try adding `--in-process-gpu` to the command arguments. If you encounter controller issues with `winewayland.drv`, try using `PROTON_USE_SDL=1`, or running Steam with `-steamos3` which might allow Steam Input to work. For other options relating to `winewayland.drv` refer to [Proton-EM documentation](https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/EM-ADDITIONS.md)
+If something that uses Electron/CEF (launchers like Battle.net, Ubisoft Connect, EA App, Rockstar Launcher) doesn't work (displays as white window) after enabling native Wayland support, try adding `--in-process-gpu` to the command arguments. If you encounter controller issues with `winewayland.drv`, try using `PROTON_USE_SDL=1`, or running Steam with `-steamos3` which might allow Steam Input to work. For other options relating to `winewayland.drv` refer to [Proton-EM documentation](https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/EM-ADDITIONS.md)
+
+**NOTE:** The automated wayland hacks that were included in Proton 10 have been removed on purpose pending a proper implementation. This is the reason previous versions seemed to work but in Proton 11 some launchers display as a white window.
 
 ### Manually providing `amdxcffx64.dll`
 In case you want to manually provide the `amdxcffx64.dll` DLL, there are two ways to achieve it.
