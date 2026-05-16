@@ -1,3 +1,54 @@
+### Version 11.0-20260506
+* Proton (SLR and Native)
+   - Updated to the most recent Proton Experimental release [`11.0-20260506`](https://github.com/ValveSoftware/Proton/tree/experimental-11.0-20260506)
+   - Imported a number of fixes and updates from Proton-EM for `winewayland.drv`.
+     * Prefer `ext_data_control_manager_v1` over `zwlr_data_control_manager_v1` when present. Thanks to @Etaash-mathamsetty
+     * Implemented `VK_COLORSPACE_HDR10_ST2084_EXT` using `windows_bt2100` image description when **version 3** of the `wp_color_manager_v1` protocol is supported (no compositor supports it yet). Thanks to @Etaash-mathamsetty
+     * Fixed crashes when the Wayland output image description changes. Thanks to @Etaash-mathamsetty
+     * Simplified client surface caching and made it handle more cases. Thanks to @Etaash-mathamsetty
+     * Fixed mouse pointer moving abruptly after entering a window when using `winewayland.drv` (https://github.com/CachyOS/proton-cachyos/issues/153). Thanks to @Etaash-mathamsetty
+     * Fixed an issue that "upgraded" FSR3.1 to FSR4 on RDNA3 GPUs automatically even without using the intended environemnt variables. Thanks to @Etaash-mathamsetty
+   - Removed `PROTON_ENABLE_HDR` as an option. It doesn't make much sense to have it any more, as it also required `ENABLE_HDR_WSI=0` in certain cases. If it is required, you can use `DXVK_HDR=1` instead, optionally with `ENABLE_HDR_WSI=1` on Nvidia driver versions older than `595.x.x`.
+   - Fixed more than a few media playback issues.
+     * Fixed an issue where some H264 videos would fail to play (e.g. Stella Sora). Thanks to @NelloKudo
+     * Fixed an issue where some videos would fail to start on winedmo due to flawed Seek() implementation (e.g. Danganronpa V3). Thanks to @NelloKudo
+     * Fixed a crash in faudio and improved WMA videos playback, DMC1 videos should now play fine on winedmo. Thanks to @NelloKudo
+     * Fixed intro video not playing in Guilty Gear XX Accent Core Plus R. Thanks to @NelloKudo
+   - Fixed semi-transparent webviews in Wuthering Waves. Thanks to @NelloKudo
+   - Thanks to @Vyrolian's efforts, improvements have been made in `winepulse.drv` in Valve's Proton, and as a result their older more hacky patch for `winepulse.drv` has been removed. The multi-channel audio patches for `winealsa.drv` are still included.
+   - Imported the changes from https://gitlab.winehq.org/wine/wine/-/merge_requests/10829 which tries to make collisions on the futex queues much less likely.
+   - Imported the changes from https://gitlab.winehq.org/wine/wine/-/merge_requests/10871 to respect runtime font smoothing settings.
+   - Improved `WINE_BLOCK_HOSTS` to block second-level domains too. `WINE_BLOCK_HOSTS=test.org` will block all of `this.test.org`, `other.test.org`. Word of caution, the domain name matching is very naive, so `WINE_BLOCK_HOSTS=org` will block any `.org` TLD.
+   - Added basic integration of [OptiScaler](https://github.com/optiscaler/OptiScaler) into `umu-protonfixes` and Proton-CachyOS, see below.
+     * Presently it is controlled by two environment variables, `PROTON_USE_OPTISCALER=1` to enable it, and `PROTON_OPTISCALER_NAME=<name.dll>` to control the DLL that should be injected. Three names are supported for `PROTON_OPTISCALER_NAME`, `dxgi.dll`, `d3d12.dll` and `dbghelp.dll` and defaults to `dxgi.dll` unless explictly set.
+     * When enabled, the `PROTON_<UPSCALER>_UPGRADE` options can be used to dictate the versions of the upscaler DLLs to download and use, so `PROTON_FSR4_RDNA3_UPGRADE=4.0.2` will download the FidelityFX DLLs for version `4.0.2`. `PROTON_FSR4_RDNA3_UPGRADE=1` still defaults to `4.0.0` and `PROTON_FSR4_UPGRADE=1` defaults to `4.1.0`. You will need either of these to enable FSR4 upscaling presently.
+     * The configuration files are placed with the DLLs in `<prefix>/drive_c/windows/system32/umu/` in case you need to edit them. Further configuration options exposed through environment variables are not planned, and likely to not be implemented.
+     * Right now drop-in DLL replacements are not possible, since the files are validated on each startup. If you need more fine-grained control than what is offered by the in-game menu, it's probably better to manually set up OptiScaler.
+     * I consider this work-in-progress, and it will certainly not work with all games. **Do not report issues to OptiScaler when using this, always try their own manual installation first (and of course disable this feature when doing so).**
+     * Thanks to @FakeMichau from the OptiScaler dev team for making this kind of integration possible by identifying and resolving various issues, and @mrlukyxd and @noel-personal for their input and testing while I was implementing it.
+   - Updated `d7vk` submodule to [`v1.9`](https://github.com/WinterSnowfall/d7vk/releases/tag/v1.9).
+   - Updated `dxvk-sarek` submodule to [`01e9165a`](https://github.com/pythonlover02/DXVK-Sarek/commit/01e9165aebf95957084bea0efe1a7e64499816ec) to include the back-ported `d7vk` updates.
+* Proton (SLR specific)
+  - None
+* Proton (Native specific)
+  - Converted it back into a multilib package until it's no longer possible for us to build it as such.
+* Wine (Standalone)
+  - None
+
+> [!IMPORTANT]
+> I know that we have a lot of different packages that might cause confusion. My suggestion is to be conservative and use `x86_64`.
+> Feel free to experiment and see which fits better for your system, of course.
+
+> [!NOTE]
+> * For Wayland specific flags and options, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/EM-ADDITIONS.md
+> * For FSR4 related documentation, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/FSR4.md
+> * For `dxvk-sarek` specific options to tune its behavior refer to: https://github.com/pythonlover02/DXVK-Sarek?tab=readme-ov-file#shader-compilation
+> * For `dxvk-low-latency` related options to tune its behavior refer to: https://github.com/netborg-afps/dxvk-low-latency?tab=readme-ov-file#dxvk-low-latency
+
+**Base:** https://github.com/ValveSoftware/Proton/tree/experimental-11.0-20260506
+
+---
+
 ### Version 11.0-20260429
 * Proton (SLR and Native)
    - Bugfix release based on [`cachyos-10.0-20260428-slr`](https://github.com/CachyOS/proton-cachyos/releases/tag/cachyos-10.0-20260428-slr)
@@ -22,6 +73,8 @@
 > * For `dxvk-low-latency` related options to tune its behavior refer to: https://github.com/netborg-afps/dxvk-low-latency?tab=readme-ov-file#dxvk-low-latency
 
 **Base:** https://github.com/ValveSoftware/Proton/tree/experimental-11.0-20260428
+
+---
 
 ### Version 11.0-20260428
 * Proton (SLR and Native)
@@ -53,6 +106,8 @@
 
 **Base:** https://github.com/ValveSoftware/Proton/tree/experimental-11.0-20260428
 
+---
+
 ### Version 10.0-20260425
 * Proton (SLR and Native)
    - Final release for the Proton 10 branch based on [`10.0-20260407`](https://github.com/ValveSoftware/Proton/tree/experimental-10.0-20260407)
@@ -79,6 +134,8 @@ required updates.
 
 **Base:** https://github.com/ValveSoftware/Proton/tree/experimental-10.0-20260407
 
+---
+
 ### Version 10.0-20260424
 * Proton (SLR and Native)
    - Update release based on [`cachyos-10.0-20260420-slr`](https://github.com/CachyOS/proton-cachyos/releases/tag/cachyos-10.0-20260420-slr)
@@ -104,6 +161,8 @@ required updates.
 > * For `dxvk-low-latency` related options to tune its behavior refer to: https://github.com/netborg-afps/dxvk-low-latency?tab=readme-ov-file#dxvk-low-latency
 
 **Base:** https://github.com/ValveSoftware/Proton/tree/experimental-10.0-20260407
+
+---
 
 ### Version 10.0-20260420
 * Proton (SLR and Native)
