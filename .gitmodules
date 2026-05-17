@@ -141,3 +141,6 @@
 [submodule "Vulkan-Utility-Libraries"]
 	path = Vulkan-Utility-Libraries
 	url = https://github.com/KhronosGroup/Vulkan-Utility-Libraries.git
+[submodule "discord-rpc-bridge"]
+	path = discord-rpc-bridge
+	url = https://github.com/enderice2/rpc-bridge.git
