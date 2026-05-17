@@ -1741,16 +1741,8 @@ PYROVEIL_CMAKE_ARGS = \
   -DCMAKE_BUILD_TYPE=release
 
 $(eval $(call rules-source,pyroveil,$(SRCDIR)/vklayers/pyroveil))
-$(eval $(call rules-cmake,pyroveil,i386,unix))
 $(eval $(call rules-cmake,pyroveil,x86_64,unix))
 $(eval $(call rules-cmake,pyroveil,aarch64,unix))
-
-$(OBJ)/.pyroveil-i386-post-build:
-	mkdir -p $(DST_DIR)/share/vulkan/implicit_layer.d/
-	cat $(PYROVEIL_SRC)/layer/VkLayer_pyroveil.json.in | sed 's|@PYROVEIL_LAYER_PATH@|libVkLayer_pyroveil_32.so|g' > \
-		$(PYROVEIL_i386_DST)/share/vulkan/implicit_layer.d/VkLayer_pyroveil_32.json
-	cp -a $(PYROVEIL_i386_DST)/share/vulkan/implicit_layer.d/VkLayer_pyroveil_32.json $(DST_DIR)/share/vulkan/implicit_layer.d/
-	touch $@
 
 $(OBJ)/.pyroveil-x86_64-post-build:
 	mkdir -p $(DST_DIR)/share/pyroveil/implicit_layer.d/
