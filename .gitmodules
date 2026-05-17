@@ -141,3 +141,6 @@
 [submodule "vklayers/vkbasalt"]
 	path = vklayers/vkbasalt
 	url = https://github.com/DadSchoorse/vkBasalt.git
+[submodule "discord-rpc-bridge"]
+	path = discord-rpc-bridge
+	url = https://github.com/enderice2/rpc-bridge.git
