@@ -123,3 +123,9 @@
 [submodule "d7vk"]
 	path = d7vk
 	url = https://github.com/WinterSnowfall/d7vk.git
+[submodule "Vulkan-Utility-Libraries"]
+	path = Vulkan-Utility-Libraries
+	url = https://github.com/KhronosGroup/Vulkan-Utility-Libraries.git
+[submodule "vklayers/low_latency_layer"]
+	path = vklayers/low_latency_layer
+	url = https://github.com/Korthos-Software/low_latency_layer.git
