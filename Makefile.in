@@ -971,8 +971,8 @@ WINE_CFLAGS += \
 
 WINE_AUTOCONF_ARGS = \
   --with-mingw=$(MINGW_TYPE) \
-  --disable-tests \
-  --enable-build-id
+  --enable-build-id \
+  --disable-tests
 
 WINE_AUTOCONF_ARGS += \
   --with-x \
