@@ -1,21 +1,47 @@
-Obtaining Proton sources
+How this repository is structured
+------------------------
+Because we need to constantly rebase on top of Valve's Proton, this repository
+is not using the typical branching strategy of having a `master` or `main` 
+as the default branch that holds the most recent development version. Instead
+the default branch is `cachyos_main` which holds the documentation.
+
+The code resides in versioned branches named after their respective releases.
+These branches follow the pattern of
+```
+cachyos_<majorver>_<date>/<subpath>
+```
+The subpaths `main` and `main_native` hold the final releases for the
+Steam Linux Runtime and host-native builds respectively. For the most recent
+release, or the one being worked one, other subpaths might exists such as
+`_sauce`, `_umu`, `_action` and `_native`. These branches starting with an
+underscore are usually collections of commits for a specific set of features,
+which are later merged into the `main` and `main_native` subpaths to construct
+the final source tree for that release.
+
+
+Obtaining Proton-CachyOS sources
 ------------------------
 
-Acquire Proton's source by cloning <https://github.com/ValveSoftware/Proton>
+Acquire Proton's source by cloning <https://github.com/CachyOS/proton-cachyos>
 and checking out the branch you desire.
 
 You can clone the latest Proton to your system with this command:
 
 ```bash
-git clone --recurse-submodules https://github.com/ValveSoftware/Proton.git proton
+git clone --recurse-submodules https://github.com/CachyOS/proton-cachyos proton-cachyos
 ```
 
 Be sure to update submodules when switching between branches:
 
 ```bash
-git checkout experimental_6.3
-git submodule update --init --recursive
+git checkout cachyos_11.0_20260506/main
+git submodule update --init --recursive [--filter=tree:0]
 ```
+
+`--filter=tree:0` is optional and it will create a "swallow" clone but retains
+full version information, which is important for building, and the ability to
+traverse the repository's history. Use if you only want to build Proton, for
+development purposes it is strongly suggested to avoid it.
 
 If you want to change any subcomponent, now is the time to do so. For
 example, if you wish to make changes to Wine, you would apply them to the
@@ -77,7 +103,7 @@ See `make help` for other build targets and options.
 
 ```bash
 mkdir ../build && cd ../build
-../proton/configure.sh --enable-ccache --build-name=my_build
+../proton-cachyos/configure.sh --enable-ccache --build-name=my_build
 ```
 
 Running `configure.sh` will create a `Makefile` allowing you to build Proton.
