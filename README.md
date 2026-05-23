@@ -17,13 +17,13 @@ features, community modifications and stores other than Steam.
 
 **The changelog** is available in [CHANGELOG.md][changelog-md].
 
-**Build instructions** are available in [BUILD.md][build-md].
+**Build instructions** are available in [BUILDING.md][building-md].
 
 [steam-play-introduction]: https://steamcommunity.com/games/221410/announcements/detail/1696055855739350561
 [umu-launcher]: https://github.com/Open-Wine-Components/umu-launcher
 [releases]: https://github.com/CachyOS/proton-cachyos/releases
 [changelog-md]: https://github.com/CachyOS/proton-cachyos/blob/cachyos_main/CHANGELOG.md
-[build-md]: https://github.com/CachyOS/proton-cachyos/blob/cachyos_main/BUILD.md
+[building-md]: https://github.com/CachyOS/proton-cachyos/blob/cachyos_main/BUILDING.md
 
 
 Runtime Config Options
