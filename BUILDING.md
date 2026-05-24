@@ -10,9 +10,16 @@ These branches follow the pattern of
 ```
 cachyos_<majorver>_<date>/<subpath>
 ```
+
+### `<majorver>_<date>`
+Depends on the version used as the basis of each release, and usually it is
+inherited from Proton's `experimental-<majorver>-<date>` tags from the
+respective `experimental_<majorver>` branch.
+
+### `<subpath>`
 The subpaths `main` and `main_native` hold the final releases for the
 Steam Linux Runtime and host-native builds respectively. For the most recent
-release, or the one being worked one, other subpaths might exists such as
+release, or the one being worked one, other subpaths might exist such as
 `_sauce`, `_umu`, `_action` and `_native`. These branches starting with an
 underscore are usually collections of commits for a specific set of features,
 which are later merged into the `main` and `main_native` subpaths to construct
@@ -46,6 +53,39 @@ development purposes it is strongly suggested to avoid it.
 If you want to change any subcomponent, now is the time to do so. For
 example, if you wish to make changes to Wine, you would apply them to the
 `wine/` directory.
+
+
+Applying custom patches
+------------------------
+For the major components, patches and modification are normally applied in their
+respective repositories, and their submodules are updated accordingly. For example,
+Wine's source is included from [wine-cachyos][wine-cachyos].
+
+For minor components, or components that a fork doesn't exist because the modification
+are temporary, the `patches` folder is used. Each submodule has its own patches folder,
+as such patches for `protonfixes` go into `patches/protonfixes`. Patches for `wine`
+can also be applied this way, but it's not preferable other than testing.
+
+The order they are applied depends on their lexicographical ordering. For example,
+for wine you can place them into `patches/wine` and the build system will pick them
+up and apply them. Patches can also be in subfolders, with `patches/wine/0001-<something>`
+folder applied before `patches/wine/0002-<else>`.
+
+Not all components have support for kind of patching, it is added per-case when it's required.
+You can find out which components already support this by using
+```bash
+grep -E 'post-source:.*patches-source' Makefile.in
+```
+
+If you need to add ephemeral patches in some component which doesn't already have this option,
+you can use the following from `glslang` as a template.
+```makefile
+$(OBJ)/.glslang-post-source: patches-source
+	$(foreach p,$(shell find $(PATCHES_SRC)/glslang/ -name "*.patch" | sort),patch -d $(GLSLANG_SRC) -Np1 -i $(p) &&) true
+	touch $@
+```
+
+[wine-cachyos]: https://github.com/CachyOS/wine-cachyos
 
 
 Building Proton
