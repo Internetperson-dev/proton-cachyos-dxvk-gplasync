@@ -45,7 +45,7 @@
 	url = https://github.com/liberationfonts/liberation-fonts
 [submodule "libxml2"]
 	path = libxml2
-	url = https://gitlab.gnome.org/GNOME/libxml2.git
+	url = https://github.com/GNOME/libxml2.git
 [submodule "libxkbcommon"]
 	path = libxkbcommon
 	url = https://github.com/xkbcommon/libxkbcommon.git
