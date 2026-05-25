@@ -112,7 +112,7 @@ to your distribution's documentation for setup instructions (e.g. Arch
 [debian-docker]: https://wiki.debian.org/Docker
 
 
-## The Easy Way
+## The Easy Way (unsupported)
 
 We provide a top-level Makefile which will execute most of the build commands
 for you.

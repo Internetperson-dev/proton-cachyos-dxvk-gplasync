@@ -1,3 +1,40 @@
+### Version 11.0-20260519
+* Proton (SLR and Native)
+   - Updated to Proton Experimental Bleeding Edge [`11.0-20260518b`](https://github.com/ValveSoftware/Proton/tree/experimental-11.0-20260518b)
+   - Imported a number of fixes and updates from Proton-EM for `winewayland.drv`. Thanks to @Etaash-mathamsetty
+      * Fixed some issues with color management. Thanks to @kode54 for identifying the issues and providing the basis for the fixes https://github.com/CachyOS/wine-cachyos/pull/6, https://github.com/CachyOS/wine-cachyos/pull/8.
+      * Fixed a bug where mouse pointer wouldn't warp when the pointer lock was released.
+      * Fixed some cases where the winewayland event dispatcher thread would get suspended.
+      * Improved ensure contents implementation for opaque surfaces.
+   - Improved video playback patches which should allow more games, especially visual novels, to play their media without issues. Games which previously required `PROTON_MEDIA_USE_GST=1`, should work out of the box. Thanks to @NelloKudo
+   - Renamed `PROTON_MEDIA_USE_GST` to `PROTON_MEDIA_FORCE_GST` to disable protofixes that used the former to workaround media playback issues. We are cautiously confident that many things will work now out-of-the-box. Still the configuration options remains through the renamed environment variable in case it is still needed for anything or debugging.
+   - Removed the extraneous `PROTON_VKREFLEX` environment variable which enabled dxvk-nvapi's Reflex layer. Exposing the layer, as well as enabling it, is now controlled by the original upstream environment variable `DXVK_NVAPI_VKREFLEX=1`.
+   - Included [`low_latency_layer`](https://github.com/Korthos-Software/low_latency_layer) as an optional layer. It can be enabled using `LOW_LATENCY_LAYER=1`. This only enables the layer, for further configuration options refer to the project's documentation.
+   - Included [`rpc-bridge`](https://github.com/enderice2/rpc-bridge) with Proton to allow games to set Discord's Rich Presence. The service does not run by default and can be enabled using `PROTON_DISCORD_BRIDGE=1`.
+   - Fixed the OptiScaler injection method in Wine to work in more games. Due to the way it works, it might hook overlays instead of the game. If that stops OptiScaler from working, you can block it by editing the config and adding the overlay process in the [`ProcessExclusionList`](https://github.com/optiscaler/OptiScaler/blob/master/OptiScaler.ini#L1359). Let us know by making an issue so we can exclude more overlay processes in the future.
+   - Updated `protonfixes` to [stop "unsymlinking"](https://github.com/Open-Wine-Components/umu-protonfixes/pull/557) the whole prefix unconditionally. Reduces the size of the prefix and should improve Proton warmup time.
+   - Updated Wine to default to Windows 11
+* Proton (SLR specific)
+   - None
+* Proton (Native specific)
+   - None
+* Wine (Standalone)
+   - None
+
+> [!IMPORTANT]
+> I know that we have a lot of different packages that might cause confusion. My suggestion is to be conservative and use `x86_64`.
+> Feel free to experiment and see which fits better for your system, of course.
+
+> [!NOTE]
+> * For Wayland specific flags and options, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/EM-ADDITIONS.md
+> * For FSR4 related documentation, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/FSR4.md
+> * For `dxvk-sarek` specific options to tune its behavior refer to: https://github.com/pythonlover02/DXVK-Sarek?tab=readme-ov-file#shader-compilation
+> * For `dxvk-low-latency` related options to tune its behavior refer to: https://github.com/netborg-afps/dxvk-low-latency?tab=readme-ov-file#dxvk-low-latency
+
+**Base:** https://github.com/ValveSoftware/Proton/tree/experimental-11.0-20260518b
+
+---
+
 ### Version 11.0-20260506
 * Proton (SLR and Native)
    - Updated to the most recent Proton Experimental release [`11.0-20260506`](https://github.com/ValveSoftware/Proton/tree/experimental-11.0-20260506)
