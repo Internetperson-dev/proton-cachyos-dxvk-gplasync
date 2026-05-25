@@ -1,14 +1,14 @@
-From 56e87f13411ca8ccecf2ffc457225ccebf44f7a3 Mon Sep 17 00:00:00 2001
+From b9e24231240217fe9c668601fe3e082679a19acd Mon Sep 17 00:00:00 2001
 From: Stelios Tsampas <loathingkernel@gmail.com>
 Date: Sun, 17 May 2026 20:21:29 +0300
-Subject: [PATCH 1/2] Use relative library path, enable layer explicitly
+Subject: [PATCH] Use relative library path, enable layer explicitly
 
 ---
- low_latency_layer.json.in | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ low_latency_layer.json.in | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/low_latency_layer.json.in b/low_latency_layer.json.in
-index e93b438..fc960a2 100644
+index 31e087c..fc960a2 100644
 --- a/low_latency_layer.json.in
 +++ b/low_latency_layer.json.in
 @@ -3,7 +3,7 @@
@@ -20,20 +20,6 @@ index e93b438..fc960a2 100644
          "api_version": "1.3.0",
          "implementation_version": "3",
          "description": "Input latency reduction layer",
-@@ -11,8 +11,11 @@
-             "vkGetInstanceProcAddr": "LowLatency_GetInstanceProcAddr",
-             "vkGetDeviceProcAddr": "LowLatency_GetDeviceProcAddr"
-         },
-+        "enable_environment": {
-+            "LOW_LATENCY_LAYER": "1"
-+        },
-         "disable_environment": {
-             "DISABLE_LOW_LATENCY_LAYER": "1"
-         }
-     }
--}
-\ No newline at end of file
-+}
 -- 
 2.54.0
 
