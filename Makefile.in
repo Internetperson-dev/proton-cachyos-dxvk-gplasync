@@ -1810,7 +1810,7 @@ $(OBJ)/.vulkan-utility-libraries-aarch64-dist:
 LOW_LATENCY_LAYER_CMAKE_ARGS = \
   -DCMAKE_BUILD_TYPE=release
 
-LOW_LATENCY_LAYER_DEPENDS = vulkan-utility-libraries
+LOW_LATENCY_LAYER_DEPENDS = vulkan-headers vulkan-utility-libraries
 
 $(eval $(call rules-source,low_latency_layer,$(SRCDIR)/low_latency_layer))
 $(eval $(call rules-cmake,low_latency_layer,x86_64,unix))
