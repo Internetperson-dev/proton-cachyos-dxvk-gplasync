@@ -1,3 +1,31 @@
+### Version 11.0-20260520
+* Proton (SLR and Native)
+   - Bugfix release based on [`cachyos-11.0-20260519-slr`](https://github.com/CachyOS/proton-cachyos/releases/tag/cachyos-11.0-20260519-slr)
+   - Fixed an issue with defaulting to Windows 11 in Wine, which made the version not being detected correctly and might have caused `dotnet48` to fail during installation.
+   - If you are using custom local protonfixes which are installing  any `dotnet*` version, you will also need to update them according to https://github.com/Open-Wine-Components/umu-protonfixes/pull/557. You can also apply the `PROTON_DLL_COPY="*"` (notice the syntax, it's important to quote the value) environment variable if you are installing through the command line. This will considerably increase the size of the prefix.
+   - Fixed an issue with `winewayland.drv` which caused some games to not show their window, https://github.com/CachyOS/proton-cachyos/issues/181. Thanks to @Etaash-mathamsetty
+   - Updated the alternative `vkd3d-proton` submodule to track `descriptor-heap-rebase` again instead of `forza-workarounds`.
+* Proton (SLR specific)
+   - None
+* Proton (Native specific)
+   - None
+* Wine (Standalone)
+   - None
+
+> [!IMPORTANT]
+> I know that we have a lot of different packages that might cause confusion. My suggestion is to be conservative and use `x86_64`.
+> Feel free to experiment and see which fits better for your system, of course.
+
+> [!NOTE]
+> * For Wayland specific flags and options, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/EM-ADDITIONS.md
+> * For FSR4 related documentation, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/FSR4.md
+> * For `dxvk-sarek` specific options to tune its behavior refer to: https://github.com/pythonlover02/DXVK-Sarek?tab=readme-ov-file#shader-compilation
+> * For `dxvk-low-latency` related options to tune its behavior refer to: https://github.com/netborg-afps/dxvk-low-latency?tab=readme-ov-file#dxvk-low-latency
+
+**Base:** https://github.com/ValveSoftware/Proton/tree/experimental-11.0-20260518b
+
+---
+
 ### Version 11.0-20260519
 * Proton (SLR and Native)
    - Updated to Proton Experimental Bleeding Edge [`11.0-20260518b`](https://github.com/ValveSoftware/Proton/tree/experimental-11.0-20260518b)
@@ -13,6 +41,7 @@
    - Included [`rpc-bridge`](https://github.com/enderice2/rpc-bridge) with Proton to allow games to set Discord's Rich Presence. The service does not run by default and can be enabled using `PROTON_DISCORD_BRIDGE=1`.
    - Fixed the OptiScaler injection method in Wine to work in more games. Due to the way it works, it might hook overlays instead of the game. If that stops OptiScaler from working, you can block it by editing the config and adding the overlay process in the [`ProcessExclusionList`](https://github.com/optiscaler/OptiScaler/blob/master/OptiScaler.ini#L1359). Let us know by making an issue so we can exclude more overlay processes in the future.
    - Updated `protonfixes` to [stop "unsymlinking"](https://github.com/Open-Wine-Components/umu-protonfixes/pull/557) the whole prefix unconditionally. Reduces the size of the prefix and should improve Proton warmup time.
+   - If you are using custom local protonfixes which are installing `dotnet` you will also need to update them according to https://github.com/Open-Wine-Components/umu-protonfixes/pull/557. You can also apply the `PROTON_DLL_COPY="*"` (notice the syntax, it's important to quote the value) environment variable if you are installing through the command line.
    - Updated Wine to default to Windows 11
 * Proton (SLR specific)
    - None
