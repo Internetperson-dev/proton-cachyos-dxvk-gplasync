@@ -35,7 +35,7 @@ and checking out the branch you desire.
 You can clone the latest Proton to your system with this command:
 
 ```bash
-git clone --recurse-submodules https://github.com/CachyOS/proton-cachyos proton-cachyos
+git clone --branch cachyos_11.0_20260506/main --tags https://github.com/CachyOS/proton-cachyos proton-cachyos
 ```
 
 Be sure to update submodules when switching between branches:
