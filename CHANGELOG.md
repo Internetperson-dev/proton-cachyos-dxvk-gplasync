@@ -1,3 +1,36 @@
+### Version 11.0-20260521
+Well, I guess a lot of things have been happening so another minor update release is in order. Three releases in three days is a bit of a meme, I am right there with you, be sure of that. As you may very well know the **descriptor heap** has been merged into `vkd3d-proton`, so I thought I might aswell do another release to update `vkd3d-proton` and clean some stuff up.
+
+* Proton (SLR and Native)
+   - Minor update release based on [`cachyos-11.0-20260520-slr`](https://github.com/CachyOS/proton-cachyos/releases/tag/cachyos-11.0-20260520-slr)
+   - Updated `vkd3d-proton` to the latest version. This includes the **descriptor heap** branch now, meaning that only `VKD3D_CONFIG=descriptor_heap` is required to enable it. As a result `PROTON_VKD3D_HEAP` has been removed, only the `VKD3D_CONFIG` configuration is needed to enable **descriptor heap**.
+   - The alternative `vkd3d-proton` submodule, which was housing the `descriptor-heap-rebase` branch, has also been removed. It might come back in the future to host other features.
+   - Fixed a hang that happened during game startup on **Gnome / Mutter** when using `winewayland.drv`. Thanks to @Etaash-mathamsetty
+   - Fixed an issue that would cause games to freeze after switching windows when using `winewayland.drv`. Thanks to @Etaash-mathamsetty
+   - Implemented brazil ABNT keyboard layout for `winewayland.drv`. Thanks to @Etaash-mathamsetty
+   - Improved media playback for **Darksiders Warmastered Edition**  to render the videos and no longer crash the game. There are still some issues that we are looking into. If you running the game from a store other than Steam, for example EGS or GOG, you will **need** to provide `umu-launcher` with the gameid `GAMEID=umu-462780`. Thanks to @NelloKudo
+   - Fixed slow media playback in **Persona 5 Strikers**. Thanks to @NelloKudo
+* Proton (SLR specific)
+   - None
+* Proton (Native specific)
+   - None
+* Wine (Standalone)
+   - None
+
+> [!IMPORTANT]
+> I know that we have a lot of different packages that might cause confusion. My suggestion is to be conservative and use `x86_64`.
+> Feel free to experiment and see which fits better for your system, of course.
+
+> [!NOTE]
+> * For Wayland specific flags and options, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/EM-ADDITIONS.md
+> * For FSR4 related documentation, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/FSR4.md
+> * For `dxvk-sarek` specific options to tune its behavior refer to: https://github.com/pythonlover02/DXVK-Sarek?tab=readme-ov-file#shader-compilation
+> * For `dxvk-low-latency` related options to tune its behavior refer to: https://github.com/netborg-afps/dxvk-low-latency?tab=readme-ov-file#dxvk-low-latency
+
+**Base:** https://github.com/ValveSoftware/Proton/tree/experimental-11.0-20260518b
+
+---
+
 ### Version 11.0-20260520
 * Proton (SLR and Native)
    - Bugfix release based on [`cachyos-11.0-20260519-slr`](https://github.com/CachyOS/proton-cachyos/releases/tag/cachyos-11.0-20260519-slr)
