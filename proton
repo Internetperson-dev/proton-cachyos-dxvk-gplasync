@@ -1961,6 +1961,10 @@ class Session:
         if "lowlatencylayer" in self.compat_config:
             append_to_env_str(self.env, "VK_IMPLICIT_LAYER_PATH", g_proton.dist_dir + "share/low_latency_layer/implicit_layer.d", ":")
 
+        self.check_environment("ENABLE_VKBASALT", "vkbasalt")
+        if "vkbasalt" in self.compat_config:
+            append_to_env_str(self.env, "VK_IMPLICIT_LAYER_PATH", g_proton.dist_dir + "share/vkbasalt/implicit_layer.d", ":")
+
         if "nofsync" in self.compat_config:
             self.env.pop("WINEFSYNC", "")
             self.env["WINEFSYNC"] = "0"
