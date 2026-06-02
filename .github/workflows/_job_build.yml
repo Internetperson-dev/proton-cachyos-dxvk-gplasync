@@ -89,13 +89,14 @@ jobs:
         USE_LTO: 0
       run: |
         ../configure.sh --build-name=${{ inputs.name }} --container-engine=docker ${{ inputs.configure }}
+        cat Makefile
 
     - name: Cache identifier
       working-directory: ./build
       id: ccache-id
       run: |
         image=$(make get-steamrt-image | tail -1)
-        checksum=$(echo "$image ${{ inputs.cflags }}" | sha1sum | cut -d' ' -f1)
+        checksum=$(echo "$image ${{ inputs.cflags }} ${{ inputs.configure }}" | sha1sum | cut -d' ' -f1)
         echo "checksum=$checksum" >> $GITHUB_OUTPUT
 
     - name: Restore cache
