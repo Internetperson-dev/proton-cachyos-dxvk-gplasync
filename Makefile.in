@@ -52,22 +52,20 @@ DEPLOY_DIR := ./deploy
 REDIST_DIR := ./redist
 
 HOST_CFLAGS    ?= -O2 -march=nocona -mtune=core-avx2
-CCOS_CFLAGS    := $(HOST_CFLAGS) -pipe -mno-avx512f
+CCOS_CFLAGS    := $(HOST_CFLAGS) -pipe
 i386_CFLAGS    := -mstackrealign $(CCOS_CFLAGS) -mfpmath=sse
 x86_64_CFLAGS  := -mcmodel=small $(CCOS_CFLAGS) -mfpmath=sse
 HOST_RUSTFLAGS   ?= -Copt-level=3 -Ctarget-cpu=nocona
 i386_RUSTFLAGS   := $(HOST_RUSTFLAGS)
 x86_64_RUSTFLAGS := $(HOST_RUSTFLAGS)
-aarch64_CFLAGS := -march=armv8.2-a -mtune=cortex-x3
-arm64ec_CFLAGS := -march=armv8.2-a -mtune=cortex-x3
+aarch64_CFLAGS := -O2 -march=armv8.2-a -mtune=cortex-x3
+arm64ec_CFLAGS := -O2 -march=armv8.2-a -mtune=cortex-x3
 aarch64_RUSTFLAGS := -Copt-level=3 -Ctarget-cpu=armv8.2-a
 arm64ec_RUSTFLAGS := -Copt-level=3 -Ctarget-cpu=armv8.2-a
 
 CFLAGS  = -fwrapv -fno-strict-aliasing
 CFLAGS += -ffunction-sections -fdata-sections -fno-omit-frame-pointer
 CFLAGS += -ffile-prefix-map=$(CCACHE_BASEDIR)=.
-i386_CFLAGS += -D_TIME_BITS=64 -D_FILE_OFFSET_BITS=64
-x86_64_CFLAGS += -D_TIME_BITS=64 -D_FILE_OFFSET_BITS=64
 
 ifneq ($(SUPPRESS_WARNINGS),)
 	CFLAGS += -w
@@ -122,9 +120,9 @@ ifeq ($(shell cc --version|grep 'clang'),)
 	TOOLCHAIN_PREFIX :=
 	OBJCOPY_FLAGS  := -p
 	MINGW_TYPE := gcc
-	i386_CFLAGS += -s -mprefer-avx128
+	i386_CFLAGS += -s -mno-avx -mno-avx2 -mno-avx512f
 	i386_CFLAGS += -fvect-cost-model=cheap -fno-semantic-interposition -fipa-pta
-	x86_64_CFLAGS += -s -mprefer-avx128
+	x86_64_CFLAGS += -s -mno-avx -mno-avx2 -mno-avx512f
 	x86_64_CFLAGS += -fvect-cost-model=cheap -fno-semantic-interposition -fipa-pta
 	i386_SANITY_FLAGS := -mpreferred-stack-boundary=2
 else
@@ -132,6 +130,8 @@ else
 	TOOLCHAIN_PREFIX := llvm-
 	OBJCOPY_FLAGS  :=
 	MINGW_TYPE := clang
+	i386_CFLAGS += -mno-avx -mno-avx2 -mno-avx512f
+	x86_64_CFLAGS += -mno-avx -mno-avx2 -mno-avx512f
 	# TODO: move this to a configure option
 	i386_SANITY_FLAGS := -mstack-alignment=4
 endif
@@ -467,7 +467,8 @@ GST_BAD_MESON_ARGS := \
 	-Dauto_features=disabled \
 	-Dvideoparsers=enabled \
 	-Dhls=enabled \
-	-Dmpegtsdemux=enabled
+	-Dmpegtsdemux=enabled \
+	-Daudiobuffersplit=enabled
 
 GST_BAD_MESON_ARGS += \
 	$(GST_LTO) \
@@ -614,6 +615,8 @@ $(eval $(call rules-source,gst_ugly,$(SRCDIR)/gstreamer/subprojects/gst-plugins-
 $(eval $(call rules-meson,gst_ugly,i386,unix))
 $(eval $(call rules-meson,gst_ugly,x86_64,unix))
 $(eval $(call rules-meson,gst_ugly,aarch64,unix))
+
+default_pfx: gst_ugly
 
 ##
 ## FFmpeg
@@ -873,6 +876,8 @@ $(eval $(call rules-makedep,umuexe,i386))
 $(eval $(call rules-makedep,umuexe,x86_64))
 $(eval $(call rules-makedep,umuexe,aarch64))
 
+default_pfx: umuexe
+
 
 ##
 ## steam.exe
@@ -1037,12 +1042,13 @@ WINE_SOURCE_ARGS = \
   --exclude server/request_trace.h \
 
 WINE_CFLAGS += \
+  -Wno-stringop-overflow \
   -Wno-incompatible-pointer-types \
 
 WINE_AUTOCONF_ARGS = \
   --with-mingw=$(MINGW_TYPE) \
-  --disable-tests \
-  --enable-build-id
+  --enable-build-id \
+  --disable-tests
 
 WINE_AUTOCONF_ARGS += \
   --with-x \
@@ -1066,17 +1072,18 @@ WINE_i386_AUTOCONF_ARGS += \
 WINE_x86_64_AUTOCONF_ARGS += \
   VKD3D_PE_CFLAGS="-I$(VULKAN_HEADERS_x86_64_DST)/include -I$(VKD3D_x86_64_DST)/include/vkd3d" \
   VKD3D_PE_LIBS="-L$(VKD3D_x86_64_LIBDIR)/vkd3d/x86_64-windows -l:libvkd3d-1.dll -l:libvkd3d-shader-1.dll"
+WINE_EXT_VKD3D_DEPENDS = vkd3d
 endif
 
 ifneq ($(WITHOUT_TTS),1)
 WINE_DEPENDS = gst_orc gstreamer gst_base ffmpeg openfst kaldi vosk
-WINE_i386_DEPENDS = vkd3d
-WINE_x86_64_DEPENDS = piper vkd3d
+WINE_i386_DEPENDS = $(WINE_EXT_VKD3D_DEPENDS)
+WINE_x86_64_DEPENDS = piper $(WINE_EXT_VKD3D_DEPENDS)
 WINE_aarch64_DEPENDS = piper
 else
 WINE_DEPENDS = gst_orc gstreamer gst_base ffmpeg
-WINE_i386_DEPENDS = vkd3d
-WINE_x86_64_DEPENDS = vkd3d
+WINE_i386_DEPENDS = $(WINE_EXT_VKD3D_DEPENDS)
+WINE_x86_64_DEPENDS = $(WINE_EXT_VKD3D_DEPENDS)
 endif
 
 WINE_DEPENDS += libxml2
@@ -1640,6 +1647,8 @@ $(OBJ)/.vkd3d-i386-post-build: $(OBJ)/.wine-$(HOST_ARCH)-tools
 	cp $(VKD3D_i386_DST)/bin/libvkd3d-1.dll $(VKD3D_i386_LIBDIR)/vkd3d/i386-windows
 	cp $(VKD3D_i386_DST)/bin/libvkd3d-shader-1.dll $(VKD3D_i386_LIBDIR)/vkd3d/i386-windows
 	touch $@
+
+default_pfx: vkd3d
 
 
 ##
@@ -2286,10 +2295,8 @@ endif
 ## default_pfx
 ##
 
-default_pfx: vkd3d
-
 default_pfx: wine gst_good gst_bad gst_libav gst_plugins_rs lsteamclient steamexe vrclient wineopenxr $(WINEOPENXR64_JSON) dxvk dxvk-nvapi vkd3d-proton
-	find $(DST_LIBDIR)/wine -type f -execdir chmod go-w '{}' '+'
+	find $(DST_LIBDIR)/wine -type f -execdir chmod a-w '{}' '+'
 	rm -rf $(abspath $(DIST_PREFIX))
 	rm -rf $(abspath $(DIST_PREFIX_ARM64))
 ifneq ($(findstring x86_64,$(unix_ARCHS)),)
@@ -2387,6 +2394,8 @@ $(OBJ)/.protonfixes-aarch64-dist:
 	rsync --delete -arx $(PROTONFIXES_aarch64_DST)/ $(PROTONFIXES_TARGET)
 	touch $@
 
+all-dist: protonfixes
+
 
 ##
 ## proton(.py), filelock.py, etc.
@@ -2394,6 +2403,9 @@ $(OBJ)/.protonfixes-aarch64-dist:
 
 FILELOCK_TARGET := $(addprefix $(DST_BASE)/,filelock.py)
 $(FILELOCK_TARGET): $(addprefix $(SRCDIR)/,filelock.py)
+
+VULKAN_BINDINGS_TARGET := $(addprefix $(DST_BASE)/,vulkan.py)
+$(VULKAN_BINDINGS_TARGET): $(addprefix $(SRCDIR)/,vulkan.py)
 
 UTILITIES_TARGET := $(addprefix $(DST_BASE)/,utilities.py)
 $(UTILITIES_TARGET): $(addprefix $(SRCDIR)/,utilities.py)
@@ -2407,7 +2419,8 @@ $(PROTON37_TRACKED_FILES_TARGET): $(addprefix $(SRCDIR)/,proton_3.7_tracked_file
 USER_SETTINGS_PY_TARGET := $(addprefix $(DST_BASE)/,user_settings.sample.py)
 $(USER_SETTINGS_PY_TARGET): $(addprefix $(SRCDIR)/,user_settings.sample.py)
 
-DIST_COPY_TARGETS := $(FILELOCK_TARGET) $(UTILITIES_TARGET) $(PROTON_PY_TARGET) \
+DIST_COPY_TARGETS := $(FILELOCK_TARGET) $(PROTON_PY_TARGET) \
+                     $(VULKAN_BINDINGS_TARGET) $(UTILITIES_TARGET) \
                      $(PROTON37_TRACKED_FILES_TARGET) $(USER_SETTINGS_PY_TARGET)
 
 $(DIST_COPY_TARGETS): | $(DST_DIR)
@@ -2507,7 +2520,7 @@ DOCKER_BASE = $(CONTAINER_ENGINE) run --rm -v $(SRC):$(SRC)$(CONTAINER_MOUNT_OPT
 
 .PHONY: dist deploy redist symstore-tarball
 .DEFAULT dist deploy redist symstore-tarball:
-	if [ "$(ENABLE_CCACHE)" -eq "1" ]; then mkdir -p $(CCACHE_DIR); fi
+	if [ "$(ENABLE_CCACHE)" = "1" ]; then mkdir -p $(CCACHE_DIR); fi
 	mkdir -p $(CARGO_HOME)
 	$(DOCKER_BASE) $(MAKE) -j$(J) $(filter -j%,$(MAKEFLAGS)) -f $(firstword $(MAKEFILE_LIST)) $(MFLAGS) $(MAKEOVERRIDES) CONTAINER=1 $@
 

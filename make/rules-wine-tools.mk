@@ -15,6 +15,8 @@ $$(OBJ)/.$(1)-$(3)-tools:
 	@echo ":: building $(1)-$(3)-tools..." >&2
 	+cd "$$($(2)_$(3)_OBJ)" && env $$($(2)_$(3)_ENV) \
 	$$(BEAR) $$(MAKE) __tooldeps__
+	+cd "$$($(2)_$(3)_OBJ)" && env $$($(2)_$(3)_ENV) \
+	$$(BEAR) $$(MAKE) nls/all
 	touch $$@
 
 $$(OBJ)/.$(1)-$(3)-build: $$(OBJ)/.$(1)-$(3)-tools

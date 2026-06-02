@@ -1340,11 +1340,6 @@ def default_compat_config():
     ret = set()
     if "SteamAppId" in os.environ:
         appid = os.environ["SteamAppId"]
-        if appid not in [
-                "3280350", #Death Stranding 2
-                "990080", #Hogwarts Legacy
-                ]:
-            ret.add("ntsync")
         if appid in [
                 #affected by CW bug 19741
                 "1017900", #Age of Empires: Definitive Edition
@@ -1566,6 +1561,13 @@ def default_compat_config():
             ret.add("fnad3d11")
 
     #options to also be enabled for prerequisite setup steps
+    ret.add("gamedrive")
+
+    if not utilities.primary_gpu_supports_vulkan(
+        1, 3, device_filter=os.getenv("DXVK_FILTER_DEVICE_UUID", os.getenv("DXVK_FILTER_DEVICE_NAME", ""))
+    ):
+        ret.add("dxvksarek")
+
     if "STEAM_COMPAT_APP_ID" in os.environ:
         appid = os.environ["STEAM_COMPAT_APP_ID"]
 
@@ -1904,11 +1906,11 @@ class Session:
         self.check_environment("PROTON_HIDE_APU", "hideapu")
         self.check_environment("PROTON_ENABLE_MEDIACONV", "mediaconv")
         self.check_environment("PROTON_NO_WM_DECORATION", "nowmdecoration")
-        self.check_environment("PROTON_USE_WAYLAND", "wayland")
         self.check_environment("PROTON_ENABLE_WAYLAND", "wayland")
+        self.check_environment("PROTON_USE_WAYLAND", "wayland")
         self.check_environment("PROTON_ENABLE_HDR", "hdr")
-        self.check_environment("PROTON_USE_SDL", "sdlinput")
         self.check_environment("PROTON_PREFER_SDL", "sdlinput")
+        self.check_environment("PROTON_USE_SDL", "sdlinput")
         self.check_environment("PROTON_FSR4_INDICATOR", "fsr4hud")
         self.check_environment("PROTON_DLSS_INDICATOR", "dlsshud")
         self.check_environment("PROTON_NATIVE_AGS", "nativeags")
