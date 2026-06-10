@@ -8,6 +8,10 @@ body:
       value: |
         Please fill out this form as completely as possible. Incomplete reports are harder to act on.
 
+        > Only report issues that happen with Proton-CachyOS and NOT Proton or Proton Experimetnal.
+        > Issues happening with Proton and Proton Experimental should be reported to Valve directly.
+        > The exception is for issues that concern customizations specific to this custom Proton that do not exist in the official one.
+
         > You can find the Steam AppID in the URL of the store page (e.g. for *The Witcher 3* the AppID is `292030`).
         > Full system information is available in Steam under **Help → System Information**. Copy it to a [Gist](https://gist.github.com/) and paste the link below.
 
