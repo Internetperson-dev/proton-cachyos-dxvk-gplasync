@@ -1,3 +1,46 @@
+### Version 11.0-20260601
+* Proton (SLR and Native)
+   - Updated to Proton Experimental [`11.0-20260529`](https://github.com/ValveSoftware/Proton/tree/experimental-11.0-20260529)
+   - Imported a lot of `winewayland.drv` improvements from Proton-EM. Thanks to @Etaash-mathamsetty
+      * Implement xdg-popup for unmanaged windows with an owner.
+      * Fixed race condition with first frame of server side decorations.
+      * Implemented client surface reparenting for unmanaged window role transition.
+      * Fixed winewayland being broken on wow64 due to a regression. Issues: https://github.com/CachyOS/proton-cachyos/issues/200, https://github.com/CachyOS/proton-cachyos/issues/208
+      * Fixed key release with focus loss with keyboard hooks.
+      * Fixed ensure window contents and NtUserExposeWindowSurface.
+      * Fixed some cases of division by zero.
+   - Enabled automatic HDR detection/enablement. In case you need to disable it for any reason, you can set `DXVK_NO_HDR=1`. Thanks to @Etaash-mathamsetty
+   - Fixed an issue with videos in **Mega Man Legacy Collection 2** that would cause the game to hang. Thanks to @NelloKudo. Issue: https://github.com/CachyOS/proton-cachyos/issues/211
+   - Fixed an issue with videos in **The Legend of Heroes - Trails in the Sky FC** that caused them to be upside-down. Thanks to @NelloKudo. Issue: https://github.com/CachyOS/proton-cachyos/issues/199
+   - Fixed an issue with videos in **Unravel** and **Unravel Two** that caused the games to crash. Thanks to @NelloKudo. Issue: https://github.com/CachyOS/proton-cachyos/issues/161
+   - Fixed an issue that would cause some games to crash or be unable to connect to game servers. Thanks to @GenkaiToppa for finding the offending change. Issues: https://github.com/CachyOS/proton-cachyos/issues/207, https://github.com/CachyOS/proton-cachyos/issues/204, https://github.com/CachyOS/proton-cachyos/issues/201
+   - Added Vulkan version detection to automatically use DXVK-Sarek if the primary GPU does **NOT** support **Vulkan 1.3**. Presently the detection is based solely on Vulkan version, which can be wrong in cases where the driver in use only misses certain extensions or features. If for any reason the automatic detection is wrong, you can still force-enable it using `PROTON_DXVK_SAREK=1`, if or you want to disable DXVK-Sarek, you can do so with `PROTON_DXVK_SAREK=0`. Thanks to @CommandMC
+   - Changed `PROTON_USE_OPTISCALER` to also download DLSS dlls by default in order to enable DLSS inputs for FSR4. Issue: https://github.com/CachyOS/proton-cachyos/issues/214
+   - Added `PROTON_OPTISCALER_CONFIG` to write arbitrary configuration in `OptiScaler.ini` when using `PROTON_USE_OPTISCALER`.
+      * The config is a semicolon (`;`) separated string of individual options. The template for each option is `{section}.{option}={value}`, for example `PROTON_OPTISCALER_CONFIG="Upscalers.Dx11Upscaler=fsr31;Upscalers.Dx12Upscaler=dlss"`. To avoid mistakes, only config options that already exist in `Optiscaler.ini` can be modified.
+      * The changes to the config are permanent until OptiScaler is upgraded or downgraded to a different version. To modify a setting it has to either be manually edited or altered by applying a different config through the environment variable.
+      * Be careful, using this will also remove any comments from the `OptiScaler.ini` file. Keep a backup or refer to https://github.com/optiscaler/OptiScaler/blob/master/OptiScaler.ini for documentation of the various settings.
+* Proton (SLR specific)
+   - None
+* Proton (Native specific)
+   - None
+* Wine (Standalone)
+   - None
+
+> [!IMPORTANT]
+> I know that we have a lot of different packages that might cause confusion. My suggestion is to be conservative and use `x86_64`.
+> Feel free to experiment and see which fits better for your system, of course.
+
+> [!NOTE]
+> * For Wayland specific flags and options, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/EM-ADDITIONS.md
+> * For FSR4 related documentation, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/FSR4.md
+> * For `dxvk-sarek` specific options to tune its behavior refer to: https://github.com/pythonlover02/DXVK-Sarek?tab=readme-ov-file#shader-compilation
+> * For `dxvk-low-latency` related options to tune its behavior refer to: https://github.com/netborg-afps/dxvk-low-latency?tab=readme-ov-file#dxvk-low-latency
+
+**Base:** https://github.com/ValveSoftware/Proton/tree/experimental-11.0-20260529
+
+---
+
 ### Version 11.0-20260521
 Well, I guess a lot of things have been happening so another minor update release is in order. Three releases in three days is a bit of a meme, I am right there with you, be sure of that. As you may very well know the **descriptor heap** has been merged into `vkd3d-proton`, so I thought I might aswell do another release to update `vkd3d-proton` and clean some stuff up.
 
