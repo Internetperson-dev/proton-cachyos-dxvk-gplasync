@@ -1,4 +1,4 @@
-From a2d9ff5aae573041f957f8aeeea6ba413a88146d Mon Sep 17 00:00:00 2001
+From e28a0c4512b7900f9f09f7d44f1b33ce68d22671 Mon Sep 17 00:00:00 2001
 From: Stelios Tsampas <loathingkernel@gmail.com>
 Date: Fri, 3 Apr 2026 02:31:29 +0300
 Subject: [PATCH 1/6] upscalers: update to new WINE_UPSCALER_REPLACE env

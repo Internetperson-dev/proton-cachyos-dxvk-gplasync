@@ -1,4 +1,4 @@
-From 0b27271e4b8b3eb1c314f0659f1d079f6c588646 Mon Sep 17 00:00:00 2001
+From 4ece6e268cb3e43d57d32f5bfb66e3af23ec6093 Mon Sep 17 00:00:00 2001
 From: Stelios Tsampas <loathingkernel@gmail.com>
 Date: Mon, 1 Jun 2026 19:25:32 +0300
 Subject: [PATCH 5/6] upscalers: implement method to modify OptiScaler.ini

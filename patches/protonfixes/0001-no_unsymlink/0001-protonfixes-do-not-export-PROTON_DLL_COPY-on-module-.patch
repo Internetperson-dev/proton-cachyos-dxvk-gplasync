@@ -1,4 +1,4 @@
-From 0812d03cc0728404c5b2e2bd617176303fb4c7b9 Mon Sep 17 00:00:00 2001
+From f6daba860143cc82101a7f559a5423570854c4a1 Mon Sep 17 00:00:00 2001
 From: Stelios Tsampas <loathingkernel@gmail.com>
 Date: Sat, 23 May 2026 23:23:10 +0300
 Subject: [PATCH 1/3] protonfixes: do not export `PROTON_DLL_COPY=*` on module
@@ -127,7 +127,7 @@ index f1bb809..a0abee3 100644
      """Crashes unless dotnet48 is installed."""
      util.protontricks('dotnet48')
 diff --git a/gamefixes-steam/23460.py b/gamefixes-steam/23460.py
-index 3f279d1..a5ffb5f 100644
+index 7e4309c..ead5c4b 100644
 --- a/gamefixes-steam/23460.py
 +++ b/gamefixes-steam/23460.py
 @@ -8,6 +8,10 @@ import subprocess
@@ -139,8 +139,8 @@ index 3f279d1..a5ffb5f 100644
 +
 +
  def main() -> None:
+     util.set_environment('PROTON_NO_XALIA', '1')
      util.protontricks('dotnet35sp1')
-     util.winedll_override('libvkd3d-1', util.OverrideOrder.NATIVE)
 diff --git a/gamefixes-steam/244210.py b/gamefixes-steam/244210.py
 index bbed50c..89f5244 100755
 --- a/gamefixes-steam/244210.py
