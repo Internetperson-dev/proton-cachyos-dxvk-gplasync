@@ -10,7 +10,7 @@
       * Fixed ensure window contents and NtUserExposeWindowSurface.
       * Fixed some cases of division by zero.
    - Enabled automatic HDR detection/enablement. In case you need to disable it for any reason, you can set `DXVK_NO_HDR=1`. Thanks to @Etaash-mathamsetty
-     NOTE: Presently Gnome does not support enough color management features to expose HDR automatically.
+     **NOTE**: Presently Gnome does **not** support enough color management features to expose HDR automatically.
    - Fixed an issue with videos in **Mega Man Legacy Collection 2** that would cause the game to hang. Thanks to @NelloKudo. Issue: https://github.com/CachyOS/proton-cachyos/issues/211
    - Fixed an issue with videos in **The Legend of Heroes - Trails in the Sky FC** that caused them to be upside-down. Thanks to @NelloKudo. Issue: https://github.com/CachyOS/proton-cachyos/issues/199
    - Fixed an issue with videos in **Unravel** and **Unravel Two** that caused the games to crash. Thanks to @NelloKudo. Issue: https://github.com/CachyOS/proton-cachyos/issues/161
