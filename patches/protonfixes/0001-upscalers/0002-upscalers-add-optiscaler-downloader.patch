@@ -1,4 +1,4 @@
-From 9c9c771e32dc1004ecd8cd22b392c467aad6a29e Mon Sep 17 00:00:00 2001
+From 9f4fa5c5e40477b2e71ce7c0d5b036c3fd177e0a Mon Sep 17 00:00:00 2001
 From: Stelios Tsampas <loathingkernel@gmail.com>
 Date: Wed, 13 May 2026 01:21:47 +0300
 Subject: [PATCH 2/6] upscalers: add optiscaler downloader
