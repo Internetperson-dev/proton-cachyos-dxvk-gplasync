@@ -366,16 +366,6 @@ def setup_openvr_paths():
         json.dump(contents, file, indent=3)
 
 
-def is_driver_loaded(d):
-    try:
-        with open('/proc/modules') as f:
-            drivers = set([line.partition(' ')[0] for line in f.read().splitlines()])
-            if drivers.intersection(d):
-                return True
-            else:
-                return False
-    except OSError:
-        return False
 
 # Function to find the installed location of DLL files for use by Wine/Proton
 # from the NVIDIA Linux driver
@@ -968,9 +958,6 @@ class CompatData:
                 with open(self.creation_sync_guard, "w"):
                     pass
                 os.sync()
-
-            # Fix broken prefixes by replacing any faulty values in registry
-            get_replace_reg_value(self.prefix_dir + "user.reg", "Software\\\\Wine\\\\Drivers", "Graphics", "\"x11,wayland\"")
 
             self.migrate_user_paths()
 
@@ -1867,7 +1854,7 @@ class Session:
         self.env.setdefault("VKD3D_SHADER_DEBUG", "none")
 
         # Enable wine-nvml by default on Nvidia (experimental)
-        if is_driver_loaded({'nvidia'}):
+        if utilities.is_driver_loaded({'nvidia'}):
             self.compat_config.add("nvml")
 
         if "wined3d11" in self.compat_config:
@@ -1956,7 +1943,7 @@ class Session:
             self.compat_config.add("nvoptix")
 
         self.check_environment("DXVK_NVAPI_VKREFLEX", "vkreflex")
-        if "vkreflex" in self.compat_config and "disablenvapi" not in self.compat_config and is_driver_loaded({'nvidia'}):
+        if "vkreflex" in self.compat_config and "disablenvapi" not in self.compat_config and utilities.is_driver_loaded({'nvidia'}):
             append_to_env_str(self.env, "VK_IMPLICIT_LAYER_PATH", g_proton.dist_dir + "share/dxvk-nvapi-vkreflex-layer/implicit_layer.d", ":")
 
         self.check_environment("LOW_LATENCY_LAYER", "lowlatencylayer")
@@ -2237,19 +2224,7 @@ class Session:
                         if max_map_count < 1048576:
                             self.log_file.write(f"WARNING: Low /proc/sys/vm/max_map_count: {max_map_count} will prevent some games from working\n")
 
-                self.log_file.write("======================\n")
-                self.log_file.write("Inherited environment\n")
-                for var in (name for name in (
-                    "MANGOHUD",
-                    "PROTON_DLSS_UPGRADE",
-                    "PROTON_XESS_UPGRADE",
-                    "PROTON_FSR3_UPGRADE",
-                    "PROTON_FSR4_UPGRADE",
-                    "PROTON_FSR4_RDNA3_UPGRADE",
-                    "DXVK_FILTER_DEVICE_NAME",
-
-                ) if name in self.env):
-                    self.log_file.write(var + ": " + self.env[var] + "\n")
+                utilities.log_environment(self.env, self.log_file)
                 self.log_file.write("======================\n")
                 self.log_file.flush()
             else:

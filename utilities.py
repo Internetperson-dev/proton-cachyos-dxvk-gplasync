@@ -1,5 +1,6 @@
 """Various utility functions for use in the proton script"""
 
+import io
 import sys
 import os
 from argparse import Namespace
@@ -36,6 +37,34 @@ class Log:
 
 config = Config()
 log = Log()
+
+
+def log_environment(env: dict, log_file: io.TextIOWrapper):
+    log_file.write('======================\n')
+    log_file.write('Inherited environment\n')
+    for var in (name for name in (
+        'MANGOHUD',
+        'PROTON_DLSS_UPGRADE',
+        'PROTON_XESS_UPGRADE',
+        'PROTON_FSR3_UPGRADE',
+        'PROTON_FSR4_UPGRADE',
+        'PROTON_FSR4_RDNA3_UPGRADE',
+        'DXVK_FILTER_DEVICE_NAME',
+        'PROTON_DISCORD_BRIDGE',
+    ) if name in env):
+        log_file.write(var + ": " + env[var] + "\n")
+
+
+def is_driver_loaded(d):
+    try:
+        with open('/proc/modules') as f:
+            drivers = set([line.partition(' ')[0] for line in f.read().splitlines()])
+            if drivers.intersection(d):
+                return True
+            else:
+                return False
+    except OSError:
+        return False
 
 
 def primary_gpu_supports_vulkan(major: int, minor: int, patch: int = 0, /, device_filter: str = '') -> bool:
@@ -104,4 +133,4 @@ if __name__ == '__main__':
     pass
 
 
-__all__ = ['primary_gpu_supports_vulkan']
+__all__ = ['primary_gpu_supports_vulkan', 'is_driver_loaded', 'log_environment']
