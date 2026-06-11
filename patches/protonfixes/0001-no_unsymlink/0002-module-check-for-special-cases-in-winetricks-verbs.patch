@@ -1,4 +1,4 @@
-From 8e1bcb9982786456d9d6b62a125eeb01e19f0864 Mon Sep 17 00:00:00 2001
+From bffe2ae6e06cb988412425407e8a3f536ab02246 Mon Sep 17 00:00:00 2001
 From: Stelios Tsampas <loathingkernel@gmail.com>
 Date: Wed, 27 May 2026 18:28:33 +0300
 Subject: [PATCH 2/3] module: check for special cases in winetricks verbs
