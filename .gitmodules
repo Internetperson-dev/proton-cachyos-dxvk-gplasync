@@ -43,8 +43,8 @@
 [submodule "steamrtdeps/libxkbcommon"]
 	path = steamrtdeps/libxkbcommon
 	url = https://github.com/xkbcommon/libxkbcommon.git
-[submodule "wayland-protocols"]
-	path = wayland-protocols
+[submodule "steamrtdeps/wayland-protocols"]
+	path = steamrtdeps/wayland-protocols
 	url = https://gitlab.freedesktop.org/wayland/wayland-protocols.git
 [submodule "steamrtdeps/libpcap"]
 	path = steamrtdeps/libpcap
