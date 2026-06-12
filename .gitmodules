@@ -52,8 +52,8 @@
 [submodule "libpcap"]
 	path = libpcap
 	url = https://github.com/the-tcpdump-group/libpcap.git
-[submodule "libwebp"]
-	path = libwebp
+[submodule "steamrtdeps/libwebp"]
+	path = steamrtdeps/libwebp
 	url = https://github.com/webmproject/libwebp.git
 [submodule "gstreamer"]
 	path = gstreamer
