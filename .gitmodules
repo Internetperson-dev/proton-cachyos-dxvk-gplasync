@@ -52,6 +52,9 @@
 [submodule "steamrtdeps/libwebp"]
 	path = steamrtdeps/libwebp
 	url = https://github.com/webmproject/libwebp.git
+[submodule "steamrtdeps/pipewire"]
+	path = steamrtdeps/pipewire
+	url = https://github.com/PipeWire/pipewire.git
 [submodule "gstreamer"]
 	path = gstreamer
 	url = https://github.com/GStreamer/gstreamer.git
