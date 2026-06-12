@@ -289,7 +289,7 @@ NGHTTP2_CONFIGURE_ARGS = \
 	--disable-python-bindings \
 	--enable-lib-only
 
-$(eval $(call rules-source,nghttp2,$(SRCDIR)/nghttp2))
+$(eval $(call rules-source,nghttp2,$(SRCDIR)/runtime_deps/nghttp2))
 $(eval $(call rules-configure,nghttp2,i386,unix))
 $(eval $(call rules-configure,nghttp2,x86_64,unix))
 $(eval $(call rules-configure,nghttp2,aarch64,unix))
