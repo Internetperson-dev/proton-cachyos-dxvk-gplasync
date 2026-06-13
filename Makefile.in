@@ -191,6 +191,7 @@ $(eval $(call rules-source,meson,$(SRCDIR)/meson))
 include $(SRC)/steamrtdeps/build-libwebp.mk
 include $(SRC)/steamrtdeps/build-libxml2.mk
 include $(SRC)/steamrtdeps/build-libxkbcommon.mk
+include $(SRC)/steamrtdeps/build-libpcap.mk
 
 
 ##
@@ -222,35 +223,6 @@ $(eval $(call rules-meson,wayland-protocols,x86_64,unix))
 $(eval $(call rules-meson,wayland-protocols,aarch64,unix))
 
 endif # WITHOUT_WAYLAND_LIBS
-
-
-ifneq ($(WITHOUT_LIBPCAP),1)
-
-##
-## libpcap
-##
-
-LIBPCAP_CONFIGURE_ARGS := \
-	--enable-shared \
-	--disable-static \
-	--disable-usb \
-	--disable-netmap \
-	--disable-bluetooth \
-	--disable-dbus \
-	--disable-rdma \
-	--with-pcap=linux \
-	--without-libnl
-
-$(eval $(call rules-source,libpcap,$(SRCDIR)/libpcap))
-$(eval $(call rules-configure,libpcap,i386,unix))
-$(eval $(call rules-configure,libpcap,x86_64,unix))
-$(eval $(call rules-configure,libpcap,aarch64,unix))
-
-$(OBJ)/.libpcap-post-source:
-	cd "$(LIBPCAP_SRC)" && autoreconf -fiv
-	touch $@
-
-endif # WITHOUT_LIBPCAP
 
 
 ##
@@ -1087,9 +1059,7 @@ endif
 
 WINE_DEPENDS += $(LIBXML2_DEPENDENCY)
 WINE_DEPENDS += $(LIBXKBCOMMON_DEPENDENCY)
-ifneq ($(WITHOUT_LIBPCAP),1)
-WINE_DEPENDS += libpcap
-endif
+WINE_DEPENDS += $(LIBPCAP_DEPENDENCY)
 
 WINE_i386_LIBDIR = $(WINE_i386_DST)/lib
 WINE_x86_64_LIBDIR = $(WINE_x86_64_DST)/lib
