@@ -46,8 +46,8 @@
 [submodule "wayland-protocols"]
 	path = wayland-protocols
 	url = https://gitlab.freedesktop.org/wayland/wayland-protocols.git
-[submodule "libpcap"]
-	path = libpcap
+[submodule "steamrtdeps/libpcap"]
+	path = steamrtdeps/libpcap
 	url = https://github.com/the-tcpdump-group/libpcap.git
 [submodule "steamrtdeps/libwebp"]
 	path = steamrtdeps/libwebp
