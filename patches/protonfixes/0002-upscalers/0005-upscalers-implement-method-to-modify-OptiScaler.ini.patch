@@ -1,7 +1,7 @@
-From 4ece6e268cb3e43d57d32f5bfb66e3af23ec6093 Mon Sep 17 00:00:00 2001
+From 56fd8b79b73fd97f64938b32ed2ea595f6b15894 Mon Sep 17 00:00:00 2001
 From: Stelios Tsampas <loathingkernel@gmail.com>
 Date: Mon, 1 Jun 2026 19:25:32 +0300
-Subject: [PATCH 5/6] upscalers: implement method to modify OptiScaler.ini
+Subject: [PATCH 5/9] upscalers: implement method to modify OptiScaler.ini
 
 Config values are passed through the `PROTON_OPTISCALER_CONFIG` environment
 variable. The config is a semicolon (`;`) separated string of individual options.
@@ -27,7 +27,7 @@ Using this will also remove any comments from the `OptiScaler.ini` file.
  1 file changed, 28 insertions(+), 2 deletions(-)
 
 diff --git a/upscalers.py b/upscalers.py
-index 6bd3e7f..311ee67 100644
+index e0f684b..c3e3a9b 100644
 --- a/upscalers.py
 +++ b/upscalers.py
 @@ -1,5 +1,5 @@

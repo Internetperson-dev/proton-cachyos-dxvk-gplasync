@@ -1,7 +1,7 @@
-From a4c1af13a3356ec85aca82a2e7b707a55dfe4e3e Mon Sep 17 00:00:00 2001
+From f4bc63162b6873d5ca897fcce097c6004fe34be7 Mon Sep 17 00:00:00 2001
 From: Stelios Tsampas <loathingkernel@gmail.com>
 Date: Sat, 6 Jun 2026 18:33:49 +0300
-Subject: [PATCH 6/6] upscalers: setup DLSS dlls when optiscaler is enabled
+Subject: [PATCH 6/9] upscalers: setup DLSS dlls when optiscaler is enabled
 
 fixes issues with spoofing dlss inputs for some games.
 ---
@@ -9,7 +9,7 @@ fixes issues with spoofing dlss inputs for some games.
  1 file changed, 2 insertions(+), 3 deletions(-)
 
 diff --git a/upscalers.py b/upscalers.py
-index 311ee67..4503508 100644
+index c3e3a9b..951f571 100644
 --- a/upscalers.py
 +++ b/upscalers.py
 @@ -695,12 +695,13 @@ def setup_upscalers(

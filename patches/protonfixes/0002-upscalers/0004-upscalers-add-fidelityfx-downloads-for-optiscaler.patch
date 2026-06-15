@@ -1,14 +1,14 @@
-From 8da6933d469689e9ff3e085ad435af4c44423cec Mon Sep 17 00:00:00 2001
+From a8519dc3d455d8ece91bad9c7229b8bb3e9ac7a1 Mon Sep 17 00:00:00 2001
 From: Stelios Tsampas <loathingkernel@gmail.com>
 Date: Thu, 14 May 2026 03:43:39 +0300
-Subject: [PATCH 4/6] upscalers: add fidelityfx downloads for optiscaler
+Subject: [PATCH 4/9] upscalers: add fidelityfx downloads for optiscaler
 
 ---
  upscalers.py | 199 ++++++++++++++++++++++++++++++++++-----------------
  1 file changed, 134 insertions(+), 65 deletions(-)
 
 diff --git a/upscalers.py b/upscalers.py
-index 629b776..6bd3e7f 100644
+index 81d6786..e0f684b 100644
 --- a/upscalers.py
 +++ b/upscalers.py
 @@ -84,6 +84,7 @@ __xess_version_file = 'xess_version'

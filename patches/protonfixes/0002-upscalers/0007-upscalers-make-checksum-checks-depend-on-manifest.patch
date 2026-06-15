@@ -1,0 +1,56 @@
+From 0992b3afedcbc6567e33a0e8805c62eb37364e11 Mon Sep 17 00:00:00 2001
+From: Stelios Tsampas <loathingkernel@gmail.com>
+Date: Mon, 15 Jun 2026 16:07:31 +0300
+Subject: [PATCH 7/9] upscalers: make checksum checks depend on manifest
+
+by not filtering the files to be checked locally, we can apply updates
+by updating the remote archive. This was the case with adding
+OptiPatcher.asi in the redistributable
+---
+ upscalers.py | 9 ++-------
+ 1 file changed, 2 insertions(+), 7 deletions(-)
+
+diff --git a/upscalers.py b/upscalers.py
+index 951f571..67c4f53 100644
+--- a/upscalers.py
++++ b/upscalers.py
+@@ -355,8 +355,6 @@ def check_optiscaler(
+ 
+     dst_hashes = {}
+     for dst in local_versions:
+-        if not dst.endswith('.dll'):
+-            continue
+         target = os.path.join(prefix_dir, dst)
+         if not os.path.isfile(target):
+             log.warn(f'Missing file from prefix "{dst}"')
+@@ -372,8 +370,6 @@ def check_optiscaler(
+     if not ignore_version:
+         for name in item['md5_hash']:
+             dst = os.path.join(path, name)
+-            if not dst.endswith('.dll'):
+-                continue
+             target = os.path.join(prefix_dir, dst)
+             if not os.path.isfile(target):
+                 log.warn(f'Missing file from prefix "{dst}"')
+@@ -567,7 +563,8 @@ def download_optiscaler(
+         __cached_download(item, cached_file)
+ 
+         for target in local_versions:
+-            if not target.endswith('.dll'):
++            # do not remove .ini files
++            if target.endswith('.ini'):
+                 continue
+             local_file = os.path.join(prefix_dir, target)
+             if os.path.exists(local_file):
+@@ -583,8 +580,6 @@ def download_optiscaler(
+ 
+         version = {}
+         for name in item['md5_hash']:
+-            if not name.endswith('.dll'):
+-                continue
+             version[os.path.join(path, name)] = {
+                 'version': item['version'],
+                 'md5_hash': item['md5_hash'][name]
+-- 
+2.54.0
+

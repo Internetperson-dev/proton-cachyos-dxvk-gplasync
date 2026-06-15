@@ -1,14 +1,14 @@
-From 9f4fa5c5e40477b2e71ce7c0d5b036c3fd177e0a Mon Sep 17 00:00:00 2001
+From 147bbe3c912e38c47561a2bb60ff961c3a9307cb Mon Sep 17 00:00:00 2001
 From: Stelios Tsampas <loathingkernel@gmail.com>
 Date: Wed, 13 May 2026 01:21:47 +0300
-Subject: [PATCH 2/6] upscalers: add optiscaler downloader
+Subject: [PATCH 3/9] upscalers: add optiscaler downloader
 
 ---
  upscalers.py | 262 +++++++++++++++++++++++++++++++++++++++++----------
  1 file changed, 210 insertions(+), 52 deletions(-)
 
 diff --git a/upscalers.py b/upscalers.py
-index 55a1c03..6705649 100644
+index 90ced61..81d6786 100644
 --- a/upscalers.py
 +++ b/upscalers.py
 @@ -5,6 +5,7 @@ import json
@@ -268,8 +268,8 @@ index 55a1c03..6705649 100644
          }
      with open(version_file, 'w', encoding='utf-8') as version_fd:
          version_fd.write(json.dumps(version))
-@@ -350,26 +421,30 @@ def __download_file(url: str, dst: Path, *, checksum: Union[str, None] = None) -
-         dst_md5 = hashlib.md5(dst.open('rb').read()).hexdigest().lower()
+@@ -351,27 +422,31 @@ def __download_file(url: str, dst: Path, *, checksum: Union[str, None] = None) -
+             dst_md5 = hashlib.md5(dst_fd.read()).hexdigest().lower()
          dst_size = dst.stat().st_size if dst.exists() else 0
          # Size check is arbitrary, but nothing should be below 1K
 -        if (checksum is not None and dst_md5 != checksum.lower()) or dst_size < 1024:
@@ -288,7 +288,8 @@ index 55a1c03..6705649 100644
 +    item_md5 = item.get('zip_md5_hash', '')
 +
      if cached_file.exists():
-         cached_md5 = hashlib.md5(cached_file.open('rb').read()).hexdigest().lower()
+         with cached_file.open('rb') as cached_fd:
+             cached_md5 = hashlib.md5(cached_fd.read()).hexdigest().lower()
 -        if file_md5 is not None and cached_md5 != file_md5.lower():
 -            log.crit(
 -                f'MD5 checksum mismatch between manifest and cached "{cached_file.name}"'
@@ -309,8 +310,8 @@ index 55a1c03..6705649 100644
      dst.parent.mkdir(parents=True, exist_ok=True)
      if cached_file.suffix == '.zip':
          with zipfile.ZipFile(cached_file) as zip_fd:
-@@ -379,17 +454,17 @@ def __download_extract_zip(file: dict, cache: Path, dst: Path) -> None:
-             dst_fd.write(lzma.decompress(cached_file.open('rb').read()))
+@@ -383,17 +458,17 @@ def __download_extract_zip(file: dict, cache: Path, dst: Path) -> None:
+                 dst_fd.write(lzma.decompress(cached_fd.read()))
  
  
 -def __download_fsr4(file: dict, cache: Path, dst: Path) -> None:
@@ -332,7 +333,7 @@ index 55a1c03..6705649 100644
      dst.parent.mkdir(parents=True, exist_ok=True)
      shutil.copy(cached_file, dst)
  
-@@ -412,19 +487,82 @@ def download_upscaler(
+@@ -416,19 +491,82 @@ def download_upscaler(
          'fsr3': (__get_fsr3_dlls, __download_extract_zip, __fsr3_version_file),
          'fsr4': (__get_fsr4_dlls, __download_fsr4, __fsr4_version_file),
      }
@@ -398,7 +399,7 @@ index 55a1c03..6705649 100644
 +                local_file = os.path.join(prefix_dir, path, name)
 +                if name.endswith('.ini') and os.path.exists(local_file):
 +                    os.rename(local_file, local_file + '.old' )
-+                tar_fd.extract(name, os.path.join(prefix_dir, path), filter='data')
++                tar_fd.extract(name, os.path.join(prefix_dir, path))
 +
 +        version = {}
 +        for name in item['md5_hash']:
@@ -419,7 +420,7 @@ index 55a1c03..6705649 100644
  
  
  def setup_upscaler(
-@@ -443,6 +581,21 @@ def setup_upscaler(
+@@ -447,6 +585,21 @@ def setup_upscaler(
      return enabled
  
  
@@ -441,7 +442,7 @@ index 55a1c03..6705649 100644
  def setup_upscalers(
      compat_config: set, env: dict, compat_dir: str, prefix_dir: str
  ) -> None:
-@@ -451,10 +604,10 @@ def setup_upscalers(
+@@ -455,10 +608,10 @@ def setup_upscalers(
      usage: setup_upscalers(g_session.compat_config, g_session.env, g_compatdata.base_dir, g_compatdata.prefix_dir)
      """
      upscaler_replace = set()
@@ -454,7 +455,7 @@ index 55a1c03..6705649 100644
          if setup_upscaler(env, 'PROTON_XESS_UPGRADE', 'xess', compat_dir, prefix_dir):
              upscaler_replace.add('xess')
      if 'fsr3' in compat_config:
-@@ -469,6 +622,11 @@ def setup_upscalers(
+@@ -473,6 +626,11 @@ def setup_upscalers(
          if setup_upscaler(env, 'PROTON_FSR4_UPGRADE', 'fsr4', compat_dir, prefix_dir):
              upscaler_replace.add('fsr4')
  
