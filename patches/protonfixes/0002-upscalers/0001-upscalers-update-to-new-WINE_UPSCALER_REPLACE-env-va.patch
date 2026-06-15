@@ -1,7 +1,7 @@
-From e28a0c4512b7900f9f09f7d44f1b33ce68d22671 Mon Sep 17 00:00:00 2001
+From 58e86094a852a2fe445f35450e8e966aa4c3d769 Mon Sep 17 00:00:00 2001
 From: Stelios Tsampas <loathingkernel@gmail.com>
 Date: Fri, 3 Apr 2026 02:31:29 +0300
-Subject: [PATCH 1/6] upscalers: update to new WINE_UPSCALER_REPLACE env
+Subject: [PATCH 1/9] upscalers: update to new WINE_UPSCALER_REPLACE env
  variable
 
 Move dll install location to `c:\windows\system32\umu` for everything but

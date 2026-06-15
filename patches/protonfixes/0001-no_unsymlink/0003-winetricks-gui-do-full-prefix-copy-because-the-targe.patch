@@ -1,7 +1,7 @@
-From 9041d1d069f2c78d908ddfb98361c7354e964f4d Mon Sep 17 00:00:00 2001
+From 3711f1bb1688bf53423c913f7fad5ee669cc9232 Mon Sep 17 00:00:00 2001
 From: Stelios Tsampas <loathingkernel@gmail.com>
 Date: Wed, 27 May 2026 18:49:28 +0300
-Subject: [PATCH 3/3] winetricks-gui: do full prefix copy because the target
+Subject: [PATCH 3/4] winetricks-gui: do full prefix copy because the target
  verb is unknown
 
 ---

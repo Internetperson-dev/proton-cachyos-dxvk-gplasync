@@ -1,0 +1,41 @@
+From e692b9d631855f45984fc5c5c0873f00f17b1b3f Mon Sep 17 00:00:00 2001
+From: Stelios Tsampas <loathingkernel@gmail.com>
+Date: Wed, 17 Jun 2026 12:33:05 +0300
+Subject: [PATCH 9/9] upscalers: reduce wait time when checking for amdxcffx64
+ dll and hide failure
+
+---
+ upscalers.py | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/upscalers.py b/upscalers.py
+index d401817..d7716e4 100644
+--- a/upscalers.py
++++ b/upscalers.py
+@@ -70,12 +70,12 @@ def __get_dll_manifest(upscaler: str, version: str = 'default') -> dict:
+ def __dll_download_exists(url: str) -> bool:
+     try:
+         req = urllib.request.Request(url, method='HEAD')
+-        with urllib.request.urlopen(req, timeout=2) as response:
++        with urllib.request.urlopen(req, timeout=1) as response:
+             if response.status == 200:
+                 log.info(f'Found reachable URL {url}')
+                 return True
+     except (HTTPError, URLError, ValueError) as e:
+-        log.warn(f'URL {url} returned {e}')
++        log.debug(f'URL {url} returned {e}')
+     return False
+ 
+ 
+@@ -189,7 +189,7 @@ def __get_fsr4_dlls(version: str = 'default') -> dict:
+ 
+     item = __fsr4_dlls[version]
+     if not (__dll_download_exists(item['download_url']) or _cached_file_exists(item)):
+-        for key in sorted(__fsr4_dlls.keys(), reverse=True):
++        for key in [key for key in sorted(__fsr4_dlls.keys(), reverse=True) if key <= version]:
+             item = __fsr4_dlls[key]
+             if __dll_download_exists(item['download_url']) or _cached_file_exists(item):
+                 version = key
+-- 
+2.54.0
+

@@ -1,7 +1,7 @@
-From f6daba860143cc82101a7f559a5423570854c4a1 Mon Sep 17 00:00:00 2001
+From d2ec95caeed18ae1d1c73bf43e08e19356f30619 Mon Sep 17 00:00:00 2001
 From: Stelios Tsampas <loathingkernel@gmail.com>
 Date: Sat, 23 May 2026 23:23:10 +0300
-Subject: [PATCH 1/3] protonfixes: do not export `PROTON_DLL_COPY=*` on module
+Subject: [PATCH 1/4] protonfixes: do not export `PROTON_DLL_COPY=*` on module
  import
 
 `protonfixes` exports `PROTON_DLL_COPY=*` on module import to, which caused
@@ -38,7 +38,7 @@ we can expand on it later on.
  15 files changed, 68 insertions(+), 4 deletions(-)
 
 diff --git a/__init__.py b/__init__.py
-index f911624..769526a 100644
+index a07e5f3..b68eb84 100644
 --- a/__init__.py
 +++ b/__init__.py
 @@ -33,10 +33,6 @@ aarch64_lib_dir: str = (
@@ -127,10 +127,10 @@ index f1bb809..a0abee3 100644
      """Crashes unless dotnet48 is installed."""
      util.protontricks('dotnet48')
 diff --git a/gamefixes-steam/23460.py b/gamefixes-steam/23460.py
-index 7e4309c..ead5c4b 100644
+index c017ec2..c2af892 100644
 --- a/gamefixes-steam/23460.py
 +++ b/gamefixes-steam/23460.py
-@@ -8,6 +8,10 @@ import subprocess
+@@ -6,6 +6,10 @@ Videos still don't work.
  from protonfixes import util
  
  
