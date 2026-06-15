@@ -78,14 +78,14 @@ def primary_gpu_supports_vulkan(major: int, minor: int, patch: int = 0, /, devic
         return True
 
     gpus_to_look_at = discrete_gpus or integrated_gpus or virtual_gpus
-    required_features = (
-        features.features12.descriptorIndexing,
-    )
-    required_extensions = (
-    )
     return any(
-        properties.apiVersion >= (major, minor, patch) and all(required_features) and all(required_extensions)
-        for properties, extensions, features in gpus_to_look_at
+        _props.apiVersion >= (major, minor, patch) and all((
+            # features
+            _feats.features12.descriptorIndexing,
+        )) and all((
+            # extensions
+        ))
+        for _props, _extens, _feats in gpus_to_look_at
     )
 
 
