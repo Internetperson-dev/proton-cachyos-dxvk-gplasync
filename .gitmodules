@@ -34,9 +34,6 @@
 [submodule "dxvk-llasync"]
 	path = dxvk-llasync
 	url = https://github.com/netborg-afps/dxvk-low-latency.git
-[submodule "dxvk-sarek"]
-	path = dxvk-sarek
-	url = https://github.com/pythonlover02/DXVK-Sarek.git
 [submodule "openvr"]
 	path = openvr
 	url = https://github.com/ValveSoftware/openvr
@@ -126,6 +123,9 @@
 [submodule "libsoup"]
 	path = libsoup
 	url = https://github.com/GNOME/libsoup.git
+[submodule "extras/dxvk-sarek"]
+	path = extras/dxvk-sarek
+	url = https://github.com/pythonlover02/DXVK-Sarek.git
 [submodule "d7vk"]
 	path = d7vk
 	url = https://github.com/WinterSnowfall/d7vk.git
