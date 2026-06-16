@@ -129,6 +129,9 @@
 [submodule "extras/dxvk-llasync"]
 	path = extras/dxvk-llasync
 	url = https://github.com/netborg-afps/dxvk-low-latency.git
+[submodule "extras/discord-rpc-bridge"]
+	path = extras/discord-rpc-bridge
+	url = https://github.com/enderice2/rpc-bridge.git
 [submodule "vklayers/pyroveil"]
 	path = vklayers/pyroveil
 	url = https://github.com/HansKristian-Work/pyroveil.git
@@ -141,6 +144,3 @@
 [submodule "vklayers/vkbasalt"]
 	path = vklayers/vkbasalt
 	url = https://github.com/DadSchoorse/vkBasalt.git
-[submodule "discord-rpc-bridge"]
-	path = discord-rpc-bridge
-	url = https://github.com/enderice2/rpc-bridge.git
