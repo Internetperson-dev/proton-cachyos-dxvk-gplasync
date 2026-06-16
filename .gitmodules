@@ -31,9 +31,6 @@
 [submodule "dxvk"]
 	path = dxvk
 	url = https://github.com/doitsujin/dxvk.git
-[submodule "dxvk-llasync"]
-	path = dxvk-llasync
-	url = https://github.com/netborg-afps/dxvk-low-latency.git
 [submodule "openvr"]
 	path = openvr
 	url = https://github.com/ValveSoftware/openvr
@@ -129,6 +126,9 @@
 [submodule "extras/d7vk"]
 	path = extras/d7vk
 	url = https://github.com/WinterSnowfall/d7vk.git
+[submodule "extras/dxvk-llasync"]
+	path = extras/dxvk-llasync
+	url = https://github.com/netborg-afps/dxvk-low-latency.git
 [submodule "vklayers/pyroveil"]
 	path = vklayers/pyroveil
 	url = https://github.com/HansKristian-Work/pyroveil.git
