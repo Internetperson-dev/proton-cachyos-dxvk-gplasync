@@ -2,7 +2,7 @@
 ## dxvk-sarek
 ##
 
-ifneq ($(WITHOUT_SAREK),1)
+ifeq ($(findstring dxvk-sarek,$(WITHOUT_EXTRAS)),)
 
 # wine builds DLLs with the same names, we need to differentiate the timestamps
 DXVK_SAREK_i386_SOURCE_DATE_EPOCH := $(shell expr $(i386_SOURCE_DATE_EPOCH) - 1)
@@ -38,4 +38,4 @@ $(OBJ)/.dxvk-sarek-post-source:
 
 default_pfx: dxvk-sarek
 
-endif # WITHOUT_SAREK
+endif # WITHOUT_EXTRAS
