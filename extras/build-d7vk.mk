@@ -2,7 +2,7 @@
 ## d7vk
 ##
 
-ifneq ($(WITHOUT_D7VK),1)
+ifeq ($(findstring d7vk,$(WITHOUT_EXTRAS)),)
 
 # wine builds DLLs with the same names, we need to differentiate the timestamps
 D7VK_i386_SOURCE_DATE_EPOCH := $(shell expr $(i386_SOURCE_DATE_EPOCH) - 1)
@@ -32,6 +32,6 @@ $(OBJ)/.d7vk-post-source:
 
 default_pfx: d7vk
 
-endif # WITHOUT_D7VK
+endif # WITHOUT_EXTRAS
 
 
