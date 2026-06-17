@@ -8,7 +8,7 @@
       * Backported Vulkan version detection for automatic fallback to `dxvk-sarek`
       * Backported Optiscaler integration and defaulting to Windows 11
       * Backported the updates for `umu-protonfixes` to reduce the size of the prefixes and using `zenity-rs`
-  Proton (SLR specific)
+* Proton (SLR specific)
    - None
 * Proton (Native specific)
    - None
