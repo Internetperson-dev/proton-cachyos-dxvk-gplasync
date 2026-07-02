@@ -1,3 +1,25 @@
+### Version 11.0-next
+* Proton (SLR and Native)
+   - Updated to Proton Experimental [`11.0-20260622b`](https://github.com/ValveSoftware/Proton/tree/experimental-11.0-20260622b)
+   - Imported `amdxc64` changes from Proton-EM to enable FSR4 4.1.1 on all supported hardware. Thanks to @Etaash-Mathamsetty.
+   - Added some stubs to `dnsapi` which should allow iRacing to run. The anti-cheat blocks the game from being fully working. Thanks to @DanFraserUK. 
+   - Fixed **Surviving Mars** crashing after loading into the start menu. Thanks to @NelloKudo. Issue:
+   - Improved the Vulkan version detection and the underlying API to also check for driver versions and extensions in the future. Thanks to @CommandMC
+
+> [!IMPORTANT]
+> I know that we have a lot of different packages that might cause confusion. My suggestion is to be conservative and use `x86_64`.
+> Feel free to experiment and see which fits better for your system, of course.
+
+> [!NOTE]
+> * For Wayland specific flags and options, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/EM-ADDITIONS.md
+> * For FSR4 related documentation, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/FSR4.md
+> * For `dxvk-sarek` specific options to tune its behavior refer to: https://github.com/pythonlover02/DXVK-Sarek?tab=readme-ov-file#shader-compilation
+> * For `dxvk-low-latency` related options to tune its behavior refer to: https://github.com/netborg-afps/dxvk-low-latency?tab=readme-ov-file#dxvk-low-latency
+
+**Base:** https://github.com/ValveSoftware/Proton/tree/experimental-11.0-20260622b
+
+---
+
 ### Version 11.0-20260602
 * Proton (SLR and Native)
    - Bugfix release based on [`cachyos-11.0-20260601-slr`](https://github.com/CachyOS/proton-cachyos/releases/tag/cachyos-11.0-20260601-slr)
