@@ -1,10 +1,42 @@
-### Version 11.0-next
+### Version 11.0-20260702
 * Proton (SLR and Native)
-   - Updated to Proton Experimental [`11.0-20260622b`](https://github.com/ValveSoftware/Proton/tree/experimental-11.0-20260622b)
-   - Imported `amdxc64` changes from Proton-EM to enable FSR4 4.1.1 on all supported hardware. Thanks to @Etaash-Mathamsetty.
-   - Added some stubs to `dnsapi` which should allow iRacing to run. The anti-cheat blocks the game from being fully working. Thanks to @DanFraserUK. 
-   - Fixed **Surviving Mars** crashing after loading into the start menu. Thanks to @NelloKudo. Issue:
-   - Improved the Vulkan version detection and the underlying API to also check for driver versions and extensions in the future. Thanks to @CommandMC
+   - Updated to Proton Experimental [`11.0-20260701b`](https://github.com/ValveSoftware/Proton/tree/experimental-11.0-20260701b)
+   - Added `winepipewire.drv` driver for Wine to directly use Pipewire instead of using `winepulse.drv` and going through pipewire-pulse. Thanks to @M0n7y5.
+      * The driver is enabled by default. To disable it and use `winepulse.drv` set `PROTON_USE_PIPEWIRE=0`.
+      * You can also use `WINE_AUDIO_DRIVER` to set the list of drivers for wine to choose from. The default list is `pipewire,pulse,alsa`. For example `WINE_AUDIO_DRIVER=pulse` will use `winepulse.drv` exclusively.
+      * When reporting issues with `winepipewire.drv` remember to use `PROTON_LOG=warn+pipewire,warn+mmdevapi %command%` for create meaningful logs.
+      * You can make sure the game uses `winepipewire.drv` either through `pw-top` or by looking at the audio device names in the game itself which should include `(Pipewire)` in their name.         
+   - Imported `amdxc64` changes from Proton-EM to enable FSR4 `4.1.1` on all supported hardware. Thanks to @Etaash-Mathamsetty.
+   - Due to the updates regarding FSR4 and the update to version `4.1.1` of `amdxcffx64.dll` the following things have been adjusted accordingly.
+      * The `amdxcffx64.dll` driver dll is copied automatically, there is no need to use `PROTON_FSR4_UPGRADE` any more, although the environment variable remains to request a specific version of the dll ( restricted to `4.0.0` and `4.1.1` only right now ).
+      * It's worth noting here that when using the OptiScaler integration, `PROTON_FSR4_UPGRADE` will accept more versions than just `4.0.0` and `4.1.1` and it will control the version of the respective FidelityFX SDK dlls.
+      * It is not possible anymore to manually provide different `amdxcffx64.dll` dll versions through the protonfixes cache. It was ugly and confusing anyways. I am glad it's gone.
+      * The `PROTON_MLFG_UPGRADE`/`MLFG_UPGRADE` is not enabled by default any more.
+      * Since the dll is always present the following shorter environment variables will also work.
+
+         | Variable       | Description  |
+         | :------------- | :----------- |
+         | `FSR4_UPGRADE` | Upgrade FSR3/4 to newer FSR4 (FP8 or I8) using AMD's FSR 4.1.1 amdxcffx64.dll taken from Proton Experimental. This option is not needed on RDNA2-4 discrete GPUs. |
+         | `MLFG_UPGRADE` | Enables FSR4 MLFG upgrade to use redstone frame generation. Can be used in tandom with FSR4-I8 on RDNA3 using `DXIL_SPIRV_CONFIG=wmma_rdna3_workaround`.          |
+
+      * Removed `PROTON_FSR4_RDNA3_UPGRADE` as setting `DXIL_SPIRV_CONFIG=wmma_rdna3_workaround` is not required any more in most cases, with the exception of enabling MLFG on RDNA3 (see table above).
+      * Removed `PROTON_FSR3_UPGRADE`, it has been renamed to `PROTON_FFX3_UPGRADE`. You do not need to ever use this under normal circumstances.
+      * To make it a bit confusing again, the versions controlled through `PROTON_FFX4_UPGRADE` can also be controlled through `PROTON_FSR4_UPGRADE` when OptiScaler is enabled, to remain somewhat compatible with existing configurations.
+      * I am still considering how to make all this a bit more streamlined and consistent, so expect changes in this area in the future.
+   - Added the DualSense 5 patches that were skipped previously due to the rebase to Proton 11.0. Thanks to @xzn.
+   - Added some stubs to `dnsapi` which should allow iRacing to run. The anti-cheat blocks the game from fully working. Thanks to @DanFraserUK. MRs: https://github.com/CachyOS/wine-cachyos/pull/18 https://gitlab.winehq.org/wine/wine/-/merge_requests/11208
+   - Fixed **Surviving Mars** crashing after loading into the start menu along with some other audio-related issues. Thanks to @NelloKudo. Issue: https://github.com/CachyOS/proton-cachyos/issues/233 https://github.com/CachyOS/proton-cachyos/issues/236
+   - Fixed compile-time configuration for GStreamer, specifically enabled `glib-checks` again, as disabling them caused some issues with media playback since Wine depends on the APIs they provide for fault checking. Thansk to @NelloKudo.
+   - Updated `d7vk` to version [`v1.12`](https://github.com/WinterSnowfall/d7vk/releases/tag/v1.12).
+   - Improved the Vulkan version detection and the underlying API to also check for driver versions and extensions in the future. Thanks to @CommandMC.
+   - Added `PROTON_ADD_CONFIG` environment variable to supply configuration through compatibility configs instead of environment variables. It accepts a comma-separated list of compat configs. If you are wondering what these are, they are the first column in the tables of environment variables in the documentation.
+   - Enabled the `compiler` item in `DXVK_HUD` by default. Since there are too many invalid reports due to shader compilation from new users, this should provide a visual feedback aid of what is going on.
+* Proton (SLR specific)
+   - None
+* Proton (Native specific)
+   - None
+* Wine (Standalone)
+   - None
 
 > [!IMPORTANT]
 > I know that we have a lot of different packages that might cause confusion. My suggestion is to be conservative and use `x86_64`.
@@ -16,7 +48,7 @@
 > * For `dxvk-sarek` specific options to tune its behavior refer to: https://github.com/pythonlover02/DXVK-Sarek?tab=readme-ov-file#shader-compilation
 > * For `dxvk-low-latency` related options to tune its behavior refer to: https://github.com/netborg-afps/dxvk-low-latency?tab=readme-ov-file#dxvk-low-latency
 
-**Base:** https://github.com/ValveSoftware/Proton/tree/experimental-11.0-20260622b
+**Base:** https://github.com/ValveSoftware/Proton/tree/experimental-11.0-20260701b
 
 ---
 
