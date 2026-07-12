@@ -11,14 +11,11 @@
       * The `amdxcffx64.dll` driver dll is copied automatically, there is no need to use `PROTON_FSR4_UPGRADE` any more, although the environment variable remains to request a specific version of the dll ( restricted to `4.0.0` and `4.1.1` only right now ).
       * It's worth noting here that when using the OptiScaler integration, `PROTON_FSR4_UPGRADE` will accept more versions than just `4.0.0` and `4.1.1` and it will control the version of the respective FidelityFX SDK dlls.
       * It is not possible anymore to manually provide different `amdxcffx64.dll` dll versions through the protonfixes cache. It was ugly and confusing anyways. I am glad it's gone.
-      * The `PROTON_MLFG_UPGRADE`/`MLFG_UPGRADE` is not enabled by default any more.
       * Since the dll is always present the following shorter environment variables will also work.
-
          | Variable       | Description  |
          | :------------- | :----------- |
          | `FSR4_UPGRADE` | Upgrade FSR3/4 to newer FSR4 (FP8 or I8) using AMD's FSR 4.1.1 amdxcffx64.dll taken from Proton Experimental. This option is not needed on RDNA2-4 discrete GPUs. |
          | `MLFG_UPGRADE` | Enables FSR4 MLFG upgrade to use redstone frame generation. Can be used in tandom with FSR4-I8 on RDNA3 using `DXIL_SPIRV_CONFIG=wmma_rdna3_workaround`.          |
-
       * Removed `PROTON_FSR4_RDNA3_UPGRADE` as setting `DXIL_SPIRV_CONFIG=wmma_rdna3_workaround` is not required any more in most cases, with the exception of enabling MLFG on RDNA3 (see table above).
       * Removed `PROTON_FSR3_UPGRADE`, it has been renamed to `PROTON_FFX3_UPGRADE`. You do not need to ever use this under normal circumstances.
       * To make it a bit confusing again, the versions controlled through `PROTON_FFX4_UPGRADE` can also be controlled through `PROTON_FSR4_UPGRADE` when OptiScaler is enabled, to remain somewhat compatible with existing configurations.
