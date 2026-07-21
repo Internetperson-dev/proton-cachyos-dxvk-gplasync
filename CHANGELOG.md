@@ -1,3 +1,31 @@
+### Version 11.0-20260703
+* Proton (SLR and Native)
+   - Bugfix release based on [`cachyos-11.0-20260702-slr`](https://github.com/CachyOS/proton-cachyos/releases/tag/cachyos-11.0-20260702-slr)
+   - Included @netborg-afps's [`vkd3d-low-latency`](https://github.com/netborg-afps/vkd3d-low-latency) as an option. It can be enabled with `PROTON_VKD3D_LOWLATENCY=1`. It is **very important** to read and understand the [current status and limitations](https://github.com/netborg-afps/vkd3d-low-latency#status--limitations). Thanks to @netborg-afps
+      * `vkd3d-low-latency` features built-in, hardware-agnostic low-latency frame pacing for DX12. It natively implements the NVIDIA Reflex API within the translation layer (bypassing the conversion into `VK_NV_low_latency2`) and also allows for advanced frame pacing via Waitable DXGI Swapchains to significantly reduce input lag.
+      * AMD users should also take a look in [the dedicated discussion](https://github.com/netborg-afps/vkd3d-low-latency/discussions/3)
+   - Removed the default configuration for `DXVK_HUD` which enabled the `compiler` item. Because the `DXVK_HUD` configuration takes precedence over configuration coming from `dxvk.conf`, using `DXVK_HUD` would override perfectly working setups which used `dxvk.conf` as a way to do per-game configuration.
+   - Updated `d7vk`, `dxvk-sarek`, `low_latency_layer` and `nvidia-libs` submodules
+* Proton (SLR specific)
+   - None
+* Proton (Native specific)
+   - None
+* Wine (Standalone)
+   - None
+
+> [!IMPORTANT]
+> I know that we have a lot of different packages that might cause confusion. My suggestion is to be conservative and use `x86_64`.
+> Feel free to experiment and see which fits better for your system, of course.
+
+> [!NOTE]
+> * For Wayland specific flags and options, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/EM-ADDITIONS.md
+> * For FSR4 related documentation, please refer to: https://github.com/Etaash-mathamsetty/Proton/blob/em-10/docs/FSR4.md
+> * For `dxvk-sarek` specific options to tune its behavior refer to: https://github.com/pythonlover02/DXVK-Sarek?tab=readme-ov-file#shader-compilation
+> * For `dxvk-low-latency` related options to tune its behavior refer to: https://github.com/netborg-afps/dxvk-low-latency?tab=readme-ov-file#dxvk-low-latency
+> * For `vkd3d-low-latency` related options to tune its behavior refer to: https://github.com/netborg-afps/vkd3d-low-latency?tab=readme-ov-file#vkd3d-low-latency
+
+---
+
 ### Version 11.0-20260702
 * Proton (SLR and Native)
    - Updated to Proton Experimental [`11.0-20260701b`](https://github.com/ValveSoftware/Proton/tree/experimental-11.0-20260701b)
