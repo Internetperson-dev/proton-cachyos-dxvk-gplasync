@@ -97,12 +97,18 @@ body:
           required: true
         - label: I haven't encountered this issue using an official Proton release (Proton, Proton Experimental, or Proton Bleeding Edge).
           required: true
+        - label: I have verified that the issue happens after I **DISABLED** and **REMOVED** all options and configuration that is **NOT RELEVANT** to my issue (MangoHud, winewayland, pipewire etc)
+          required: true
 
   - type: textarea
     id: symptoms
     attributes:
       label: Symptoms
-      description: What is the problem? Describe what you see, hear, or experience.
+      description: |
+        What is the problem? Describe what you see, hear, or experience.
+        Make sure you test **WITHOUT ANY CONFIGURATION** that is not directly affecting your issue.
+        Issues that fail to do this will be closed immediately.
+        You are expected to perform some basic debugging and testing to identify what configuration might be causing your issues.
     validations:
       required: true
 
