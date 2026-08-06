@@ -15,7 +15,7 @@ Using a older version of Proton is not a good idea for performance, or comptabil
 It is used by applying `DXVK_ASYNC=1 %command%`  as a launch option in Steam after installing this custom version of Proton in Steam/compatibilitytools.d/
 
 A correct local tool installation should look similar to this:
-
+```
 compatibilitytools.d/my_proton/
 ├── compatibilitytool.vdf
 ├── filelock.py
@@ -25,7 +25,7 @@ compatibilitytools.d/my_proton/
 ├── toolmanifest.vdf
 ├── user_settings.sample.py
 └── version
-
+```
 
 
 ## To do
