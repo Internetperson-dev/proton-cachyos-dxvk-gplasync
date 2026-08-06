@@ -26,6 +26,39 @@ on:
         required: true
         type: boolean
 
+  workflow_dispatch:
+    inputs:
+      name:
+        description: 'Build name'
+        required: true
+        type: string
+        default: 'custom-proton'
+      cflags:
+        description: 'CFLAGS'
+        required: false
+        type: string
+        default: ''
+      rustflags:
+        description: 'RUSTFLAGS'
+        required: false
+        type: string
+        default: ''
+      configure:
+        description: 'Configure options'
+        required: false
+        type: string
+        default: ''
+      runner:
+        description: 'Runner OS'
+        required: false
+        type: string
+        default: 'ubuntu-24.04'
+      continue:
+        description: 'Continue on error'
+        required: false
+        type: boolean
+        default: false
+
 jobs:
   proton:
     name: Build ${{ inputs.name }}
@@ -94,7 +127,7 @@ jobs:
         cd ..
         
         if [ "$CI_COMMIT_TAG" ]; then
-        	./release.sh;
+            ./release.sh;
         fi
 
     - name: Configure
