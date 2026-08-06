@@ -10,7 +10,7 @@ Proton-cachyos is a version of Proton-GE with specific tweaks.
 gplasync was a way to get Asynchronous shaders in DXVK. This would prevent some shader compilation stutter which can be helpful in certain cases at the cost of potentially having some graphical glitches.
 
 
-Using a older version of Proton is not a good idea for performance, or comptabilty concerns. For example missing out on the video playback improvements in Proton-GE 11. This is why this fork was made. (Mainly to see if combining this with shader compilation could reduce stutters in Persona 3 Reload.)
+Using a older version of Proton is not a good idea for performance, or compatibility concerns. For example missing out on the video playback improvements in Proton-GE 11. This is why this fork was made. (Mainly to see if combining this with shader compilation could reduce stutters in one my problem games Persona 3 Reload on an Nvidia graphics card, even with Steam's background shader caching and shader processing before launching enabled.)
 
 It is used by applying `DXVK_ASYNC=1 %command%`  as a launch option in Steam after installing this custom version of Proton in Steam/compatibilitytools.d/
 
