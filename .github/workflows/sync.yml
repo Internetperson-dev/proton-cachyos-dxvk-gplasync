@@ -1,0 +1,224 @@
+name: Sync CachyOS Proton
+
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+
+      - name: Add CachyOS upstream
+        run: |
+          git remote remove upstream || true
+          git remote add upstream https://github.com/CachyOS/proton-cachyos.git
+          git fetch upstream --tags
+
+
+      - name: Find latest CachyOS release branch
+        id: latest
+        shell: bash
+        run: |
+
+          BRANCH=$(
+            git ls-remote --heads upstream |
+            awk '{print $2}' |
+            sed 's#refs/heads/##' |
+            grep -E '^cachyos_[0-9]+\.[0-9]+_[0-9]+/main$' |
+            sort -V |
+            tail -1
+          )
+
+          if [ -z "$BRANCH" ]; then
+            echo "No CachyOS release branch found"
+            exit 1
+          fi
+
+          echo "Latest CachyOS branch:"
+          echo "$BRANCH"
+
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+
+
+
+      - name: Capture current branch
+        id: current
+        run: |
+
+          echo "branch=$(git branch --show-current)" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+
+
+      - name: Check if update required
+        id: check
+        run: |
+
+          if [ "${{ steps.current.outputs.branch }}" = "${{ steps.latest.outputs.branch }}" ]; then
+            echo "needed=false" >> "$GITHUB_OUTPUT"
+            echo "Already on latest CachyOS branch"
+          else
+            echo "needed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+
+
+      - name: Create new CachyOS branch
+        if: steps.check.outputs.needed == 'true'
+        run: |
+
+          NEW="${{ steps.latest.outputs.branch }}"
+
+          echo "Creating new branch:"
+          echo "$NEW"
+
+          git fetch upstream "$NEW"
+
+          git checkout -b "$NEW" "upstream/$NEW"
+
+
+
+      - name: Merge previous fork history
+        if: steps.check.outputs.needed == 'true'
+        id: merge
+        continue-on-error: true
+        run: |
+
+          OLD_SHA="${{ steps.current.outputs.sha }}"
+
+          echo "Merging previous fork history:"
+          echo "$OLD_SHA"
+
+
+          git merge \
+            "$OLD_SHA" \
+            --no-edit \
+            --no-ff
+
+
+
+      - name: Restore protected files
+        if: steps.merge.outcome == 'success'
+        run: |
+
+          OLD_SHA="${{ steps.current.outputs.sha }}"
+
+          if [ -f .sync-protected ]; then
+
+            echo "Protected file list found"
+
+            while IFS= read -r file; do
+
+              if [ -z "$file" ]; then
+                continue
+              fi
+
+              if [ -f "$file" ] || [ -d "$file" ]; then
+
+                echo "Restoring protected file:"
+                echo "$file"
+
+                git checkout "$OLD_SHA" -- "$file"
+                git add "$file"
+
+              fi
+
+            done < .sync-protected
+
+
+            if ! git diff --cached --quiet; then
+
+              git commit \
+                --no-edit \
+                -m "Restore protected files"
+
+            fi
+
+          else
+
+            echo "No .sync-protected file"
+
+          fi
+
+
+
+      - name: Handle merge conflict
+        if: steps.merge.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+
+          git merge --abort || true
+
+
+          gh issue create \
+            --title "CachyOS Proton sync conflict" \
+            --body "
+          Automatic CachyOS Proton update failed.
+
+          Current branch:
+          ${{ steps.current.outputs.branch }}
+
+          Target branch:
+          ${{ steps.latest.outputs.branch }}
+
+          The merge produced conflicts.
+
+          Manual resolution required.
+
+          Workflow:
+          ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          "
+
+
+          exit 1
+
+
+
+      - name: Update submodules
+        if: steps.merge.outcome == 'success'
+        run: |
+
+          git submodule sync --recursive
+          git submodule update --init --recursive
+
+
+
+      - name: Push new branch
+        if: steps.merge.outcome == 'success'
+        run: |
+
+          git push origin \
+            "${{ steps.latest.outputs.branch }}"
+
+
+
+      - name: Set default branch
+        if: steps.merge.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+
+          gh repo edit \
+            "${{ github.repository }}" \
+            --default-branch "${{ steps.latest.outputs.branch }}"
