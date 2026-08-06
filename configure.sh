@@ -121,6 +121,18 @@ function configure() {
     internal_tool_name=${build_name}-proton
   fi
 
+  if [[ -n $arg_display_name ]]; then
+    display_name="$arg_display_name"
+  elif [[ "$build_name" == *-* ]]; then
+    # Pretty-print the build name: keep the first hyphen (e.g. the
+    # "Proton-CachyOS" brand), turn the rest into spaces.
+    local head="${build_name%%-*}"
+    local rest="${build_name#*-}"
+    display_name="${head}-${rest//-/ }"
+  else
+    display_name="$build_name"
+  fi
+
   local target_arch=x86_64
   if [[ -n $arg_target_arch ]]; then
     target_arch="$arg_target_arch"
@@ -170,6 +182,7 @@ function configure() {
     echo "BUILD_NAME := $(escape_for_make "$build_name")"
     echo "TARGET_ARCH := $(escape_for_make "$target_arch")"
     echo "INTERNAL_TOOL_NAME := $(escape_for_make "$internal_tool_name")"
+    echo "DISPLAY_NAME := $(escape_for_make "$display_name")"
 
     # SteamRT was specified, baking it into the Makefile
     if [[ -n $arg_protonsdk_image ]]; then
@@ -234,6 +247,7 @@ function configure() {
 
 arg_protonsdk_image=""
 arg_build_name=""
+arg_display_name=""
 arg_target_arch=""
 arg_container_engine=""
 arg_docker_opts=""
@@ -283,6 +297,9 @@ function parse_args() {
       arg_help=1
     elif [[ $arg = --build-name ]]; then
       arg_build_name="$val"
+      val_used=1
+    elif [[ $arg = --display-name ]]; then
+      arg_display_name="$val"
       val_used=1
     elif [[ $arg = --target-arch ]]; then
       arg_target_arch="$val"
@@ -360,6 +377,10 @@ usage() {
   "$1" "    --help / --usage     Show this help text and exit"
   "$1" ""
   "$1" "    --build-name=<name>  Set the name of the build that displays when used in Steam"
+  "$1" ""
+  "$1" "    --display-name=<name> Set the human-readable name shown in Steam. Defaults to a"
+  "$1" "                          pretty-printed version of --build-name (the first hyphen is"
+  "$1" "                          kept, the rest become spaces)."
   "$1" ""
   "$1" "    --target-arch=<name> Builds for given architecture. x86_64 (default) and arm64 are supported."
   "$1" ""
