@@ -101,39 +101,128 @@ jobs:
             --no-edit \
             --no-ff
 
-      - name: Restore protected files
-        if: steps.merge.outcome == 'success'
+      - name: Auto-resolve conflicts and finalize merge
+        id: finalize
+        if: steps.check.outputs.needed == 'true'
+        env:
+          OLD_SHA: ${{ steps.current.outputs.sha }}
+          MERGE_OUTCOME: ${{ steps.merge.outcome }}
         run: |
-          OLD_SHA="${{ steps.current.outputs.sha }}"
+          set -uo pipefail
+          set +e
 
-          if [ -f .sync-protected ]; then
-            echo "Protected file list found"
+          OLD_SHA="${OLD_SHA}"
+          MERGE_OUTCOME="${MERGE_OUTCOME}"
 
-            while IFS= read -r file; do
-              if [ -z "$file" ]; then
-                continue
-              fi
+          MERGE_HEAD_FILE="$(git rev-parse --git-path MERGE_HEAD)"
 
-              if [ -f "$file" ] || [ -d "$file" ]; then
-                echo "Restoring protected file:"
-                echo "$file"
+          if [ "$MERGE_OUTCOME" = "failure" ] && [ ! -f "$MERGE_HEAD_FILE" ]; then
+            echo "Merge failed before reaching conflict resolution"
+            echo "state=conflict" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
 
-                git checkout "$OLD_SHA" -- "$file"
-                git add "$file"
-              fi
-            done < .sync-protected
+          echo "=== Identifying fork-customized files ==="
 
+          FORK_BASE=""
+          for b in $(git branch -r | sed 's#^[[:space:]]*##; s#^upstream/##' | grep -E '^cachyos_[0-9]+\.[0-9]+_[0-9]+/main$' | sort -V); do
+            if git merge-base --is-ancestor "refs/remotes/upstream/$b" "$OLD_SHA" 2>/dev/null; then
+              FORK_BASE="refs/remotes/upstream/$b"
+            fi
+          done
+
+          FORK_OWNED="$(mktemp)"
+          if [ -n "$FORK_BASE" ]; then
+            echo "Fork base branch: $FORK_BASE"
+            git diff --name-only "$FORK_BASE" "$OLD_SHA" >> "$FORK_OWNED"
+          fi
+
+          git show "$OLD_SHA:.sync-protected" 2>/dev/null | while IFS= read -r f; do
+            f="${f//[[:space:]]/}"
+            [ -n "$f" ] && printf '%s\n' "$f" >> "$FORK_OWNED"
+          done || true
+
+          sort -u "$FORK_OWNED" -o "$FORK_OWNED"
+
+          if [ ! -s "$FORK_OWNED" ]; then
+            echo "Unable to determine fork-customized files; refusing to auto-resolve"
+            git merge --abort || true
+            echo "state=conflict" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Fork-customized files:"
+          cat "$FORK_OWNED"
+
+          echo "=== Restoring fork-customized files ==="
+
+          while IFS= read -r f; do
+            [ -z "$f" ] && continue
+            if git cat-file -e "$OLD_SHA:$f" 2>/dev/null; then
+              echo "Restoring $f"
+              git checkout "$OLD_SHA" -- "$f"
+              git add "$f"
+            else
+              echo "Removing $f (not present in fork)"
+              git rm -f -- "$f" 2>/dev/null || git update-index --force-remove "$f" 2>/dev/null || true
+            fi
+          done < "$FORK_OWNED"
+
+          echo "=== Auto-resolving conflicts ==="
+
+          while IFS= read -r path; do
+            [ -z "$path" ] && continue
+            if grep -Fqx "$path" "$FORK_OWNED"; then
+              entry=$(git ls-files -u "$path" | awk '$3==3{print $1,$2}' | head -1)
+              who="fork"
+            else
+              entry=$(git ls-files -u "$path" | awk '$3==2{print $1,$2}' | head -1)
+              who="upstream"
+            fi
+            if [ -n "$entry" ]; then
+              mode=${entry%% *}
+              sha=${entry##* }
+              git update-index --cacheinfo "$mode,$sha,$path"
+              echo "Resolved ($who wins): $path"
+            else
+              git update-index --force-remove "$path"
+              echo "Resolved ($who wins, file removed): $path"
+            fi
+          done < <(git ls-files -u | awk '{print $4}' | sort -u)
+
+          echo "=== Checking for unresolved conflicts ==="
+
+          UNMERGED="$(git ls-files -u | awk '{print $4}' | sort -u)"
+
+          if [ -n "$UNMERGED" ]; then
+            echo "Unresolved conflicts remain:"
+            echo "$UNMERGED"
+            git merge --abort || true
+            echo "state=conflict" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "=== Committing ==="
+
+          if [ -f "$MERGE_HEAD_FILE" ]; then
+            echo "Completing merge commit"
+            git commit --no-edit || git commit --no-edit --allow-empty
+          else
             if ! git diff --cached --quiet; then
+              echo "Committing restored files"
               git commit \
                 --no-edit \
                 -m "Restore protected files"
             fi
-          else
-            echo "No .sync-protected file"
           fi
 
+          git reset --hard HEAD
+          git clean -fd
+
+          echo "state=merged" >> "$GITHUB_OUTPUT"
+
       - name: Test GitHub API token
-        if: steps.merge.outcome == 'failure'
+        if: steps.finalize.outputs.state == 'conflict'
         env:
           GH_TOKEN: ${{ secrets.SYNC_TOKEN }}
         run: |
@@ -146,16 +235,14 @@ jobs:
             "repos/${{ github.repository }}" \
             --jq '{full_name: .full_name, issues_enabled: .has_issues}'
 
-      - name: Handle merge conflict
-        if: steps.merge.outcome == 'failure'
+      - name: Handle unresolvable merge conflict
+        if: steps.finalize.outputs.state == 'conflict'
         env:
           GH_TOKEN: ${{ secrets.SYNC_TOKEN }}
           CURRENT_BRANCH: ${{ steps.current.outputs.branch }}
           TARGET_BRANCH: ${{ steps.latest.outputs.branch }}
           WORKFLOW_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          git merge --abort || true
-
           echo "Creating GitHub issue..."
 
           BODY=$(cat <<EOF
@@ -167,7 +254,7 @@ jobs:
           Target branch:
           ${TARGET_BRANCH}
 
-          The merge produced conflicts.
+          The merge produced conflicts that could not be resolved automatically.
 
           Manual resolution required.
 
@@ -185,19 +272,19 @@ jobs:
           exit 1
 
       - name: Update submodules
-        if: steps.merge.outcome == 'success'
+        if: steps.finalize.outputs.state == 'merged'
         run: |
           git submodule sync --recursive
           git submodule update --init --recursive
 
       - name: Push new branch
-        if: steps.merge.outcome == 'success'
+        if: steps.finalize.outputs.state == 'merged'
         run: |
           git push origin \
             "${{ steps.latest.outputs.branch }}"
 
       - name: Set default branch
-        if: steps.merge.outcome == 'success'
+        if: steps.finalize.outputs.state == 'merged'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
