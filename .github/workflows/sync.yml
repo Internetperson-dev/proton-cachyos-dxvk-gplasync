@@ -132,12 +132,12 @@ jobs:
             echo "No .sync-protected file"
           fi
 
-      - name: Test GitHub token
+      - name: Test GitHub API token
         if: steps.merge.outcome == 'failure'
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.SYNC_TOKEN }}
         run: |
-          echo "Testing GitHub token..."
+          echo "Testing GitHub API token..."
 
           gh api user \
             --jq '{login: .login, type: .type}'
@@ -149,7 +149,7 @@ jobs:
       - name: Handle merge conflict
         if: steps.merge.outcome == 'failure'
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.SYNC_TOKEN }}
           CURRENT_BRANCH: ${{ steps.current.outputs.branch }}
           TARGET_BRANCH: ${{ steps.latest.outputs.branch }}
           WORKFLOW_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
