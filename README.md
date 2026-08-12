@@ -7,7 +7,7 @@ Proton-cachyos is a version of Proton-GE with specific tweaks.
 )
 
 
-gplasync was a way to get Asynchronous shaders in DXVK. This would prevent some shader compilation stutter which can be helpful in certain cases at the cost of potentially having some graphical glitches.
+gplasync is a way to get Asynchronous shaders in DXVK. This would prevent some shader compilation stutter which can be helpful in certain cases at the cost of potentially having some graphical glitches.
 
 
 Using a older version of Proton is not a good idea for performance, or compatibility concerns. For example missing out on the video playback improvements in Proton-GE 11. This is why this fork was made.
