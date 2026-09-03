@@ -100,7 +100,7 @@ jobs:
         #testing: false
 
     - name: Prepare host
-      run: sudo apt update && sudo apt-get install -y ccache fontforge-nox
+      run: sudo apt update && sudo apt-get install -y ccache fontforge-nox ninja-build meson
 
     - name: Checkout
       uses: actions/checkout@v6
