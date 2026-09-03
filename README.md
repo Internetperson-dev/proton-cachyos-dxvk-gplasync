@@ -30,7 +30,30 @@ compatibilitytools.d/my_proton/
 
 DXVK handles DirectX 8, 9, 10, and 11 calls. 
 
+## Recomendations 
 
+
+If you are using this solution to deal with shader compilation stutter, it is a good idea to enable shader-pre caching in Steam, and ensure you have an adequate shader cache size 
+
+<img width="850" height="722" alt="image" src="https://github.com/user-attachments/assets/0b1e7155-00e4-4b2c-8607-4d08d713fc8e" />
+
+```
+cat > ~/environment.d/gaming.conf <<'EOF'
+# Increase Nvidia shader cache size to 120GB
+__GL_SHADER_DISK_CACHE_SIZE=120000000000
+
+# Increase AMD's/Intel's? shader cache size to 12GB
+MESA_SHADER_CACHE_MAX_SIZE=12G
+EOF
+
+cp -p ~/.config/environment.d .var/app/com.valvesoftware.Steam/.config  ; cp -p .config/environment.d .var/app/com.heroicgameslauncher.hgl/.config ; p -p .config/environment.d .var/app/com.github.Matoking.protontricks/.config
+
+
+flatpak override --user \
+  --env=MESA_SHADER_CACHE_MAX_SIZE=120G \
+  --env=__GL_SHADER_DISK_CACHE_SIZE=120000000000 \
+  com.valvesoftware.Steam
+```
 
 ## To do
 
