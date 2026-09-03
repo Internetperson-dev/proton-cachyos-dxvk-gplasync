@@ -119,6 +119,7 @@ jobs:
 
     - name: Patch DXVK to use DXVK-gplasync
       run: | # Delete Old version of DXVK
+        cd proton-ge-custom
         sudo rm -rv dxvk 
         set -e
         git clone --branch master --recursive https://github.com/doitsujin/dxvk.git
