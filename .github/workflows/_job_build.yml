@@ -66,51 +66,17 @@ jobs:
     continue-on-error: ${{ inputs.continue }}
     steps:
 
-    #- name: Debloat GitHub runner - Addtional disk space not needed, not doing this speeds up deployment 
-      #uses: endersonmenezes/free-disk-space@v3
-      #with:
-        #remove_android: true
-        #remove_dotnet: true
-        #remove_haskell: true
-        #remove_tool_cache: true
-        #remove_swap: true
-        #remove_packages: >-
-          #azure-cli
-          #google-cloud-cli
-          #microsoft-edge-stable
-          #google-chrome-stable
-          #firefox
-          #postgresql*
-          #temurin-*
-          #*llvm*
-          #mysql*
-          #dotnet-sdk-*
-        #remove_packages_one_command: false
-        #remove_folders: >-
-          #/usr/share/swift
-          #/usr/share/miniconda
-          #/usr/share/az*
-          #/usr/local/lib/node_modules
-          #/usr/local/share/chromium
-          #/usr/local/share/powershell
-          #/usr/local/julia
-          #/usr/local/aws-cli
-          #/usr/local/aws-sam-cli
-          #/usr/share/gradle
-        #testing: false
-
     - name: Prepare host
       run: sudo apt update && sudo apt-get install -y ccache fontforge-nox ninja-build meson g++-mingw-w64 glslang-tools 
 
     - name: Checkout
-      uses: actions/checkout@v6
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
         fetch-tags: true
         submodules: false
 
-
-    - name: Clone Proton-GE and patch # (CatchyOS Proton has not had an update in a while. So use which ever is the latest or best. Patching saves build time and requires less maintance. ) 
+    - name: Clone Proton-GE and patch
       run: | 
         curl -L "$(curl -s https://api.github.com/repos/GloriousEggroll/proton-ge-custom/releases/latest | grep 'browser_download_url.*x86_64.tar.gz' | cut -d '"' -f 4)" -o GE-Proton-latest.tar.gz
         mkdir -p ~/GE-Proton-latest
@@ -130,41 +96,44 @@ jobs:
 
     - name: Build DXVK-Async
       run: | 
-                git clone --branch v3.0 --recursive https://github.com/doitsujin/dxvk.git
-                cd dxvk
-                curl -LO "https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/patches/dxvk-gplasync-master.patch?ref_type=heads"
-                curl -LO "https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/patches/global-dxvk.conf.patch?ref_type=heads"
-                patch -p1 < dxvk-gplasync-master.patch
-                patch -p1 < global-dxvk.conf.patch
+        git clone --branch v3.0 --recursive https://github.com/doitsujin/dxvk.git
+        cd dxvk
+        curl -LO "https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/patches/dxvk-gplasync-master.patch?ref_type=heads"
+        curl -LO "https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/patches/global-dxvk.conf.patch?ref_type=heads"
+        patch -p1 < dxvk-gplasync-master.patch
+        patch -p1 < global-dxvk.conf.patch
         
-                # Build DXVK to a temporary output directory
-                ./package-release.sh master build_output --no-package
-        
-
+        # Build DXVK to a temporary output directory
+        ./package-release.sh master build_output --no-package
 
     - name: Patch DXVK to use DXVK-gplasync
       run: | 
-                # Create destination directories for GE-Proton
-                mkdir -p ~/GE-Proton-latest/files/lib/wine/dxvk/x86_64-windows
-                mkdir -p ~/GE-Proton-latest/files/lib/wine/dxvk/i686-windows
+        # Create destination directories for GE-Proton
+        mkdir -p ~/GE-Proton-latest/files/lib/wine/dxvk/x86_64-windows
+        mkdir -p ~/GE-Proton-latest/files/lib/wine/dxvk/i686-windows
         
-                # Copy x64 and x32 build outputs into respective Proton folders
-                cp -f build_output/dxvk-master/x64/*.dll ~/GE-Proton-latest/files/lib/wine/dxvk/x86_64-windows/
-                cp -f build_output/dxvk-master/x32/*.dll ~/GE-Proton-latest/files/lib/wine/dxvk/i686-windows/
+        # Copy x64 and x32 build outputs into respective Proton folders
+        cp -f dxvk/build_output/dxvk-master/x64/*.dll ~/GE-Proton-latest/files/lib/wine/dxvk/x86_64-windows/
+        cp -f dxvk/build_output/dxvk-master/x32/*.dll ~/GE-Proton-latest/files/lib/wine/dxvk/i686-windows/
         
-                # Verify 64-bit files exist
-                ls -la ~/GE-Proton-latest/files/lib/wine/dxvk/x86_64-windows/
-                cd ..
+        # Verify 64-bit files exist
+        ls -la ~/GE-Proton-latest/files/lib/wine/dxvk/x86_64-windows/
 
+    - name: Compress patched GE-Proton archive
+      run: |
+        mkdir -p ./build
+        tar -cJf "./build/${{ inputs.name }}.tar.xz" -C ~/ GE-Proton-latest
+        cd ./build
+        sha512sum "${{ inputs.name }}.tar.xz" > "${{ inputs.name }}.sha512sum"
 
     - name: Upload artifact ${{ inputs.name }}.tar.xz
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ inputs.name }}.tar.xz
         path: ./build/${{ inputs.name }}.tar.xz
 
     - name: Upload artifact ${{ inputs.name }}.sha512sum
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ inputs.name }}.sha512sum
         path: ./build/${{ inputs.name }}.sha512sum
