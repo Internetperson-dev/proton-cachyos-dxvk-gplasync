@@ -126,8 +126,8 @@ jobs:
         ls ~/GE-Proton-latest/files/lib/wine/dxvk
         ls ~/GE-Proton-latest/files/lib/wine/dxvk/x86_64-windows
 
-        - name: Build DXVK-Async
-              run: | 
+    - name: Build DXVK-Async
+      run: | 
                 git clone --branch v3.0 --recursive https://github.com/doitsujin/dxvk.git
                 cd dxvk
                 curl -LO "https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/patches/dxvk-gplasync-master.patch?ref_type=heads"
