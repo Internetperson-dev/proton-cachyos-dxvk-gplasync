@@ -100,7 +100,7 @@ jobs:
         #testing: false
 
     - name: Prepare host
-      run: sudo apt update && sudo apt-get install -y ccache fontforge-nox ninja-build meson g++-mingw-w64
+      run: sudo apt update && sudo apt-get install -y ccache fontforge-nox ninja-build meson g++-mingw-w64 glslang
 
     - name: Checkout
       uses: actions/checkout@v6
