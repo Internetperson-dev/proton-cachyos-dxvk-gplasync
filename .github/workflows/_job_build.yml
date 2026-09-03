@@ -113,6 +113,7 @@ jobs:
     - name: Clone Proton-GE and patch # (CatchyOS Proton has not had an update in a while. So use which ever is the latest or best. Patching saves build time and requires less maintance. ) 
       run: | 
         curl -L "$(curl -s https://api.github.com/repos/GloriousEggroll/proton-ge-custom/releases/latest | grep 'browser_download_url.*x86_64.tar.gz' | cut -d '"' -f 4)" -o GE-Proton-latest.tar.gz
+        mkdir -p ~/GE-Proton-latest
         tar -xf GE-Proton-latest.tar.gz -C ~/GE-Proton-latest/
         ls ~/GE-Proton-latest/
         ls ~/GE-Proton-latest/files
