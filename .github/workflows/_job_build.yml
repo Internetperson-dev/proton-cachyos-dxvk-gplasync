@@ -94,6 +94,23 @@ jobs:
         ls ~/GE-Proton-latest/files/lib/wine/dxvk
         ls ~/GE-Proton-latest/files/lib/wine/dxvk/x86_64-windows
 
+
+        - name: Apply Custom Version and Replace Root Files
+              run: |
+                # 1. Append '-gplasync' to the existing GE-Proton version string
+                if [ -f ~/GE-Proton-latest/version ]; then
+                  sed -i 's/$/-gplasync/' ~/GE-Proton-latest/version
+                  echo "Updated version file content:"
+                  cat ~/GE-Proton-latest/version
+                fi
+        
+                # 2. Overwrite files in GE-Proton root with the repo root files
+                # (compatibilitytool.vdf, proton, version, etc.)
+                cp -f compatibilitytool.vdf ~/GE-Proton-latest/ 2>/dev/null || true
+                cp -f proton ~/GE-Proton-latest/ 2>/dev/null || true
+                cp -f version ~/GE-Proton-latest/ 2>/dev/null || true
+        
+
     - name: Build DXVK-Async
       run: | 
         git clone --branch v3.0 --recursive https://github.com/doitsujin/dxvk.git
