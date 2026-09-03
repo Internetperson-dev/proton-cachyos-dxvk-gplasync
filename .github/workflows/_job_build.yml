@@ -114,7 +114,11 @@ jobs:
       run: | 
         curl -L "$(curl -s https://api.github.com/repos/GloriousEggroll/proton-ge-custom/releases/latest | grep 'browser_download_url.*x86_64.tar.gz' | cut -d '"' -f 4)" -o GE-Proton-latest.tar.gz
         mkdir -p ~/GE-Proton-latest
-        tar -xf GE-Proton-latest.tar.gz -C ~/GE-Proton-latest/
+
+        tar -xf GE-Proton-latest.tar.gz \
+          --strip-components=1 \
+          -C ~/GE-Proton-latest/
+
         ls ~/GE-Proton-latest/
         ls ~/GE-Proton-latest/files
         ls ~/GE-Proton-latest/files/lib
