@@ -109,6 +109,11 @@ jobs:
         fetch-tags: true
         submodules: false
 
+    - name: Clone Proton-GE # (CatchyOS Proton has not had an update in a while. So use which ever is the latest or best. Patching saves build time and requires less maintance. ) 
+      run: | 
+        git clone https://github.com/gloriouseggroll/proton-ge-custom
+        cd proton-ge-custom
+
     - name: Patch
       run: |
         git submodule update --init --filter=tree:0 --recursive
