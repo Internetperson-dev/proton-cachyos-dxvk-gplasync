@@ -140,6 +140,10 @@ jobs:
                 # Build DXVK to a temporary output directory
                 ./package-release.sh master build_output --no-package
         
+
+
+    - name: Patch DXVK to use DXVK-gplasync
+      run: | 
                 # Create destination directories for GE-Proton
                 mkdir -p ~/GE-Proton-latest/files/lib/wine/dxvk/x86_64-windows
                 mkdir -p ~/GE-Proton-latest/files/lib/wine/dxvk/i686-windows
@@ -147,17 +151,11 @@ jobs:
                 # Copy x64 and x32 build outputs into respective Proton folders
                 cp -f build_output/dxvk-master/x64/*.dll ~/GE-Proton-latest/files/lib/wine/dxvk/x86_64-windows/
                 cp -f build_output/dxvk-master/x32/*.dll ~/GE-Proton-latest/files/lib/wine/dxvk/i686-windows/
-
-
         
                 # Verify 64-bit files exist
                 ls -la ~/GE-Proton-latest/files/lib/wine/dxvk/x86_64-windows/
                 cd ..
 
-    - name: Patch DXVK to use DXVK-gplasync
-      run: | # Delete Old version of DXVK
-        cd ~/GE-Proton-latest/files/lib/wine/dxvk/x86_64-windows
-        cp ~/dxvk/*.dll ~/GE-Proton-latest/files/lib/wine/dxvk/x86_64-windows
 
     - name: Upload artifact ${{ inputs.name }}.tar.xz
       uses: actions/upload-artifact@v6
