@@ -126,17 +126,29 @@ jobs:
         ls ~/GE-Proton-latest/files/lib/wine/dxvk
         ls ~/GE-Proton-latest/files/lib/wine/dxvk/x86_64-windows
 
-    - name: Build DXVK-Async
-      run: | 
-       git clone --branch v3.0 --recursive https://github.com/doitsujin/dxvk.git
-       cd dxvk
-       curl -LO "https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/patches/dxvk-gplasync-master.patch?ref_type=heads"
-       curl -LO "https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/patches/global-dxvk.conf.patch?ref_type=heads"
-       patch -p1 < dxvk-gplasync-master.patch
-       patch -p1 < global-dxvk.conf.patch
-       ./package-release.sh master ~/GE-Proton-latest/files/lib/wine/dxvk/x86_64-windows --no-package
-       ls ~/GE-Proton-latest/files/lib/wine/dxvk/x86_64-windows
-       cd ..
+        - name: Build DXVK-Async
+              run: | 
+                git clone --branch v3.0 --recursive https://github.com/doitsujin/dxvk.git
+                cd dxvk
+                curl -LO "https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/patches/dxvk-gplasync-master.patch?ref_type=heads"
+                curl -LO "https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/patches/global-dxvk.conf.patch?ref_type=heads"
+                patch -p1 < dxvk-gplasync-master.patch
+                patch -p1 < global-dxvk.conf.patch
+        
+                # Build DXVK to a temporary output directory
+                ./package-release.sh master build_output --no-package
+        
+                # Create destination directories for GE-Proton
+                mkdir -p ~/GE-Proton-latest/files/lib/wine/dxvk/x86_64-windows
+                mkdir -p ~/GE-Proton-latest/files/lib/wine/dxvk/i686-windows
+        
+                # Copy x64 and x32 build outputs into respective Proton folders
+                cp -r build_output/dxvk-master/x64/*.dll ~/GE-Proton-latest/files/lib/wine/dxvk/x86_64-windows/
+                cp -r build_output/dxvk-master/x32/*.dll ~/GE-Proton-latest/files/lib/wine/dxvk/i686-windows/
+        
+                # Verify 64-bit files exist
+                ls -la ~/GE-Proton-latest/files/lib/wine/dxvk/x86_64-windows/
+                cd ..
 
     - name: Patch DXVK to use DXVK-gplasync
       run: | # Delete Old version of DXVK
