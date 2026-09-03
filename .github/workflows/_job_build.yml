@@ -123,8 +123,8 @@ jobs:
         ls ~/GE-Proton-latest/files
         ls ~/GE-Proton-latest/files/lib
         ls ~/GE-Proton-latest/files/lib/wine
-        ls ~/GE-Proton-latest/lib/wine/dxvk
-        ls ~/GE-Proton-latest/lib/wine/dxvk/x86_64-windows
+        ls ~/GE-Proton-latest/files/lib/wine/dxvk
+        ls ~/GE-Proton-latest/files/lib/wine/dxvk/x86_64-windows
 
     - name: Build DXVK-Async
       run: | 
