@@ -128,7 +128,7 @@ jobs:
 
     - name: Build DXVK-Async
       run: | 
-       git clone --branch master --recursive https://github.com/doitsujin/dxvk.git
+       git clone --branch v3.0 --recursive https://github.com/doitsujin/dxvk.git
        cd dxvk
        curl -LO "https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/patches/dxvk-gplasync-master.patch?ref_type=heads"
        curl -LO "https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/patches/global-dxvk.conf.patch?ref_type=heads"
