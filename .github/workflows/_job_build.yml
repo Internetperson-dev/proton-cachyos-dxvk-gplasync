@@ -140,8 +140,8 @@ jobs:
 
     - name: Patch DXVK to use DXVK-gplasync
       run: | # Delete Old version of DXVK
-        cd GE-Proton-latest/files/lib/wine/dxvk/x86_64-windows
-        cp ~/dxvk/*.dll ~/GE-Proton-latest/files/lib/wine/dxvk/x86_64-windows/
+        cd ~/GE-Proton-latest/files/lib/wine/dxvk/x86_64-windows
+        cp ~/dxvk/*.dll ~/GE-Proton-latest/files/lib/wine/dxvk/x86_64-windows
 
     - name: Upload artifact ${{ inputs.name }}.tar.xz
       uses: actions/upload-artifact@v6
