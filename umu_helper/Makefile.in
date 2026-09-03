@@ -1,7 +1,0 @@
-MODULE    = umu.exe
-IMPORTS   = user32 advapi32 shlwapi shell32 msi ole32
-
-EXTRADLLFLAGS = -mwindows
-
-SOURCES = \
-	umu.c
