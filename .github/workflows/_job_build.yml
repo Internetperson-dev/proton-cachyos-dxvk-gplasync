@@ -119,6 +119,8 @@ jobs:
           --strip-components=1 \
           -C ~/GE-Proton-latest/
 
+        chmod -R u+w ~/GE-Proton-latest
+
         ls ~/GE-Proton-latest/
         ls ~/GE-Proton-latest/files
         ls ~/GE-Proton-latest/files/lib
@@ -143,8 +145,10 @@ jobs:
                 mkdir -p ~/GE-Proton-latest/files/lib/wine/dxvk/i686-windows
         
                 # Copy x64 and x32 build outputs into respective Proton folders
-                cp -r build_output/dxvk-master/x64/*.dll ~/GE-Proton-latest/files/lib/wine/dxvk/x86_64-windows/
-                cp -r build_output/dxvk-master/x32/*.dll ~/GE-Proton-latest/files/lib/wine/dxvk/i686-windows/
+                cp -f build_output/dxvk-master/x64/*.dll ~/GE-Proton-latest/files/lib/wine/dxvk/x86_64-windows/
+                cp -f build_output/dxvk-master/x32/*.dll ~/GE-Proton-latest/files/lib/wine/dxvk/i686-windows/
+
+
         
                 # Verify 64-bit files exist
                 ls -la ~/GE-Proton-latest/files/lib/wine/dxvk/x86_64-windows/
