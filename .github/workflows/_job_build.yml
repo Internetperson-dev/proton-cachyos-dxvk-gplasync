@@ -118,7 +118,7 @@ jobs:
       run: | # Delete Old version of DXVK
         sudo rm -rv dxvk 
         set -e
-        git clone --branch v3.0 --recursive https://github.com/doitsujin/dxvk.git
+        git clone --branch master --recursive https://github.com/doitsujin/dxvk.git
         
         cd dxvk
         wget -qO- "https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/patches/dxvk-gplasync-master.patch?ref_type=heads" | patch -p1
