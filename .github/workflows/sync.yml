@@ -1,0 +1,293 @@
+name: Sync CachyOS Proton
+
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Add CachyOS upstream
+        run: |
+          git remote remove upstream || true
+          git remote add upstream https://github.com/CachyOS/proton-cachyos.git
+          git fetch upstream --tags
+
+      - name: Find latest CachyOS release branch
+        id: latest
+        shell: bash
+        run: |
+          BRANCH=$(
+            git ls-remote --heads upstream |
+            awk '{print $2}' |
+            sed 's#refs/heads/##' |
+            grep -E '^cachyos_[0-9]+\.[0-9]+_[0-9]+/main$' |
+            sort -V |
+            tail -1
+          )
+
+          if [ -z "$BRANCH" ]; then
+            echo "No CachyOS release branch found"
+            exit 1
+          fi
+
+          echo "Latest CachyOS branch:"
+          echo "$BRANCH"
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+
+      - name: Capture current branch
+        id: current
+        shell: bash
+        run: |
+          BRANCH="${GITHUB_REF_NAME}"
+          SHA="$(git rev-parse HEAD)"
+
+          echo "Current branch: $BRANCH"
+          echo "Current SHA: $SHA"
+
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+
+      - name: Check if update required
+        id: check
+        run: |
+          if [ "${{ steps.current.outputs.branch }}" = "${{ steps.latest.outputs.branch }}" ]; then
+            echo "needed=false" >> "$GITHUB_OUTPUT"
+            echo "Already on latest CachyOS branch"
+          else
+            echo "needed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create new CachyOS branch
+        if: steps.check.outputs.needed == 'true'
+        run: |
+          NEW="${{ steps.latest.outputs.branch }}"
+
+          echo "Creating new branch:"
+          echo "$NEW"
+
+          git fetch upstream "$NEW"
+          git checkout -b "$NEW" "upstream/$NEW"
+
+      - name: Merge previous fork history
+        if: steps.check.outputs.needed == 'true'
+        id: merge
+        continue-on-error: true
+        run: |
+          OLD_SHA="${{ steps.current.outputs.sha }}"
+
+          echo "Merging previous fork history:"
+          echo "$OLD_SHA"
+
+          git merge \
+            "$OLD_SHA" \
+            --no-edit \
+            --no-ff
+
+      - name: Auto-resolve conflicts and finalize merge
+        id: finalize
+        if: steps.check.outputs.needed == 'true'
+        env:
+          OLD_SHA: ${{ steps.current.outputs.sha }}
+          MERGE_OUTCOME: ${{ steps.merge.outcome }}
+        run: |
+          set -uo pipefail
+          set +e
+
+          OLD_SHA="${OLD_SHA}"
+          MERGE_OUTCOME="${MERGE_OUTCOME}"
+
+          MERGE_HEAD_FILE="$(git rev-parse --git-path MERGE_HEAD)"
+
+          if [ "$MERGE_OUTCOME" = "failure" ] && [ ! -f "$MERGE_HEAD_FILE" ]; then
+            echo "Merge failed before reaching conflict resolution"
+            echo "state=conflict" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "=== Identifying fork-customized files ==="
+
+          FORK_BASE=""
+          for b in $(git branch -r | sed 's#^[[:space:]]*##; s#^upstream/##' | grep -E '^cachyos_[0-9]+\.[0-9]+_[0-9]+/main$' | sort -V); do
+            if git merge-base --is-ancestor "refs/remotes/upstream/$b" "$OLD_SHA" 2>/dev/null; then
+              FORK_BASE="refs/remotes/upstream/$b"
+            fi
+          done
+
+          FORK_OWNED="$(mktemp)"
+          if [ -n "$FORK_BASE" ]; then
+            echo "Fork base branch: $FORK_BASE"
+            git diff --name-only "$FORK_BASE" "$OLD_SHA" >> "$FORK_OWNED"
+          fi
+
+          git show "$OLD_SHA:.sync-protected" 2>/dev/null | while IFS= read -r f; do
+            f="${f//[[:space:]]/}"
+            [ -n "$f" ] && printf '%s\n' "$f" >> "$FORK_OWNED"
+          done || true
+
+          sort -u "$FORK_OWNED" -o "$FORK_OWNED"
+
+          if [ ! -s "$FORK_OWNED" ]; then
+            echo "Unable to determine fork-customized files; refusing to auto-resolve"
+            git merge --abort || true
+            echo "state=conflict" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Fork-customized files:"
+          cat "$FORK_OWNED"
+
+          echo "=== Restoring fork-customized files ==="
+
+          while IFS= read -r f; do
+            [ -z "$f" ] && continue
+            if git cat-file -e "$OLD_SHA:$f" 2>/dev/null; then
+              echo "Restoring $f"
+              git checkout "$OLD_SHA" -- "$f"
+              git add "$f"
+            else
+              echo "Removing $f (not present in fork)"
+              git rm -f -- "$f" 2>/dev/null || git update-index --force-remove "$f" 2>/dev/null || true
+            fi
+          done < "$FORK_OWNED"
+
+          echo "=== Auto-resolving conflicts ==="
+
+          while IFS= read -r path; do
+            [ -z "$path" ] && continue
+            if grep -Fqx "$path" "$FORK_OWNED"; then
+              entry=$(git ls-files -u "$path" | awk '$3==3{print $1,$2}' | head -1)
+              who="fork"
+            else
+              entry=$(git ls-files -u "$path" | awk '$3==2{print $1,$2}' | head -1)
+              who="upstream"
+            fi
+            if [ -n "$entry" ]; then
+              mode=${entry%% *}
+              sha=${entry##* }
+              git update-index --cacheinfo "$mode,$sha,$path"
+              echo "Resolved ($who wins): $path"
+            else
+              git update-index --force-remove "$path"
+              echo "Resolved ($who wins, file removed): $path"
+            fi
+          done < <(git ls-files -u | awk '{print $4}' | sort -u)
+
+          echo "=== Checking for unresolved conflicts ==="
+
+          UNMERGED="$(git ls-files -u | awk '{print $4}' | sort -u)"
+
+          if [ -n "$UNMERGED" ]; then
+            echo "Unresolved conflicts remain:"
+            echo "$UNMERGED"
+            git merge --abort || true
+            echo "state=conflict" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "=== Committing ==="
+
+          if [ -f "$MERGE_HEAD_FILE" ]; then
+            echo "Completing merge commit"
+            git commit --no-edit || git commit --no-edit --allow-empty
+          else
+            if ! git diff --cached --quiet; then
+              echo "Committing restored files"
+              git commit \
+                --no-edit \
+                -m "Restore protected files"
+            fi
+          fi
+
+          git reset --hard HEAD
+          git clean -fd
+
+          echo "state=merged" >> "$GITHUB_OUTPUT"
+
+      - name: Test GitHub API token
+        if: steps.finalize.outputs.state == 'conflict'
+        env:
+          GH_TOKEN: ${{ secrets.SYNC_TOKEN }}
+        run: |
+          echo "Testing GitHub API token..."
+
+          gh api user \
+            --jq '{login: .login, type: .type}'
+
+          gh api \
+            "repos/${{ github.repository }}" \
+            --jq '{full_name: .full_name, issues_enabled: .has_issues}'
+
+      - name: Handle unresolvable merge conflict
+        if: steps.finalize.outputs.state == 'conflict'
+        env:
+          GH_TOKEN: ${{ secrets.SYNC_TOKEN }}
+          CURRENT_BRANCH: ${{ steps.current.outputs.branch }}
+          TARGET_BRANCH: ${{ steps.latest.outputs.branch }}
+          WORKFLOW_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          echo "Creating GitHub issue..."
+
+          BODY=$(cat <<EOF
+          Automatic CachyOS Proton update failed.
+
+          Current branch:
+          ${CURRENT_BRANCH}
+
+          Target branch:
+          ${TARGET_BRANCH}
+
+          The merge produced conflicts that could not be resolved automatically.
+
+          Manual resolution required.
+
+          Workflow:
+          ${WORKFLOW_URL}
+          EOF
+          )
+
+          gh api \
+            --method POST \
+            "repos/${{ github.repository }}/issues" \
+            -f title="CachyOS Proton sync conflict" \
+            -f body="$BODY"
+
+          exit 1
+
+      - name: Update submodules
+        if: steps.finalize.outputs.state == 'merged'
+        run: |
+          git submodule sync --recursive
+          git submodule update --init --recursive
+
+      - name: Push new branch
+        if: steps.finalize.outputs.state == 'merged'
+        run: |
+          git push origin \
+            "${{ steps.latest.outputs.branch }}"
+
+      - name: Set default branch
+        if: steps.finalize.outputs.state == 'merged'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh repo edit \
+            "${{ github.repository }}" \
+            --default-branch "${{ steps.latest.outputs.branch }}"
