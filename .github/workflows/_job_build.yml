@@ -26,6 +26,39 @@ on:
         required: true
         type: boolean
 
+  workflow_dispatch:
+    inputs:
+      name:
+        description: 'Build name'
+        required: true
+        type: string
+        default: 'custom-proton'
+      cflags:
+        description: 'CFLAGS'
+        required: false
+        type: string
+        default: ''
+      rustflags:
+        description: 'RUSTFLAGS'
+        required: false
+        type: string
+        default: ''
+      configure:
+        description: 'Configure options'
+        required: false
+        type: string
+        default: ''
+      runner:
+        description: 'Runner OS'
+        required: false
+        type: string
+        default: 'ubuntu-24.04'
+      continue:
+        description: 'Continue on error'
+        required: false
+        type: boolean
+        default: false
+
 jobs:
   proton:
     name: Build ${{ inputs.name }}
@@ -33,103 +66,89 @@ jobs:
     continue-on-error: ${{ inputs.continue }}
     steps:
 
-    - name: Debloat GitHub runner
-      uses: endersonmenezes/free-disk-space@v3
-      with:
-        remove_android: true
-        remove_dotnet: true
-        remove_haskell: true
-        remove_tool_cache: true
-        remove_swap: true
-        remove_packages: >-
-          azure-cli
-          google-cloud-cli
-          microsoft-edge-stable
-          google-chrome-stable
-          firefox
-          postgresql*
-          temurin-*
-          *llvm*
-          mysql*
-          dotnet-sdk-*
-        remove_packages_one_command: false
-        remove_folders: >-
-          /usr/share/swift
-          /usr/share/miniconda
-          /usr/share/az*
-          /usr/local/lib/node_modules
-          /usr/local/share/chromium
-          /usr/local/share/powershell
-          /usr/local/julia
-          /usr/local/aws-cli
-          /usr/local/aws-sam-cli
-          /usr/share/gradle
-        testing: false
+      - name: Prepare host
+        run: sudo apt update && sudo apt-get install -y ccache fontforge-nox ninja-build meson g++-mingw-w64 glslang-tools 
 
-    - name: Prepare host
-      run: sudo apt update && sudo apt-get install -y ccache fontforge-nox
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+          submodules: false
 
-    - name: Checkout
-      uses: actions/checkout@v6
-      with:
-        fetch-depth: 0
-        fetch-tags: true
-        submodules: false
+      - name: Clone Proton-GE and patch
+        run: | 
+          curl -L "$(curl -s https://api.github.com/repos/GloriousEggroll/proton-ge-custom/releases/latest | grep 'browser_download_url.*x86_64.tar.gz' | cut -d '"' -f 4)" -o GE-Proton-latest.tar.gz
+          mkdir -p ~/GE-Proton-latest
 
-    - name: Patch
-      run: |
-        git submodule update --init --filter=tree:0 --recursive
-        mkdir ./build
+          tar -xf GE-Proton-latest.tar.gz \
+            --strip-components=1 \
+            -C ~/GE-Proton-latest/
 
-    - name: Configure
-      working-directory: ./build
-      env:
-        CFLAGS: ${{ inputs.cflags }}
-        RUSTFLAGS: ${{ inputs.rustflags }}
-        USE_LTO: 0
-      run: |
-        ../configure.sh --build-name=${{ inputs.name }} --container-engine=docker ${{ inputs.configure }}
-        cat Makefile
+          chmod -R u+w ~/GE-Proton-latest
 
-    - name: Cache identifier
-      working-directory: ./build
-      id: ccache-id
-      run: |
-        image=$(make get-steamrt-image | tail -1)
-        checksum=$(echo "$image ${{ inputs.cflags }} ${{ inputs.configure }}" | sha1sum | cut -d' ' -f1)
-        echo "checksum=$checksum" >> $GITHUB_OUTPUT
+          ls ~/GE-Proton-latest/
+          ls ~/GE-Proton-latest/files
+          ls ~/GE-Proton-latest/files/lib
+          ls ~/GE-Proton-latest/files/lib/wine
+          ls ~/GE-Proton-latest/files/lib/wine/dxvk
+          ls ~/GE-Proton-latest/files/lib/wine/dxvk/x86_64-windows
 
-    - name: Restore cache
-      id: ccache-restore
-      uses: actions/cache/restore@v5
-      with:
-        path: ~/.ccache
-        key: ccache-proton-${{ steps.ccache-id.outputs.checksum }}-${{ github.run_id }}
-        restore-keys: |
-          ccache-proton-${{ steps.ccache-id.outputs.checksum }}
+      - name: Apply Custom Version and Replace Root Files
+        run: |
+          # 1. Append '-gplasync' to the existing GE-Proton version string
+          if [ -f ~/GE-Proton-latest/version ]; then
+            sed -i 's/$/-gplasync/' ~/GE-Proton-latest/version
+            echo "Updated version file content:"
+            cat ~/GE-Proton-latest/version
+          fi
 
-    - name: Make ${{ inputs.name }}
-      working-directory: ./build
-      run: |
-        make redist
+          # 2. Overwrite files in GE-Proton root with the repo root files
+          # (compatibilitytool.vdf, proton, version, etc.)
+          cp -f compatibilitytool.vdf ~/GE-Proton-latest/ 2>/dev/null || true
+          cp -f proton ~/GE-Proton-latest/ 2>/dev/null || true
+          cp -f version ~/GE-Proton-latest/ 2>/dev/null || true
 
-    - name: Save cache
-      id: ccache-save
-      if: always()
-      uses: actions/cache/save@v5
-      with:
-        path: ~/.ccache
-        key: ${{ steps.ccache-restore.outputs.cache-primary-key }}
+      - name: Build DXVK-Async
+        run: | 
+          git clone --branch v3.0 --recursive https://github.com/doitsujin/dxvk.git
+          cd dxvk
+          curl -LO "https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/patches/dxvk-gplasync-master.patch?ref_type=heads"
+          curl -LO "https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/patches/global-dxvk.conf.patch?ref_type=heads"
+          patch -p1 < dxvk-gplasync-master.patch
+          patch -p1 < global-dxvk.conf.patch
 
-    - name: Upload artifact ${{ inputs.name }}.tar.xz
-      uses: actions/upload-artifact@v6
-      with:
-        name: ${{ inputs.name }}.tar.xz
-        path: ./build/${{ inputs.name }}.tar.xz
+          # Build DXVK to a temporary output directory
+          ./package-release.sh master build_output --no-package
 
-    - name: Upload artifact ${{ inputs.name }}.sha512sum
-      uses: actions/upload-artifact@v6
-      with:
-        name: ${{ inputs.name }}.sha512sum
-        path: ./build/${{ inputs.name }}.sha512sum
+      - name: Patch DXVK to use DXVK-gplasync
+        run: | 
+          # Create destination directories for GE-Proton
+          mkdir -p ~/GE-Proton-latest/files/lib/wine/dxvk/x86_64-windows
+          mkdir -p ~/GE-Proton-latest/files/lib/wine/dxvk/i686-windows
 
+          # Copy x64 and x32 build outputs into respective Proton folders
+          cp -f dxvk/build_output/dxvk-master/x64/*.dll ~/GE-Proton-latest/files/lib/wine/dxvk/x86_64-windows/
+          cp -f dxvk/build_output/dxvk-master/x32/*.dll ~/GE-Proton-latest/files/lib/wine/dxvk/i686-windows/
+
+          # Verify 64-bit files exist
+          ls -la ~/GE-Proton-latest/files/lib/wine/dxvk/x86_64-windows/
+
+      - name: Compress patched GE-Proton archive
+        run: |
+          mkdir -p ./build
+          tar -cJf "./build/${{ inputs.name }}.tar.xz" -C ~/ GE-Proton-latest
+          cd ./build
+          sha512sum "${{ inputs.name }}.tar.xz" > "${{ inputs.name }}.sha512sum"
+
+      - name: Upload artifact ${{ inputs.name }}.tar.xz
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.name }}.tar.xz
+          path: ./build/${{ inputs.name }}.tar.xz
+
+      - name: Upload artifact ${{ inputs.name }}.sha512sum
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.name }}.sha512sum
+          path: ./build/${{ inputs.name }}.sha512sum
